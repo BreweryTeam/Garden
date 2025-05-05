@@ -7,6 +7,7 @@ import dev.jsinco.brewery.garden.constants.PlantPart;
 import dev.jsinco.brewery.garden.constants.PlantType;
 import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
 import dev.jsinco.brewery.garden.objects.GardenPlant;
+import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.utility.MessageUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -32,9 +33,11 @@ public class EventListeners implements Listener {
 
     private final BreweryGardenConfig config = BreweryGarden.getInstance().getPluginConfiguration();
     private final GardenRegistry gardenRegistry;
+    private final GardenPlantDataType gardenPlantDataType;
 
-    public EventListeners(GardenRegistry gardenRegistry) {
+    public EventListeners(GardenRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType) {
         this.gardenRegistry = gardenRegistry;
+        this.gardenPlantDataType = gardenPlantDataType;
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
@@ -79,6 +82,7 @@ public class EventListeners implements Listener {
             event.setCancelled(true);
         } else {
             gardenRegistry.unregisterPlant(gardenPlant);
+            gardenPlantDataType.remove(gardenPlant);
         }
     }
 
@@ -137,6 +141,7 @@ public class EventListeners implements Listener {
         // Create a new GardenPlant at the location
         GardenPlant gardenPlant = new GardenPlant(seeds.getParent(), location);
         gardenRegistry.registerPlant(gardenPlant);
+        gardenPlantDataType.insert(gardenPlant);
 
         itemInHand.setAmount(itemInHand.getAmount() - 1);
         location.getWorld().playSound(location, Sound.BLOCK_GRASS_PLACE, 1.0f, 1.0f);

@@ -1,11 +1,15 @@
 package dev.jsinco.brewery.garden;
 
+import com.dre.brewery.recipe.PluginItem;
 import dev.jsinco.brewery.garden.commands.AddonCommandManager;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.constants.PlantType;
 import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
 import dev.jsinco.brewery.garden.events.EventListeners;
+import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.objects.GardenPlant;
+import dev.jsinco.brewery.garden.persist.Database;
+import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import eu.okaeri.configs.ConfigManager;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import lombok.Getter;
@@ -15,6 +19,8 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -33,6 +39,9 @@ public final class BreweryGarden extends JavaPlugin {
     private static int taskID;
     @Getter
     private BreweryGardenConfig pluginConfiguration;
+    private Database database;
+    @Getter
+    private GardenPlantDataType gardenPlantDataType;
 
     @Override
     public void onLoad() {
@@ -41,9 +50,17 @@ public final class BreweryGarden extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        this.database = new Database();
+        try {
+            database.init(this.getDataFolder());
+        } catch (IOException | SQLException e) {
+            throw new RuntimeException(e);
+        }
         gardenRegistry = new GardenRegistry();
+        gardenPlantDataType = new GardenPlantDataType(database);
+        PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
         this.pluginConfiguration = compileConfig();
-        Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry), this);
+        Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry, gardenPlantDataType), this);
         AddonCommandManager commandManager = new AddonCommandManager();
         this.getCommand("garden").setExecutor(commandManager);
         this.getCommand("garden").setTabCompleter(commandManager);
@@ -112,6 +129,8 @@ public final class BreweryGarden extends JavaPlugin {
                 }
             });
             toRemove.forEach(gardenRegistry::unregisterPlant);
+            GardenPlantDataType gardenPlantDataType1 = BreweryGarden.getInstance().getGardenPlantDataType();
+            toRemove.forEach(gardenPlantDataType1::remove);
         }
     }
 }

@@ -16,19 +16,14 @@ import java.util.List;
 
 public class GardenPlantDataType {
 
-    public static GardenPlantDataType instance;
     private final Database database;
 
-    private GardenPlantDataType(Database database) {
+    public GardenPlantDataType(Database database) {
         this.database = database;
     }
 
-    public static void initiate(Database database) {
-        instance = new GardenPlantDataType(database);
-    }
-
     public void insert(GardenPlant plant) {
-        try (Connection connection = instance.database.getConnection()) {
+        try (Connection connection = database.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/insert_plant.sql"));
             preparedStatement.setBytes(1, Encoder.asBytes(plant.getId()));
             preparedStatement.setString(2, plant.getType().key());
@@ -43,7 +38,7 @@ public class GardenPlantDataType {
     }
 
     public void update(GardenPlant plant) {
-        try (Connection connection = instance.database.getConnection()) {
+        try (Connection connection = database.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/update_plant.sql"));
             preparedStatement.setString(1, plant.getType().key());
             preparedStatement.setInt(2, plant.getAge());
@@ -55,7 +50,7 @@ public class GardenPlantDataType {
     }
 
     public void remove(GardenPlant plant) {
-        try (Connection connection = instance.database.getConnection()) {
+        try (Connection connection = database.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/remove_plant.sql"));
             preparedStatement.setBytes(1, Encoder.asBytes(plant.getId()));
             preparedStatement.execute();
@@ -66,7 +61,7 @@ public class GardenPlantDataType {
 
     public List<GardenPlant> fetch(World world) {
         List<GardenPlant> output = new ArrayList<>();
-        try (Connection connection = instance.database.getConnection()) {
+        try (Connection connection = database.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/remove_plant.sql"));
             preparedStatement.setBytes(1, Encoder.asBytes(world.getUID()));
             ResultSet resultSet = preparedStatement.executeQuery();
