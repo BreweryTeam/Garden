@@ -37,7 +37,6 @@ public class WorldTiedBoundingBox extends BoundingBox {
     @Override
     public String toString() {
         return String.join(",",
-                getWorld().getName(),
                 String.valueOf(getMinX()),
                 String.valueOf(getMinY()),
                 String.valueOf(getMinZ()),
@@ -52,9 +51,8 @@ public class WorldTiedBoundingBox extends BoundingBox {
         return new WorldTiedBoundingBox(location.getWorld(), location.getX(), location.getY(), location.getZ(), location2.getX(), location2.getY(), location2.getZ());
     }
 
-    public static WorldTiedBoundingBox fromString(String data) {
+    public static WorldTiedBoundingBox fromString(String data, World world) {
         String[] split = data.split(",");
-        World world = Bukkit.getWorld(split[0]);
         double x1 = Double.parseDouble(split[1]);
         double y1 = Double.parseDouble(split[2]);
         double z1 = Double.parseDouble(split[3]);

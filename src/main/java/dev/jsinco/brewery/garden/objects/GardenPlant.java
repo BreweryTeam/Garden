@@ -1,15 +1,10 @@
 package dev.jsinco.brewery.garden.objects;
 
-import com.dre.brewery.utility.Logging;
 import dev.jsinco.brewery.garden.BreweryGarden;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.constants.PlantPart;
 import dev.jsinco.brewery.garden.constants.PlantType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -31,7 +26,7 @@ public class GardenPlant {
     // If you're reading this, maybe submit a PR? ^ :)
 
     private static final Random RANDOM = new Random();
-    private static final BreweryGardenConfig config = BreweryGarden.getInstance().getAddonConfigManager().getConfig(BreweryGardenConfig.class);
+    private static final BreweryGardenConfig config = BreweryGarden.getInstance().getPluginConfiguration();
 
     private final UUID id;
     private final PlantType type;
@@ -86,14 +81,12 @@ public class GardenPlant {
     public PlantPart getPlantPart(Location location) {
         for (PlantPart part : PlantPart.values()) {
             Location locationFromCenter = part.locationFromCenter(region.getCenter(), region.getWorld());
-            Logging.debugLog("Checking if " + locationFromCenter + " is equal to " + location);
             if (locationFromCenter.equals(location)) {
                 return part;
             }
         }
         return null;
     }
-
 
 
     public boolean unPlace() {

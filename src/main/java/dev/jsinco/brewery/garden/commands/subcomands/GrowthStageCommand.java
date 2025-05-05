@@ -1,12 +1,11 @@
 package dev.jsinco.brewery.garden.commands.subcomands;
 
-import com.dre.brewery.utility.BUtil;
-import com.dre.brewery.utility.Logging;
 import dev.jsinco.brewery.garden.BreweryGarden;
-import dev.jsinco.brewery.garden.GardenManager;
+import dev.jsinco.brewery.garden.GardenRegistry;
 import dev.jsinco.brewery.garden.commands.AddonSubCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.objects.GardenPlant;
+import dev.jsinco.brewery.garden.utility.MessageUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -17,13 +16,13 @@ public class GrowthStageCommand implements AddonSubCommand {
     public boolean execute(BreweryGarden addon, BreweryGardenConfig config, CommandSender sender, String label, String[] args) {
         Player player = (Player) sender;
 
-        int newGrowthStage = Math.min(BUtil.parseIntOrZero(args[0]), config.getFullyGrown());
+        int newGrowthStage = Math.min(Integer.parseInt(args[0]), config.getFullyGrown());
 
-        GardenManager gardenManager = BreweryGarden.getGardenManager();
-        GardenPlant gardenPlant = gardenManager.getByLocation(player.getTargetBlockExact(30));
+        GardenRegistry gardenRegistry = BreweryGarden.getGardenRegistry();
+        GardenPlant gardenPlant = gardenRegistry.getByLocation(player.getTargetBlockExact(30));
 
         if (gardenPlant == null) {
-            Logging.msg(player, "No GardenPlant found.");
+            MessageUtil.sendMessage(player, "No GardenPlant found.");
             return true;
         }
 
@@ -41,7 +40,7 @@ public class GrowthStageCommand implements AddonSubCommand {
 
     @Override
     public String permission() {
-        return "brewery.cmd.garden.growthstage";
+        return "garden.command.growthstage";
     }
 
     @Override

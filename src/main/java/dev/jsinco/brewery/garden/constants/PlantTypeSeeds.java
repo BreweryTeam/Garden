@@ -1,6 +1,5 @@
 package dev.jsinco.brewery.garden.constants;
 
-import com.dre.brewery.BreweryPlugin;
 import dev.jsinco.brewery.garden.BreweryGarden;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.Getter;
@@ -36,10 +35,7 @@ public final class PlantTypeSeeds extends GenericPlantType {
     public static final PlantTypeSeeds CHERRY_SEEDS = new PlantTypeSeeds(PlantType.CHERRY, Material.MELON_SEEDS);
 
 
-
-    private static final NamespacedKey PERSISTENT_DATA_KEY = new NamespacedKey(BreweryPlugin.getInstance(), "plant_seeds");
-
-    private String FIELD_NAME; // Reflect
+    private static final NamespacedKey PERSISTENT_DATA_KEY = new NamespacedKey(BreweryGarden.getInstance(), "plant_seeds");
 
     private final PlantType parent;
     private final Material seedMaterial;
@@ -66,7 +62,7 @@ public final class PlantTypeSeeds extends GenericPlantType {
         // TODO: Ask in Paper discord how to use PDC with new ItemMeta API
         ItemMeta meta = item.getItemMeta();
         meta.lore(List.of(Component.text("Rough seeds").color(NamedTextColor.DARK_GRAY)));
-        meta.getPersistentDataContainer().set(PERSISTENT_DATA_KEY, PersistentDataType.STRING, FIELD_NAME);
+        meta.getPersistentDataContainer().set(PERSISTENT_DATA_KEY, PersistentDataType.STRING, key());
         item.setItemMeta(meta);
         return item;
     }
@@ -97,10 +93,9 @@ public final class PlantTypeSeeds extends GenericPlantType {
 
             try {
                 PlantTypeSeeds plantType = (PlantTypeSeeds) field.get(null);
-                plantType.FIELD_NAME = field.getName();
-                VALUES.put(field.getName(), plantType);
+                VALUES.put(plantType.key(), plantType);
             } catch (IllegalAccessException e) {
-                BreweryGarden.getInstance().getAddonLogger().severe("Failed to get field reflectively.", e);
+                e.printStackTrace();
             }
         }
     }
@@ -115,11 +110,16 @@ public final class PlantTypeSeeds extends GenericPlantType {
 
     @Override
     public String toString() {
-        return FIELD_NAME;
+        return key();
     }
 
     @Override
     public String name() {
-        return FIELD_NAME;
+        return key();
+    }
+
+    @Override
+    public String key() {
+        return parent.key() + "_seeds";
     }
 }

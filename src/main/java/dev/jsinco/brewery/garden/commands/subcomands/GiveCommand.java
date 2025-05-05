@@ -1,13 +1,12 @@
 package dev.jsinco.brewery.garden.commands.subcomands;
 
-import com.dre.brewery.utility.BUtil;
-import com.dre.brewery.utility.Logging;
 import dev.jsinco.brewery.garden.BreweryGarden;
 import dev.jsinco.brewery.garden.commands.AddonSubCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.constants.GenericPlantType;
 import dev.jsinco.brewery.garden.constants.PlantType;
 import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
+import dev.jsinco.brewery.garden.utility.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -20,6 +19,7 @@ import java.util.Map;
 public class GiveCommand implements AddonSubCommand {
 
     private final Map<String, GenericPlantType> items = new HashMap<>();
+
     {
         for (var plant : PlantType.values()) {
             items.put(plant.name().toLowerCase(), plant);
@@ -37,7 +37,7 @@ public class GiveCommand implements AddonSubCommand {
 
         int amount = 1;
         if (args.length >= 2) {
-            amount = BUtil.parseIntOrZero(args[1]);
+            amount = Integer.parseInt(args[1]);
         }
 
         Player player = null;
@@ -55,9 +55,9 @@ public class GiveCommand implements AddonSubCommand {
         ItemStack item = plantType.getItemStack(amount);
         if (item != null) {
             player.getInventory().addItem(item);
-            Logging.msg(sender, "Gave &6x" + amount + " " + plantType.name().toLowerCase() + " &rto " + player.getName());
+            MessageUtil.sendMessage(sender, "Gave &6x" + amount + " " + plantType.name().toLowerCase() + " &rto " + player.getName());
         } else {
-            Logging.msg(sender, "Unknown item.");
+            MessageUtil.sendMessage(sender, "Unknown item.");
         }
         return true;
     }
@@ -74,7 +74,7 @@ public class GiveCommand implements AddonSubCommand {
 
     @Override
     public String permission() {
-        return "brewery.cmd.garden.give";
+        return "garden.command.give";
     }
 
     @Override

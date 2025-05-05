@@ -19,4 +19,6 @@ public abstract class GenericPlantType {
     public abstract String toString();
 
     public abstract String name();
+
+    public abstract String key();
 }

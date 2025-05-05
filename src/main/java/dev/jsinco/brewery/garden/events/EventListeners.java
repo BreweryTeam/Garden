@@ -1,13 +1,13 @@
 package dev.jsinco.brewery.garden.events;
 
-import com.dre.brewery.utility.Logging;
 import dev.jsinco.brewery.garden.BreweryGarden;
-import dev.jsinco.brewery.garden.GardenManager;
+import dev.jsinco.brewery.garden.GardenRegistry;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.constants.PlantPart;
 import dev.jsinco.brewery.garden.constants.PlantType;
 import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
 import dev.jsinco.brewery.garden.objects.GardenPlant;
+import dev.jsinco.brewery.garden.utility.MessageUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -28,13 +28,13 @@ import java.util.Random;
 public class EventListeners implements Listener {
 
     private static final Random RANDOM = new Random();
-    
-    
-    private final BreweryGardenConfig config = BreweryGarden.getInstance().getAddonConfigManager().getConfig(BreweryGardenConfig.class);
-    private final GardenManager gardenManager;
 
-    public EventListeners(GardenManager gardenManager) {
-        this.gardenManager = gardenManager;
+
+    private final BreweryGardenConfig config = BreweryGarden.getInstance().getPluginConfiguration();
+    private final GardenRegistry gardenRegistry;
+
+    public EventListeners(GardenRegistry gardenRegistry) {
+        this.gardenRegistry = gardenRegistry;
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
@@ -42,7 +42,7 @@ public class EventListeners implements Listener {
         if (isBlacklistedWorld(event.getBlock().getLocation())) {
             return;
         }
-        GardenPlant gardenPlant = gardenManager.getByLocation(event.getBlock());
+        GardenPlant gardenPlant = gardenRegistry.getByLocation(event.getBlock());
         if (gardenPlant != null) {
             event.setCancelled(true);
         }
@@ -65,21 +65,20 @@ public class EventListeners implements Listener {
             block.getWorld().dropItemNaturally(block.getLocation(), plantType.getItemStack(1));
         }
 
-        GardenPlant gardenPlant = gardenManager.getByLocation(block);
+        GardenPlant gardenPlant = gardenRegistry.getByLocation(block);
         if (gardenPlant == null) {
             return;
         }
 
-        Logging.debugLog("Found a GardenPlant at Location for BlockBreak: " + block.getLocation());
         // GardenPlant#isValid won't work here. Block's material type won't update until after this event has finished firing.
         Material itemMaterial = event.getPlayer().getInventory().getItemInMainHand().getType();
         if (block.getType() == Material.PLAYER_HEAD) { // Just gonna do this for now
             if (itemMaterial != Material.SHEARS) {
-                Logging.msg(event.getPlayer(), "&rThis plant needs to be interacted with &6shears &rto be obtained.");
+                MessageUtil.sendMessage(event.getPlayer(), "&rThis plant needs to be interacted with &6shears &rto be obtained.");
             }
             event.setCancelled(true);
         } else {
-            gardenManager.removePlant(gardenPlant);
+            gardenRegistry.unregisterPlant(gardenPlant);
         }
     }
 
@@ -116,7 +115,7 @@ public class EventListeners implements Listener {
 
         Location clickedLocation = clickedBlock.getLocation();
 
-        GardenPlant gardenPlant = gardenManager.getByLocation(clickedBlock);
+        GardenPlant gardenPlant = gardenRegistry.getByLocation(clickedBlock);
         if (gardenPlant == null || gardenPlant.getPlantPart(clickedLocation) != PlantPart.TOP || !gardenPlant.isValid()) {
             return;
         }
@@ -137,7 +136,7 @@ public class EventListeners implements Listener {
         }
         // Create a new GardenPlant at the location
         GardenPlant gardenPlant = new GardenPlant(seeds.getParent(), location);
-        gardenManager.addPlant(gardenPlant);
+        gardenRegistry.registerPlant(gardenPlant);
 
         itemInHand.setAmount(itemInHand.getAmount() - 1);
         location.getWorld().playSound(location, Sound.BLOCK_GRASS_PLACE, 1.0f, 1.0f);

@@ -1,9 +1,9 @@
 package dev.jsinco.brewery.garden.configuration;
 
-import com.dre.brewery.api.addons.AddonConfigFile;
-import com.dre.brewery.configuration.annotation.OkaeriConfigFileOptions;
-import com.dre.brewery.depend.okaeri.configs.annotation.Comment;
-import com.dre.brewery.depend.okaeri.configs.annotation.Header;
+import eu.okaeri.configs.OkaeriConfig;
+import eu.okaeri.configs.annotation.Comment;
+import eu.okaeri.configs.annotation.CustomKey;
+import eu.okaeri.configs.annotation.Header;
 import lombok.Getter;
 import org.bukkit.Material;
 
@@ -17,8 +17,7 @@ import java.util.List;
         "To see all available PlantTypes, have a look here: https://github.com/BreweryTeam/BreweryGardenAddon/blob/master/src/main/java/dev/jsinco/brewery/constants/PlantType.java#L38"
 })
 @Getter
-@OkaeriConfigFileOptions("config.yml")
-public class BreweryGardenConfig extends AddonConfigFile {
+public class BreweryGardenConfig extends OkaeriConfig {
 
     @Comment({"How likely it is for a seed to spawn from a broken 'validSeedDropBlocks' block.",
     "Use an integer from 1 to 100."})

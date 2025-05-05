@@ -6,25 +6,30 @@ import java.net.URI
 
 plugins {
     id("java")
+    id("io.github.goooler.shadow") version "8.1.7"
     id("io.papermc.hangar-publish-plugin") version "0.1.2"
     id("com.modrinth.minotaur") version "2.8.7"
+    id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
 }
 
 group = "dev.jsinco.brewery.garden"
-version = "BX3.4.10"
+version = "4.0.0"
 
 repositories {
     mavenCentral()
     maven("https://repo.jsinco.dev/releases")
+    maven("https://storehouse.okaeri.eu/repository/maven-public/")
     maven("https://repo.papermc.io/repository/maven-public/")
 }
 
 dependencies {
-    compileOnly("com.dre.brewery:BreweryX:3.4.10-SNAPSHOT")
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
+    implementation("com.zaxxer:HikariCP:6.2.1")
+    implementation("eu.okaeri:okaeri-configs-yaml-bukkit:5.0.8")
+    compileOnly("org.xerial:sqlite-jdbc:3.47.2.0")
 }
 
 
@@ -42,9 +47,26 @@ tasks {
             webhook.message = "@everyone"
             webhook.embedTitle = "BreweryGarden - v${project.version}"
             webhook.embedDescription = readChangeLog()
-            webhook.embedThumbnailUrl = "https://cdn.modrinth.com/data/3TaOMjJ9/5e44a541ba38ce5d8567207a4b75183658756d57_96.webp"
+            webhook.embedThumbnailUrl =
+                "https://cdn.modrinth.com/data/3TaOMjJ9/5e44a541ba38ce5d8567207a4b75183658756d57_96.webp"
             webhook.send()
         }
+    }
+
+    shadowJar {
+        archiveBaseName.set(rootProject.name)
+        archiveClassifier.unset()
+    }
+}
+
+bukkit {
+    main = "dev.jsinco.brewery.garden.BreweryGarden"
+    foliaSupported = false
+    apiVersion = "1.21"
+    authors = listOf("Jsinco", "Thorinwasher")
+    name = rootProject.name
+    commands {
+        register("garden")
     }
 }
 

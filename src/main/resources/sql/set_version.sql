@@ -1,0 +1,4 @@
+INSERT OR
+REPLACE
+INTO version
+VALUES (?, 0);

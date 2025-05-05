@@ -1,27 +1,25 @@
 package dev.jsinco.brewery.garden;
 
-import com.dre.brewery.BreweryPlugin;
-import com.dre.brewery.api.addons.AddonInfo;
-import com.dre.brewery.api.addons.BreweryAddon;
-import com.dre.brewery.recipe.PluginItem;
-import com.dre.brewery.utility.MinecraftVersion;
 import dev.jsinco.brewery.garden.commands.AddonCommandManager;
+import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.constants.PlantType;
 import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
 import dev.jsinco.brewery.garden.events.EventListeners;
-import dev.jsinco.brewery.garden.integration.BreweryGardenPluginItem;
 import dev.jsinco.brewery.garden.objects.GardenPlant;
+import eu.okaeri.configs.ConfigManager;
+import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-@AddonInfo(name = "BreweryGarden", version = "BX3.4.10", author = "Jsinco", description = "Adds plants to BreweryX, lightweight ExoticGarden.")
-public final class BreweryGarden extends BreweryAddon {
+public final class BreweryGarden extends JavaPlugin {
 
     // TODO:
     //  I'd like to swap to a schematic based system for plants in this addon eventually.
@@ -31,47 +29,50 @@ public final class BreweryGarden extends BreweryAddon {
     @Getter
     private static BreweryGarden instance;
     @Getter
-    private static GardenManager gardenManager;
+    private static GardenRegistry gardenRegistry;
     private static int taskID;
+    @Getter
+    private BreweryGardenConfig pluginConfiguration;
 
     @Override
-    public void onAddonPreEnable() {
+    public void onLoad() {
         instance = this;
-        PluginItem.registerForConfig("garden", BreweryGardenPluginItem::new);
     }
 
     @Override
-    public void onAddonEnable() {
-        if (!this.isPaper() || !BreweryPlugin.getMCVersion().isOrLater(MinecraftVersion.V1_21)) {
-            getAddonLogger().severe("This addon can only be run on Paper 1.21.3+");
-            getAddonManager().unloadAddon(this);
-            return;
-        }
-
-        gardenManager = new GardenManager(getDataManager());
-        registerListener(new EventListeners(gardenManager));
-        registerCommand("garden", new AddonCommandManager());
-        taskID = getScheduler().runTaskTimer(new PlantGrowthRunnable(gardenManager), 1L, 6000L).getTaskId(); // 5 minutes
+    public void onEnable() {
+        gardenRegistry = new GardenRegistry();
+        this.pluginConfiguration = compileConfig();
+        Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry), this);
+        AddonCommandManager commandManager = new AddonCommandManager();
+        this.getCommand("garden").setExecutor(commandManager);
+        this.getCommand("garden").setTabCompleter(commandManager);
+        taskID = Bukkit.getScheduler().runTaskTimer(this, new PlantGrowthRunnable(gardenRegistry), 1L, 6000L).getTaskId(); // 5 minutes
         this.registerPlantRecipes();
     }
 
     @Override
-    public void onAddonDisable() {
-        unregisterListeners();
-        unregisterCommands();
+    public void onDisable() {
         Bukkit.getScheduler().cancelTask(taskID);
     }
 
-    @Override
-    public void onBreweryReload() {
-
+    public void reload() {
+        this.pluginConfiguration = compileConfig();
     }
 
+    private BreweryGardenConfig compileConfig() {
+        return ConfigManager.create(BreweryGardenConfig.class, it -> {
+            it.withConfigurer(new YamlBukkitConfigurer());
+            it.withBindFile(new File(this.getDataFolder(), "config.yml"));
+            it.saveDefaults();
+            it.load(true);
+        });
+    }
 
     private void registerPlantRecipes() {
         for (PlantTypeSeeds plantTypeSeeds : PlantTypeSeeds.values()) {
             PlantType plantType = plantTypeSeeds.getParent();
-            NamespacedKey namespacedKey = new NamespacedKey(getBreweryPlugin(), plantType.name());
+            NamespacedKey namespacedKey = new NamespacedKey(this, plantType.name());
             if (Bukkit.getRecipe(namespacedKey) != null) {
                 Bukkit.removeRecipe(namespacedKey);
             }
@@ -85,17 +86,17 @@ public final class BreweryGarden extends BreweryAddon {
 
     public static class PlantGrowthRunnable implements Runnable {
 
-        private final GardenManager gardenManager;
+        private final GardenRegistry gardenRegistry;
         private final Random random = new Random();
 
-        public PlantGrowthRunnable(GardenManager gardenManager) {
-            this.gardenManager = gardenManager;
+        public PlantGrowthRunnable(GardenRegistry gardenRegistry) {
+            this.gardenRegistry = gardenRegistry;
         }
 
         @Override
         public void run() {
             List<GardenPlant> toRemove = new ArrayList<>(); // dont concurrently modify
-            gardenManager.getGardenPlants().forEach(gardenPlant -> {
+            gardenRegistry.getGardenPlants().forEach(gardenPlant -> {
                 if (!gardenPlant.isValid()) {
                     toRemove.add(gardenPlant);
                 } else if (random.nextInt(100) > 20) {
@@ -110,7 +111,7 @@ public final class BreweryGarden extends BreweryAddon {
                     }
                 }
             });
-            toRemove.forEach(gardenManager::removePlant);
+            toRemove.forEach(gardenRegistry::unregisterPlant);
         }
     }
 }
