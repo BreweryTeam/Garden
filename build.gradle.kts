@@ -17,6 +17,7 @@ version = "4.0.0"
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven("https://repo.jsinco.dev/releases")
     maven("https://storehouse.okaeri.eu/repository/maven-public/")
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -31,6 +32,12 @@ dependencies {
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("eu.okaeri:okaeri-configs-yaml-bukkit:5.0.8")
     compileOnly("org.xerial:sqlite-jdbc:3.47.2.0")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // TODO implement mockbukkit things again // thorin
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:dev-5640d74cf")
+    testImplementation("org.xerial:sqlite-jdbc:3.47.2.0")
 }
 
 
@@ -57,6 +64,10 @@ tasks {
     shadowJar {
         archiveBaseName.set(rootProject.name)
         archiveClassifier.unset()
+    }
+
+    test {
+        useJUnitPlatform()
     }
 }
 

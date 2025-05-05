@@ -72,7 +72,7 @@ public class Database {
     private void executeMultiple(String resourceString) throws SQLException {
         try (Connection connection = hikariDataSource.getConnection()) {
             for (String statement : FileUtil.readInternalResource(resourceString).split(";")) {
-                connection.prepareCall(statement + ";").execute();
+                connection.prepareStatement(statement + ";").execute();
             }
         }
     }

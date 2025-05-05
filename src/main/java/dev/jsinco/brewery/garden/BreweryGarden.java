@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public final class BreweryGarden extends JavaPlugin {
+public class BreweryGarden extends JavaPlugin {
 
     // TODO:
     //  I'd like to swap to a schematic based system for plants in this addon eventually.
@@ -58,7 +58,11 @@ public final class BreweryGarden extends JavaPlugin {
         }
         gardenRegistry = new GardenRegistry();
         gardenPlantDataType = new GardenPlantDataType(database);
-        PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
+        try {
+            PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
+        } catch (NoClassDefFoundError ignored) {
+
+        }
         this.pluginConfiguration = compileConfig();
         Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry, gardenPlantDataType), this);
         AddonCommandManager commandManager = new AddonCommandManager();
@@ -112,12 +116,14 @@ public final class BreweryGarden extends JavaPlugin {
 
         @Override
         public void run() {
+            GardenPlantDataType gardenPlantDataType1 = BreweryGarden.getInstance().getGardenPlantDataType();
             List<GardenPlant> toRemove = new ArrayList<>(); // dont concurrently modify
             gardenRegistry.getGardenPlants().forEach(gardenPlant -> {
                 if (!gardenPlant.isValid()) {
                     toRemove.add(gardenPlant);
                 } else if (random.nextInt(100) > 20) {
                     gardenPlant.incrementGrowthStage(1);
+                    gardenPlantDataType1.update(gardenPlant);
                 }
 
                 if (gardenPlant.isFullyGrown()) {
@@ -129,7 +135,6 @@ public final class BreweryGarden extends JavaPlugin {
                 }
             });
             toRemove.forEach(gardenRegistry::unregisterPlant);
-            GardenPlantDataType gardenPlantDataType1 = BreweryGarden.getInstance().getGardenPlantDataType();
             toRemove.forEach(gardenPlantDataType1::remove);
         }
     }

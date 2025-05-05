@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS garden_plants (
     age INTEGER,
     bounding_box TEXT,
     world_uuid BINARY(16),
-    PRIMARY KEY (uuid)
+    PRIMARY KEY (id)
 );
 
 CREATE INDEX IF NOT EXISTS world_index

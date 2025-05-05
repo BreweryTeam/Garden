@@ -1,2 +1,2 @@
 INSERT INTO garden_plants
-VALUES (?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?);

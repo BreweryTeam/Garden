@@ -84,7 +84,7 @@ public final class PlantType extends GenericPlantType {
 
     // Forever constant UUID so that all plant ItemStacks are stackable. AKA. Don't change me!
     private static final UUID CONSTANT_UUID = UUID.fromString("f714a407-f7c9-425c-958d-c9914aeac05c");
-    private static final NamespacedKey PERSISTENT_DATA_KEY = new NamespacedKey(BreweryGarden.getInstance(), "plant");
+    private static final NamespacedKey PERSISTENT_DATA_KEY = new NamespacedKey("brewerygarden", "plant");
     private static final NamespacedKey TBP_TAG = new NamespacedKey("brewery", "tag");
     private static final NamespacedKey TBP_SCORE = new NamespacedKey("brewery", "score");
     private static final NamespacedKey TBP_DISPLAY_NAME = new NamespacedKey("brewery", "display_name");
