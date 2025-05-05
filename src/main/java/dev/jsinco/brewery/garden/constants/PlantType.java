@@ -18,6 +18,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 
@@ -84,13 +85,18 @@ public final class PlantType extends GenericPlantType {
     // Forever constant UUID so that all plant ItemStacks are stackable. AKA. Don't change me!
     private static final UUID CONSTANT_UUID = UUID.fromString("f714a407-f7c9-425c-958d-c9914aeac05c");
     private static final NamespacedKey PERSISTENT_DATA_KEY = new NamespacedKey(BreweryGarden.getInstance(), "plant");
+    private static final NamespacedKey TBP_TAG = new NamespacedKey("brewery", "tag");
+    private static final NamespacedKey TBP_SCORE = new NamespacedKey("brewery", "score");
+    private static final NamespacedKey TBP_DISPLAY_NAME = new NamespacedKey("brewery", "display_name");
     private static final Random RANDOM = new Random();
     private final String key;
 
     private final String base64;
+    private final String serializedDisplayName;
 
     private PlantType(String name, String key, String skin) {
         super(MiniMessage.miniMessage().deserialize("<!i>" + name));
+        this.serializedDisplayName = name;
         this.base64 = skin;
         this.key = key;
     }
@@ -113,7 +119,11 @@ public final class PlantType extends GenericPlantType {
         // TODO: Ask in Paper discord how to use PDC with new ItemMeta API
         ItemMeta meta = item.getItemMeta();
         meta.lore(List.of(Component.text("A sweet fruit").color(NamedTextColor.DARK_GRAY)));
-        meta.getPersistentDataContainer().set(PERSISTENT_DATA_KEY, PersistentDataType.STRING, key);
+        PersistentDataContainer persistentDataContainer = meta.getPersistentDataContainer();
+        persistentDataContainer.set(PERSISTENT_DATA_KEY, PersistentDataType.STRING, key);
+        persistentDataContainer.set(TBP_TAG, PersistentDataType.STRING, "garden:" + key);
+        persistentDataContainer.set(TBP_SCORE, PersistentDataType.DOUBLE, 1D);
+        persistentDataContainer.set(TBP_DISPLAY_NAME, PersistentDataType.STRING, serializedDisplayName);
         item.setItemMeta(meta);
         return item;
     }
