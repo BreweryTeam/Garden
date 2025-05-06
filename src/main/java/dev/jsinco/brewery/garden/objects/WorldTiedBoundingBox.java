@@ -53,12 +53,12 @@ public class WorldTiedBoundingBox extends BoundingBox {
 
     public static WorldTiedBoundingBox fromString(String data, World world) {
         String[] split = data.split(",");
-        double x1 = Double.parseDouble(split[1]);
-        double y1 = Double.parseDouble(split[2]);
-        double z1 = Double.parseDouble(split[3]);
-        double x2 = Double.parseDouble(split[4]);
-        double y2 = Double.parseDouble(split[5]);
-        double z2 = Double.parseDouble(split[6]);
+        double x1 = Double.parseDouble(split[0]);
+        double y1 = Double.parseDouble(split[1]);
+        double z1 = Double.parseDouble(split[2]);
+        double x2 = Double.parseDouble(split[3]);
+        double y2 = Double.parseDouble(split[4]);
+        double z2 = Double.parseDouble(split[5]);
         return new WorldTiedBoundingBox(world, x1, y1, z1, x2, y2, z2);
     }
 }

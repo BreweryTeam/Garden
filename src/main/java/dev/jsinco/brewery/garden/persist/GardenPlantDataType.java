@@ -62,7 +62,7 @@ public class GardenPlantDataType {
     public List<GardenPlant> fetch(World world) {
         List<GardenPlant> output = new ArrayList<>();
         try (Connection connection = database.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/remove_plant.sql"));
+            PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/find_plant.sql"));
             preparedStatement.setBytes(1, Encoder.asBytes(world.getUID()));
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
