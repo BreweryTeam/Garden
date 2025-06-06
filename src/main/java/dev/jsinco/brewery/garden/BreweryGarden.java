@@ -16,6 +16,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -59,12 +60,17 @@ public class BreweryGarden extends JavaPlugin {
         }
         gardenRegistry = new GardenRegistry();
         gardenPlantDataType = new GardenPlantDataType(database);
+
         try {
             PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
         } catch (NoClassDefFoundError ignored) {
 
         }
         this.pluginConfiguration = compileConfig();
+        for (World world : Bukkit.getWorlds()) {
+            List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world);
+            gardenPlants.forEach(gardenRegistry::registerPlant);
+        }
         Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry, gardenPlantDataType), this);
         taskID = Bukkit.getScheduler().runTaskTimer(this, new PlantGrowthRunnable(gardenRegistry), 1L, 6000L).getTaskId(); // 5 minutes
         this.registerPlantRecipes();

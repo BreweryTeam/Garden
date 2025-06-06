@@ -2,8 +2,9 @@ package dev.jsinco.brewery.garden;
 
 import dev.jsinco.brewery.garden.objects.GardenPlant;
 import lombok.Getter;
-import lombok.Setter;
+import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -40,5 +41,14 @@ public class GardenRegistry {
         plant.unPlace();
         gardenPlants.remove(plant);
         gardenPlantIds.remove(plant.getId());
+    }
+
+    public void unregisterWorld(@NotNull World world) {
+        for (GardenPlant gardenPlant : List.copyOf(gardenPlants)) {
+            if (gardenPlant.getRegion().getWorld() == world) {
+                gardenPlants.remove(gardenPlant);
+                gardenPlantIds.remove(gardenPlant.getId());
+            }
+        }
     }
 }

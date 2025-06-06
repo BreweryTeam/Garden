@@ -21,6 +21,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -111,6 +113,16 @@ public class EventListeners implements Listener {
         }
     }
 
+    @EventHandler
+    public void onWorldLoad(WorldLoadEvent event) {
+        List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(event.getWorld());
+        gardenPlants.forEach(gardenRegistry::registerPlant);
+    }
+
+    @EventHandler
+    public void onWorldUnload(WorldUnloadEvent event) {
+        gardenRegistry.unregisterWorld(event.getWorld());
+    }
 
     private void handlePlantShearing(ItemStack itemInHand, Block clickedBlock) {
         if (itemInHand == null || itemInHand.getType() != Material.SHEARS) {
