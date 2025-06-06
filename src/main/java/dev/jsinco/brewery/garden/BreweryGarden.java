@@ -1,7 +1,6 @@
 package dev.jsinco.brewery.garden;
 
 import com.dre.brewery.recipe.PluginItem;
-import dev.jsinco.brewery.garden.commands.AddonCommandManager;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.constants.PlantType;
@@ -67,9 +66,6 @@ public class BreweryGarden extends JavaPlugin {
         }
         this.pluginConfiguration = compileConfig();
         Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry, gardenPlantDataType), this);
-        AddonCommandManager commandManager = new AddonCommandManager();
-        this.getCommand("garden").setExecutor(commandManager);
-        this.getCommand("garden").setTabCompleter(commandManager);
         taskID = Bukkit.getScheduler().runTaskTimer(this, new PlantGrowthRunnable(gardenRegistry), 1L, 6000L).getTaskId(); // 5 minutes
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
