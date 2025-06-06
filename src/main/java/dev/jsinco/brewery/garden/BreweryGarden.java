@@ -2,6 +2,7 @@ package dev.jsinco.brewery.garden;
 
 import com.dre.brewery.recipe.PluginItem;
 import dev.jsinco.brewery.garden.commands.AddonCommandManager;
+import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.constants.PlantType;
 import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
@@ -12,6 +13,7 @@ import dev.jsinco.brewery.garden.persist.Database;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import eu.okaeri.configs.ConfigManager;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -70,6 +72,7 @@ public class BreweryGarden extends JavaPlugin {
         this.getCommand("garden").setTabCompleter(commandManager);
         taskID = Bukkit.getScheduler().runTaskTimer(this, new PlantGrowthRunnable(gardenRegistry), 1L, 6000L).getTaskId(); // 5 minutes
         this.registerPlantRecipes();
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
     }
 
     @Override

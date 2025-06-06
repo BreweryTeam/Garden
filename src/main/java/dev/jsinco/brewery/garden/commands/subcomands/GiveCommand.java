@@ -1,89 +1,55 @@
 package dev.jsinco.brewery.garden.commands.subcomands;
 
-import dev.jsinco.brewery.garden.BreweryGarden;
-import dev.jsinco.brewery.garden.commands.AddonSubCommand;
-import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import dev.jsinco.brewery.garden.commands.argument.GenericPlantTypeArgument;
 import dev.jsinco.brewery.garden.constants.GenericPlantType;
-import dev.jsinco.brewery.garden.constants.PlantType;
-import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
-import dev.jsinco.brewery.garden.utility.MessageUtil;
-import org.bukkit.Bukkit;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+public class GiveCommand {
+    private static final SimpleCommandExceptionType ERROR_ILLEGAL_SENDER = new SimpleCommandExceptionType(() ->
+            "You have to specify a player to use this command!"
+    );
 
-public class GiveCommand implements AddonSubCommand {
-
-    private final Map<String, GenericPlantType> items = new HashMap<>();
-
-    {
-        for (var plant : PlantType.values()) {
-            items.put(plant.name().toLowerCase(), plant);
-        }
-        for (var seed : PlantTypeSeeds.values()) {
-            items.put(seed.name().toLowerCase(), seed);
-        }
+    public static ArgumentBuilder<CommandSourceStack, ?> command() {
+        return Commands.literal("give")
+                .then(Commands.argument("item", new GenericPlantTypeArgument())
+                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                .then(Commands.argument("player", ArgumentTypes.player())
+                                        .executes(context -> {
+                                            ItemStack itemStack = context.getArgument("item", GenericPlantType.class).getItemStack(context.getArgument("amount", Integer.class));
+                                            giveSender(itemStack, context.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst());
+                                            return 1;
+                                        })
+                                )
+                                .executes(context -> {
+                                    ItemStack itemStack = context.getArgument("item", GenericPlantType.class).getItemStack(context.getArgument("amount", Integer.class));
+                                    giveSender(itemStack, context.getSource().getSender());
+                                    return 1;
+                                })
+                        )
+                        .executes(context -> {
+                            ItemStack itemStack = context.getArgument("item", GenericPlantType.class).getItemStack(1);
+                            giveSender(itemStack, context.getSource().getSender());
+                            return 1;
+                        })
+                ).requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("garden.command.give"));
     }
 
-    @Override
-    public boolean execute(BreweryGarden addon, BreweryGardenConfig config, CommandSender sender, String label, String[] args) {
-        if (args.length == 0) {
-            return false;
+    private static void giveSender(ItemStack itemStack, CommandSender sender) throws CommandSyntaxException {
+        if (!(sender instanceof Player player)) {
+            throw ERROR_ILLEGAL_SENDER.create();
         }
-
-        int amount = 1;
-        if (args.length >= 2) {
-            amount = Integer.parseInt(args[1]);
+        if (!player.getInventory().addItem(itemStack).isEmpty()) {
+            player.getWorld().dropItem(player.getLocation(), itemStack);
         }
-
-        Player player = null;
-        if (args.length >= 3) {
-            player = Bukkit.getPlayerExact(args[2]);
-        } else if (sender instanceof Player p) {
-            player = p;
-        }
-
-        if (player == null) {
-            return false;
-        }
-
-        GenericPlantType plantType = items.get(args[0].toLowerCase());
-        ItemStack item = plantType.getItemStack(amount);
-        if (item != null) {
-            player.getInventory().addItem(item);
-            MessageUtil.sendMessage(sender, "Gave &6x" + amount + " " + plantType.name().toLowerCase() + " &rto " + player.getName());
-        } else {
-            MessageUtil.sendMessage(sender, "Unknown item.");
-        }
-        return true;
-    }
-
-    @Override
-    public List<String> tabComplete(BreweryGarden addon, CommandSender sender, String label, String[] args) {
-        if (args.length == 1) {
-            return items.keySet().stream().toList();
-        } else if (args.length == 2) {
-            return List.of("1", "16", "24", "32", "48", "64");
-        }
-        return null;
-    }
-
-    @Override
-    public String permission() {
-        return "garden.command.give";
-    }
-
-    @Override
-    public boolean playerOnly() {
-        return false;
-    }
-
-    @Override
-    public String usage(String label) {
-        return "&e/" + label + "garden give <item!> <amount?> <player?>";
     }
 }

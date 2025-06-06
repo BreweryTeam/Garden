@@ -10,6 +10,7 @@ plugins {
     id("io.papermc.hangar-publish-plugin") version "0.1.2"
     id("com.modrinth.minotaur") version "2.8.7"
     id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
+    id("xyz.jpenilla.run-paper") version "2.3.0"
 }
 
 group = "dev.jsinco.brewery.garden"
@@ -17,7 +18,6 @@ version = "4.0.0"
 
 repositories {
     mavenCentral()
-    mavenLocal()
     maven("https://repo.jsinco.dev/releases")
     maven("https://storehouse.okaeri.eu/repository/maven-public/")
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -35,8 +35,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    // TODO implement mockbukkit things again // thorin
-    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:dev-5640d74cf")
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.50.0")
     testImplementation("org.xerial:sqlite-jdbc:3.47.2.0")
 }
 
@@ -68,6 +67,10 @@ tasks {
 
     test {
         useJUnitPlatform()
+    }
+
+    runServer {
+        minecraftVersion("1.21.4")
     }
 }
 
