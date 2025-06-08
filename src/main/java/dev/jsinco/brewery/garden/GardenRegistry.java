@@ -1,54 +1,32 @@
 package dev.jsinco.brewery.garden;
 
-import dev.jsinco.brewery.garden.objects.GardenPlant;
-import lombok.Getter;
-import org.bukkit.World;
-import org.bukkit.block.Block;
+import dev.jsinco.brewery.garden.plant.PlantType;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.key.Keyed;
+import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-public class GardenRegistry {
-    @Getter
-    private final List<GardenPlant> gardenPlants = new ArrayList<>();
-    private final Map<UUID, GardenPlant> gardenPlantIds = new HashMap<>();
+public class GardenRegistry<T extends Keyed> {
+
+    public static final GardenRegistry<PlantType> PLANT_TYPE = new GardenRegistry<>(PlantType.readPlantTypes());
 
 
-    @Nullable
-    public GardenPlant getByID(UUID id) {
-        return gardenPlantIds.get(id);
+    private Map<Key, T> backing;
+
+    private GardenRegistry(Collection<T> values) {
+        backing = values.stream().collect(Collectors.toUnmodifiableMap(Keyed::key, value -> value));
     }
 
-    @Nullable
-    public GardenPlant getByLocation(Block l) {
-        if (l == null) return null;
-        for (GardenPlant plant : gardenPlants) {
-            if (plant.getRegion().getBlocks().contains(l)) {
-                return plant;
-            }
-        }
-        return null;
+    public @Nullable T get(@NotNull NamespacedKey key) {
+        return backing.get(key);
     }
 
-    public void registerPlant(GardenPlant plant) {
-        plant.place();
-        gardenPlants.add(plant);
-        gardenPlantIds.put(plant.getId(), plant);
-    }
-
-    public void unregisterPlant(GardenPlant plant) {
-        plant.unPlace();
-        gardenPlants.remove(plant);
-        gardenPlantIds.remove(plant.getId());
-    }
-
-    public void unregisterWorld(@NotNull World world) {
-        for (GardenPlant gardenPlant : List.copyOf(gardenPlants)) {
-            if (gardenPlant.getRegion().getWorld() == world) {
-                gardenPlants.remove(gardenPlant);
-                gardenPlantIds.remove(gardenPlant.getId());
-            }
-        }
+    public Collection<T> values() {
+        return backing.values();
     }
 }

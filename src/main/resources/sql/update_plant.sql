@@ -1,4 +1,4 @@
-UPDATE garden_plants
-SET plant_type = ?,
-    age        = ?
+UPDATE plants
+SET age            = ?,
+    transformation = ?
 WHERE id = ?;

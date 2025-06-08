@@ -1,3 +1,3 @@
 SELECT *
-FROM garden_plants
+FROM plants
 WHERE world_uuid = ?;

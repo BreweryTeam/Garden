@@ -4,8 +4,8 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.jsinco.brewery.garden.BreweryGarden;
-import dev.jsinco.brewery.garden.GardenRegistry;
-import dev.jsinco.brewery.garden.objects.GardenPlant;
+import dev.jsinco.brewery.garden.PlantRegistry;
+import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.utility.MessageUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -39,7 +39,7 @@ public class IsPlantCommand {
     }
 
     private static void sendPlantMessage(Player player, int maxDistance) {
-        GardenRegistry gardenRegistry = BreweryGarden.getGardenRegistry();
+        PlantRegistry gardenRegistry = BreweryGarden.getGardenRegistry();
         GardenPlant gardenPlant = gardenRegistry.getByLocation(player.getTargetBlockExact(maxDistance));
         if (gardenPlant != null) {
             MessageUtil.sendMessage(player, "Found a GardenPlant: " + gardenPlant);

@@ -58,7 +58,7 @@ public class Database {
     }
 
     private static @NotNull HikariConfig getHikariConfigForSqlite(File dataFolder) throws IOException {
-        File databaseFile = new File(dataFolder, "brewery.db");
+        File databaseFile = new File(dataFolder, "garden.db");
         if (!databaseFile.exists() && !databaseFile.getParentFile().mkdirs() && !databaseFile.createNewFile()) {
             throw new IOException("Could not create file or dirs");
         }

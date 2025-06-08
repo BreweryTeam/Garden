@@ -1,8 +1,9 @@
 package dev.jsinco.brewery.garden.persist;
 
 import dev.jsinco.brewery.garden.BreweryGarden;
-import dev.jsinco.brewery.garden.constants.PlantType;
-import dev.jsinco.brewery.garden.objects.GardenPlant;
+import dev.jsinco.brewery.garden.GardenRegistry;
+import dev.jsinco.brewery.garden.plant.GardenPlant;
+import dev.jsinco.brewery.garden.plant.PlantType;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +45,7 @@ class GardenPlantDataTypeTest {
         dataType.insert(gardenPlant);
         checkEquals(gardenPlant, dataType.fetch(world).get(0));
         assertEquals(1, dataType.fetch(world).size());
-        gardenPlant.incrementGrowthStage(1);
+        gardenPlant.incrementGrowthStage(1, BreweryGarden.getGardenRegistry());
         dataType.update(gardenPlant);
         checkEquals(gardenPlant, dataType.fetch(world).get(0));
         assertEquals(1, dataType.fetch(world).size());
@@ -55,12 +56,11 @@ class GardenPlantDataTypeTest {
     void checkEquals(GardenPlant expected, GardenPlant actual) {
         assertEquals(expected.getAge(), actual.getAge());
         assertEquals(expected.getType(), actual.getType());
-        assertEquals(expected.getRegion(), actual.getRegion());
-        assertEquals(expected.getRegion().getWorld(), actual.getRegion().getWorld());
+        assertEquals(expected.getStructure(), actual.getStructure());
     }
 
     public static Stream<Arguments> getPlantTypes() {
-        return PlantType.values()
+        return GardenRegistry.PLANT_TYPE.values()
                 .stream()
                 .map(Arguments::of);
     }

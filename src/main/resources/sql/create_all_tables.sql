@@ -1,14 +1,18 @@
-CREATE TABLE IF NOT EXISTS garden_plants (
+CREATE TABLE IF NOT EXISTS plants (
     id BINARY(16),
     plant_type VARCHAR(32),
     age INTEGER,
-    bounding_box TEXT,
+    origin_x INTEGER,
+    origin_y INTEGER,
+    origin_z INTEGER,
     world_uuid BINARY(16),
+    transformation TEXT,
+    track TEXT,
     PRIMARY KEY (id)
 );
 
 CREATE INDEX IF NOT EXISTS world_index
-ON garden_plants(
+ON plants(
     world_uuid
 );
 

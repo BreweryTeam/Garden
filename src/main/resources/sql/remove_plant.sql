@@ -1,3 +1,3 @@
 DELETE
-FROM garden_plants
+FROM plants
 WHERE id = ?;

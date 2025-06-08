@@ -3,13 +3,12 @@ package dev.jsinco.brewery.garden;
 import com.dre.brewery.recipe.PluginItem;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
-import dev.jsinco.brewery.garden.constants.PlantType;
-import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
 import dev.jsinco.brewery.garden.events.EventListeners;
 import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
-import dev.jsinco.brewery.garden.objects.GardenPlant;
 import dev.jsinco.brewery.garden.persist.Database;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
+import dev.jsinco.brewery.garden.plant.GardenPlant;
+import dev.jsinco.brewery.garden.plant.PlantType;
 import eu.okaeri.configs.ConfigManager;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -23,9 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class BreweryGarden extends JavaPlugin {
 
@@ -37,7 +34,7 @@ public class BreweryGarden extends JavaPlugin {
     @Getter
     private static BreweryGarden instance;
     @Getter
-    private static GardenRegistry gardenRegistry;
+    private static PlantRegistry gardenRegistry;
     private static int taskID;
     @Getter
     private BreweryGardenConfig pluginConfiguration;
@@ -58,7 +55,7 @@ public class BreweryGarden extends JavaPlugin {
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         }
-        gardenRegistry = new GardenRegistry();
+        gardenRegistry = new PlantRegistry();
         gardenPlantDataType = new GardenPlantDataType(database);
 
         try {
@@ -72,7 +69,6 @@ public class BreweryGarden extends JavaPlugin {
             gardenPlants.forEach(gardenRegistry::registerPlant);
         }
         Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry, gardenPlantDataType), this);
-        taskID = Bukkit.getScheduler().runTaskTimer(this, new PlantGrowthRunnable(gardenRegistry), 1L, 6000L).getTaskId(); // 5 minutes
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
     }
@@ -96,51 +92,15 @@ public class BreweryGarden extends JavaPlugin {
     }
 
     private void registerPlantRecipes() {
-        for (PlantTypeSeeds plantTypeSeeds : PlantTypeSeeds.values()) {
-            PlantType plantType = plantTypeSeeds.getParent();
-            NamespacedKey namespacedKey = new NamespacedKey(this, plantType.name());
+        for (PlantType plantType : GardenRegistry.PLANT_TYPE.values()) {
+            NamespacedKey namespacedKey = plantType.key();
             if (Bukkit.getRecipe(namespacedKey) != null) {
                 Bukkit.removeRecipe(namespacedKey);
             }
 
-            ShapelessRecipe recipe = new ShapelessRecipe(namespacedKey, plantTypeSeeds.getItemStack(4));
-            recipe.addIngredient(plantType.getItemStack(1));
+            ShapelessRecipe recipe = new ShapelessRecipe(namespacedKey, plantType.newSeeds().newItem(4));
+            recipe.addIngredient(plantType.newFruit().newItem(1));
             Bukkit.addRecipe(recipe);
-        }
-    }
-
-
-    public static class PlantGrowthRunnable implements Runnable {
-
-        private final GardenRegistry gardenRegistry;
-        private final Random random = new Random();
-
-        public PlantGrowthRunnable(GardenRegistry gardenRegistry) {
-            this.gardenRegistry = gardenRegistry;
-        }
-
-        @Override
-        public void run() {
-            GardenPlantDataType gardenPlantDataType1 = BreweryGarden.getInstance().getGardenPlantDataType();
-            List<GardenPlant> toRemove = new ArrayList<>(); // dont concurrently modify
-            gardenRegistry.getGardenPlants().forEach(gardenPlant -> {
-                if (!gardenPlant.isValid()) {
-                    toRemove.add(gardenPlant);
-                } else if (random.nextInt(100) > 20) {
-                    gardenPlant.incrementGrowthStage(1);
-                    gardenPlantDataType1.update(gardenPlant);
-                }
-
-                if (gardenPlant.isFullyGrown()) {
-                    if (gardenPlant.isValid()) {
-                        gardenPlant.place();
-                    } else {
-                        toRemove.add(gardenPlant);
-                    }
-                }
-            });
-            toRemove.forEach(gardenRegistry::unregisterPlant);
-            toRemove.forEach(gardenPlantDataType1::remove);
         }
     }
 }

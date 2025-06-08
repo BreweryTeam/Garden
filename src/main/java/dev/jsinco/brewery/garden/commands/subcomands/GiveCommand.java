@@ -4,8 +4,8 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import dev.jsinco.brewery.garden.commands.argument.GenericPlantTypeArgument;
-import dev.jsinco.brewery.garden.constants.GenericPlantType;
+import dev.jsinco.brewery.garden.commands.argument.PlantItemArgument;
+import dev.jsinco.brewery.garden.plant.PlantItem;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -21,23 +21,23 @@ public class GiveCommand {
 
     public static ArgumentBuilder<CommandSourceStack, ?> command() {
         return Commands.literal("give")
-                .then(Commands.argument("item", new GenericPlantTypeArgument())
+                .then(Commands.argument("item", new PlantItemArgument())
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
                                 .then(Commands.argument("player", ArgumentTypes.player())
                                         .executes(context -> {
-                                            ItemStack itemStack = context.getArgument("item", GenericPlantType.class).getItemStack(context.getArgument("amount", Integer.class));
+                                            ItemStack itemStack = context.getArgument("item", PlantItem.class).newItem(context.getArgument("amount", Integer.class));
                                             giveSender(itemStack, context.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst());
                                             return 1;
                                         })
                                 )
                                 .executes(context -> {
-                                    ItemStack itemStack = context.getArgument("item", GenericPlantType.class).getItemStack(context.getArgument("amount", Integer.class));
+                                    ItemStack itemStack = context.getArgument("item", PlantItem.class).newItem(context.getArgument("amount", Integer.class));
                                     giveSender(itemStack, context.getSource().getSender());
                                     return 1;
                                 })
                         )
                         .executes(context -> {
-                            ItemStack itemStack = context.getArgument("item", GenericPlantType.class).getItemStack(1);
+                            ItemStack itemStack = context.getArgument("item", PlantItem.class).newItem(1);
                             giveSender(itemStack, context.getSource().getSender());
                             return 1;
                         })

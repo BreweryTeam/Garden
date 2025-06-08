@@ -1,0 +1,8 @@
+{
+  "display_name": "<#6f2da8>Grape",
+  "texture_base64": "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODRjZWRiOTY4NjQ1ZTI0M2U1YWRhZWIxODY4Njk2YTY3M2I5MDdhNjc4NDE4ODA3MWI2M2QxZmE5Y2Q3YjUifX19",
+  "growth_stages": 3,
+  "approximate_growth_time": "10m",
+  "fruit_placement" : "adjacent",
+  "seed_material" : "cocoa_beans"
+}

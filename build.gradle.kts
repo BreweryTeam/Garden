@@ -31,6 +31,8 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.30")
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("eu.okaeri:okaeri-configs-yaml-bukkit:5.0.8")
+    implementation("dev.thorinwasher.schem:schem-reader:1.0.0")
+
     compileOnly("org.xerial:sqlite-jdbc:3.47.2.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
@@ -70,7 +72,10 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.21.4")
+        minecraftVersion("1.21.5")
+        downloadPlugins {
+            modrinth("worldedit", "DlD8WKr9")
+        }
     }
 }
 
@@ -98,7 +103,7 @@ hangarPublish {
         platforms {
             register(Platforms.PAPER) {
                 jar.set(tasks.jar.flatMap { it.archiveFile })
-                platformVersions.set(listOf("1.21.3", "1.21.4"))
+                platformVersions.set(listOf("1.21.5"))
             }
         }
         changelog.set(readChangeLog())
@@ -112,7 +117,7 @@ modrinth {
     versionType.set("release")
     uploadFile.set(tasks.jar)
     loaders.addAll("paper", "purpur", "folia")
-    gameVersions.addAll("1.21.3", "1.21.4")
+    gameVersions.addAll("1.21.5")
     changelog.set(readChangeLog())
 }
 

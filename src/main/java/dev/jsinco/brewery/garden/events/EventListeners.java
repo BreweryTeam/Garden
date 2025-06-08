@@ -1,16 +1,13 @@
 package dev.jsinco.brewery.garden.events;
 
 import dev.jsinco.brewery.garden.BreweryGarden;
-import dev.jsinco.brewery.garden.GardenRegistry;
+import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
-import dev.jsinco.brewery.garden.constants.PlantPart;
-import dev.jsinco.brewery.garden.constants.PlantType;
-import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
-import dev.jsinco.brewery.garden.objects.GardenPlant;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
-import dev.jsinco.brewery.garden.utility.MessageUtil;
+import dev.jsinco.brewery.garden.plant.GardenPlant;
+import dev.jsinco.brewery.garden.plant.PlantType;
+import dev.jsinco.brewery.garden.plant.Seeds;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -27,6 +24,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 public class EventListeners implements Listener {
 
@@ -34,10 +32,10 @@ public class EventListeners implements Listener {
 
 
     private final BreweryGardenConfig config = BreweryGarden.getInstance().getPluginConfiguration();
-    private final GardenRegistry gardenRegistry;
+    private final PlantRegistry gardenRegistry;
     private final GardenPlantDataType gardenPlantDataType;
 
-    public EventListeners(GardenRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType) {
+    public EventListeners(PlantRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType) {
         this.gardenRegistry = gardenRegistry;
         this.gardenPlantDataType = gardenPlantDataType;
     }
@@ -60,35 +58,11 @@ public class EventListeners implements Listener {
         }
         Block block = event.getBlock();
         if (config.getValidSeedDropBlocks().contains(block.getType()) && RANDOM.nextInt(100) <= config.getSeedSpawnChance()) {
-            List<PlantTypeSeeds> seedsList = PlantTypeSeeds.values();
-            // Drop a seed
-            block.getWorld().dropItemNaturally(block.getLocation(),
-                    seedsList.get(RANDOM.nextInt(seedsList.size())).getItemStack(1));
-        } else if (PlantType.isPlayerSkullBlock(block)) {
-            PlantType plantType = PlantType.getPlantType(block);
-            event.setDropItems(false);
-            block.getWorld().dropItemNaturally(block.getLocation(), plantType.getItemStack(1));
+            // TODO drop seed
         }
-
-        GardenPlant gardenPlant = gardenRegistry.getByLocation(block);
-        if (gardenPlant == null) {
-            return;
-        }
-
-        // GardenPlant#isValid won't work here. Block's material type won't update until after this event has finished firing.
-        Material itemMaterial = event.getPlayer().getInventory().getItemInMainHand().getType();
-        if (block.getType() == Material.PLAYER_HEAD) { // Just gonna do this for now
-            if (itemMaterial != Material.SHEARS) {
-                MessageUtil.sendMessage(event.getPlayer(), "&rThis plant needs to be interacted with &6shears &rto be obtained.");
-            }
-            event.setCancelled(true);
-        } else {
-            gardenRegistry.unregisterPlant(gardenPlant);
-            gardenPlantDataType.remove(gardenPlant);
-        }
+        // TODO: add unregistration of structure
     }
 
-    // TODO: I'm not going to put debug statements, gonna need IJ debugger for this test
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Block block = event.getClickedBlock();
@@ -109,7 +83,16 @@ public class EventListeners implements Listener {
         }
         if (PlantType.isPlant(event.getItemInHand())) {
             PlantType plantType = PlantType.getPlantType(event.getItemInHand());
-            plantType.setDataOnPlayerSkullBlock(event.getBlock());
+            String track = plantType.getRandomTrack();
+            GardenPlant gardenPlant = new GardenPlant(
+                    UUID.randomUUID(),
+                    plantType,
+                    plantType.newStructure(event.getBlock().getLocation(), 0, track),
+                    track,
+                    0
+            );
+            gardenRegistry.registerPlant(gardenPlant);
+            gardenPlantDataType.insert(gardenPlant);
         }
     }
 
@@ -125,33 +108,22 @@ public class EventListeners implements Listener {
     }
 
     private void handlePlantShearing(ItemStack itemInHand, Block clickedBlock) {
-        if (itemInHand == null || itemInHand.getType() != Material.SHEARS) {
-            return;
-        }
-
-        Location clickedLocation = clickedBlock.getLocation();
-
-        GardenPlant gardenPlant = gardenRegistry.getByLocation(clickedBlock);
-        if (gardenPlant == null || gardenPlant.getPlantPart(clickedLocation) != PlantPart.TOP || !gardenPlant.isValid()) {
-            return;
-        }
-        gardenPlant.resetGrowthStage(true);
-        clickedLocation.getWorld().playSound(clickedLocation, Sound.ENTITY_SHEEP_SHEAR, 1.0f, 1.0f);
+        //TODO
     }
 
     private boolean handleSeedPlacement(ItemStack itemInHand, Block clickedBlock) {
-        if (!PlantTypeSeeds.isSeeds(itemInHand)) {
+        if (!Seeds.isSeeds(itemInHand)) {
             return false;
         }
 
         Location location = clickedBlock.getLocation().add(0, 1, 0); // Need the block above
 
-        PlantTypeSeeds seeds = PlantTypeSeeds.getPlantSeedsType(itemInHand);
+        Seeds seeds = Seeds.getSeeds(itemInHand);
         if (seeds == null) {
             return false;
         }
         // Create a new GardenPlant at the location
-        GardenPlant gardenPlant = new GardenPlant(seeds.getParent(), location);
+        GardenPlant gardenPlant = new GardenPlant(seeds.plantType(), location);
         gardenRegistry.registerPlant(gardenPlant);
         gardenPlantDataType.insert(gardenPlant);
 

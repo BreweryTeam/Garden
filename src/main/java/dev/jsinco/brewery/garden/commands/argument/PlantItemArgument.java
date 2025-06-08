@@ -7,9 +7,10 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import dev.jsinco.brewery.garden.constants.GenericPlantType;
-import dev.jsinco.brewery.garden.constants.PlantType;
-import dev.jsinco.brewery.garden.constants.PlantTypeSeeds;
+import dev.jsinco.brewery.garden.GardenRegistry;
+import dev.jsinco.brewery.garden.plant.Fruit;
+import dev.jsinco.brewery.garden.plant.PlantItem;
+import dev.jsinco.brewery.garden.plant.Seeds;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
 import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -20,24 +21,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class GenericPlantTypeArgument implements CustomArgumentType.Converted<GenericPlantType, String> {
+public class PlantItemArgument implements CustomArgumentType.Converted<PlantItem, String> {
     private static final DynamicCommandExceptionType ERROR_ILLEGAL_ARGUMENT = new DynamicCommandExceptionType(invalidArgument ->
             MessageComponentSerializer.message().serialize(MiniMessage.miniMessage().deserialize("Illegal argument <argument>", Placeholder.unparsed("argument", invalidArgument.toString())))
     );
-    private final Map<String, GenericPlantType> items = new HashMap<>();
+    private final Map<String, PlantItem> items = new HashMap<>();
 
     {
-        for (var plant : PlantType.values()) {
-            items.put(plant.name().toLowerCase(), plant);
-        }
-        for (var seed : PlantTypeSeeds.values()) {
-            items.put(seed.name().toLowerCase(), seed);
+        for (var plant : GardenRegistry.PLANT_TYPE.values()) {
+            Seeds seeds = plant.newSeeds();
+            items.put(seeds.simpleName(), seeds);
+            Fruit fruit = plant.newFruit();
+            items.put(fruit.simpleName(), fruit);
         }
     }
 
     @Override
-    public GenericPlantType convert(String string) throws CommandSyntaxException {
-        GenericPlantType plantType = items.get(string);
+    public PlantItem convert(String string) throws CommandSyntaxException {
+        PlantItem plantType = items.get(string);
         if (plantType == null) {
             throw ERROR_ILLEGAL_ARGUMENT.create(string);
         }
