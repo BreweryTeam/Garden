@@ -24,7 +24,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 public class EventListeners implements Listener {
 
@@ -81,16 +80,13 @@ public class EventListeners implements Listener {
         if (isBlacklistedWorld(event.getBlock().getLocation())) {
             return;
         }
-        if (PlantType.isPlant(event.getItemInHand())) {
-            PlantType plantType = PlantType.getPlantType(event.getItemInHand());
-            String track = plantType.getRandomTrack();
+        if (Seeds.isSeeds(event.getItemInHand())) {
+            PlantType plantType = Seeds.getSeeds(event.getItemInHand()).plantType();
             GardenPlant gardenPlant = new GardenPlant(
-                    UUID.randomUUID(),
                     plantType,
-                    plantType.newStructure(event.getBlock().getLocation(), 0, track),
-                    track,
-                    0
+                    event.getBlock().getLocation()
             );
+            gardenPlant.getStructure().paste();
             gardenRegistry.registerPlant(gardenPlant);
             gardenPlantDataType.insert(gardenPlant);
         }
@@ -126,6 +122,7 @@ public class EventListeners implements Listener {
         GardenPlant gardenPlant = new GardenPlant(seeds.plantType(), location);
         gardenRegistry.registerPlant(gardenPlant);
         gardenPlantDataType.insert(gardenPlant);
+        gardenPlant.getStructure().paste();
 
         itemInHand.setAmount(itemInHand.getAmount() - 1);
         location.getWorld().playSound(location, Sound.BLOCK_GRASS_PLACE, 1.0f, 1.0f);

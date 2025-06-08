@@ -150,8 +150,7 @@ public record PlantType(String displayName, String skinBase64, int stages,
     public Seeds newSeeds() {
         return new Seeds(
                 this.key().getKey() + "_seeds",
-                this,
-                this.seedMaterial
+                this
         );
     }
 

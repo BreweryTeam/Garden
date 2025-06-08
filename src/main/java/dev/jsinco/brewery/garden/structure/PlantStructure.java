@@ -26,6 +26,9 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
     public void paste() {
         World world = Bukkit.getWorld(worldUuid);
         schematic.apply(transformation, (vector3i, blockData) -> {
+            if (blockData.getMaterial().isAir()) {
+                return;
+            }
             world.setBlockData(new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z), blockData);
         });
     }

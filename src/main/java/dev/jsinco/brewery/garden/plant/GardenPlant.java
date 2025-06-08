@@ -44,6 +44,7 @@ public class GardenPlant {
         this.structure.remove();
         registry.unregisterPlant(this);
         this.structure = type.newStructure(this.structure.origin(), this.age, track);
+        this.structure.paste();
         registry.registerPlant(this);
     }
 }
