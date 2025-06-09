@@ -1,14 +1,20 @@
 package dev.jsinco.brewery.garden.plant;
 
+import dev.jsinco.brewery.garden.GardenRegistry;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.FoodProperties;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
+import io.papermc.paper.persistence.PersistentDataContainerView;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockType;
+import org.bukkit.block.Skull;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -34,6 +40,7 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
         ItemMeta meta = item.getItemMeta();
         meta.lore(List.of(Component.text("A sweet fruit").color(NamedTextColor.DARK_GRAY)));
         PersistentDataContainer persistentDataContainer = meta.getPersistentDataContainer();
+        persistentDataContainer.set(ITEM_TYPE_KEY, PersistentDataType.STRING, itemType().name());
         persistentDataContainer.set(PLANT_TYPE_KEY, PersistentDataType.STRING, plantType.key().toString());
         persistentDataContainer.set(TBP_TAG, PersistentDataType.STRING, "garden:" + plantType.key());
         persistentDataContainer.set(TBP_SCORE, PersistentDataType.DOUBLE, 1D);
@@ -48,11 +55,44 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
     }
 
     public static boolean isFruit(ItemStack item) {
-        return false; //TODO
+        PersistentDataContainerView view = item.getPersistentDataContainer();
+        return view.has(ITEM_TYPE_KEY) && view.get(ITEM_TYPE_KEY, PersistentDataType.STRING).equals(GardenItemType.FRUIT.name());
     }
 
     @Nullable
-    public static Seeds getFruit(ItemStack item) {
-        return null; // TODO
+    public static Fruit getFruit(ItemStack item) {
+        if (!isFruit(item)) {
+            return null;
+        }
+        PersistentDataContainerView view = item.getPersistentDataContainer();
+        if (!view.has(PLANT_TYPE_KEY)) {
+            return null;
+        }
+        PlantType type = GardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(view.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
+        if (type == null) {
+            return null;
+        }
+        return type.newFruit();
+    }
+
+    public void placeFruit(Block relative, BlockFace facing) {
+        Skull skull;
+        if (facing == BlockFace.UP) {
+            skull = (Skull) BlockType.PLAYER_HEAD.createBlockData().createBlockState();
+        } else {
+            skull = (Skull) BlockType.PLAYER_WALL_HEAD.createBlockData(wallHead -> wallHead.setFacing(facing)).createBlockState();
+        }
+        skull.setPlayerProfile(plantType.getPlayerProfile());
+        skull.getPersistentDataContainer().set(PLANT_TYPE_KEY, PersistentDataType.STRING, plantType.key().toString());
+        skull.copy(relative.getLocation()).update(true);
+    }
+
+    @Nullable
+    public static PlantType getPlantType(Block block) {
+        if (block.getType() != Material.PLAYER_HEAD) return null;
+        Skull skull = (Skull) block.getState();
+        String key = skull.getPersistentDataContainer().get(PLANT_TYPE_KEY, PersistentDataType.STRING);
+        if (key == null) return null;
+        return GardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(key));
     }
 }

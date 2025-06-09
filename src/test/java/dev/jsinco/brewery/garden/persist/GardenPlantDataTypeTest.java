@@ -45,7 +45,7 @@ class GardenPlantDataTypeTest {
         dataType.insert(gardenPlant);
         checkEquals(gardenPlant, dataType.fetch(world).get(0));
         assertEquals(1, dataType.fetch(world).size());
-        gardenPlant.incrementGrowthStage(1, BreweryGarden.getGardenRegistry());
+        gardenPlant.incrementGrowthStage(1, BreweryGarden.getGardenRegistry(), BreweryGarden.getInstance().getGardenPlantDataType());
         dataType.update(gardenPlant);
         checkEquals(gardenPlant, dataType.fetch(world).get(0));
         assertEquals(1, dataType.fetch(world).size());

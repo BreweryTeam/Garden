@@ -50,38 +50,10 @@ public record PlantType(String displayName, String skinBase64, int stages,
         return builder.build();
     }
 
-    public void setSkullTexture(Block block) { // Think you can do this through the DataComponent API, but I'm in a rush to test this.
-        Skull skull = (Skull) block.getState();
-        skull.setPlayerProfile(this.getPlayerProfile());
-        skull.update();
-    }
-
     public PlayerProfile getPlayerProfile() {
         PlayerProfile profile = Bukkit.createProfile(CONSTANT_UUID);
         profile.getProperties().add(new ProfileProperty("textures", skinBase64));
         return profile;
-    }
-
-    public static boolean isPlant(ItemStack item) {
-        if (item == null) return false;
-        return item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(PLANT_TYPE_KEY, PersistentDataType.STRING);
-    }
-
-    @Nullable
-    public static PlantType getPlantType(ItemStack item) {
-        if (!isPlant(item)) return null;
-        String key = item.getItemMeta().getPersistentDataContainer().get(PLANT_TYPE_KEY, PersistentDataType.STRING);
-        if (key == null) return null;
-        return GardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(key));
-    }
-
-    @Nullable
-    public static PlantType getPlantType(Block block) {
-        if (block.getType() != Material.PLAYER_HEAD) return null;
-        Skull skull = (Skull) block.getState();
-        String key = skull.getPersistentDataContainer().get(PLANT_TYPE_KEY, PersistentDataType.STRING);
-        if (key == null) return null;
-        return GardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(key));
     }
 
     public PlantStructure newStructure(Location bottomLocation, int age, String track) {

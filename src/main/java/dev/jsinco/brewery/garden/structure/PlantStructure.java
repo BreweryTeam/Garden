@@ -18,6 +18,9 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
         List<Location> locations = new ArrayList<>();
         World world = Bukkit.getWorld(worldUuid);
         schematic.apply(transformation, (vector3i, blockData) -> {
+            if (blockData.getMaterial().isAir()) {
+                return;
+            }
             locations.add(new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z));
         });
         return locations;
@@ -36,6 +39,9 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
     public void remove() {
         World world = Bukkit.getWorld(worldUuid);
         schematic.apply(transformation, (vector3i, blockData) -> {
+            if (blockData.getMaterial().isAir()) {
+                return;
+            }
             Location location = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
             if (location.getBlock().getType() == blockData.getMaterial()) {
                 location.getBlock().setType(Material.AIR);
