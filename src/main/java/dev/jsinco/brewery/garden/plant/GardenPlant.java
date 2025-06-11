@@ -58,7 +58,7 @@ public class GardenPlant {
         if (!newStructure.locations().stream()
                 .map(Location::getBlock)
                 .map(Block::getType)
-                .allMatch(Material::isAir)
+                .allMatch(material -> material.isAir() || Tag.REPLACEABLE_BY_TREES.isTagged(material))
         ) {
             this.structure.paste();
             return;

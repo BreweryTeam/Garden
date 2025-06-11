@@ -1,10 +1,7 @@
 package dev.jsinco.brewery.garden.structure;
 
 import dev.thorinwasher.schem.Schematic;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
 
@@ -37,7 +34,7 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
             vector3i.sub(offset);
             Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
             Material blockToReplaceType = posToReplace.getBlock().getType();
-            if (blockToReplaceType != Material.FLOWERING_AZALEA_LEAVES && !blockToReplaceType.isAir()) {
+            if (!Tag.REPLACEABLE_BY_TREES.isTagged(blockToReplaceType) && !blockToReplaceType.isAir()) {
                 return;
             }
             world.setBlockData(posToReplace, blockData);
