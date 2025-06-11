@@ -50,6 +50,9 @@ public class GardenPlant {
     }
 
     public void setGrowthStage(int growthStage, PlantRegistry registry, GardenPlantDataType dataType) {
+        if (!structure.origin().isChunkLoaded()) {
+            return;
+        }
         this.age = growthStage;
         this.structure.remove();
         registry.unregisterPlant(this);
@@ -60,7 +63,9 @@ public class GardenPlant {
     }
 
     public void bloom() {
-        // TODO don't load chunks
+        if (!structure.origin().isChunkLoaded()) {
+            return;
+        }
         for (Location location : this.structure.locations()) {
             Block block = location.getBlock();
             if (!Tag.LEAVES.isTagged(block.getType())) {
@@ -68,17 +73,17 @@ public class GardenPlant {
             }
             if (RANDOM.nextBoolean()) {
                 block.setBlockData(
-                        BlockType.FLOWERING_AZALEA_LEAVES.createBlockData(blockData -> {
-                            blockData.setPersistent(true);
-                        })
+                        BlockType.FLOWERING_AZALEA_LEAVES.createBlockData()
                 );
+                this.bloomed = true;
             }
         }
-        this.bloomed = true;
     }
 
     public void placeFruits() {
-        // TODO don't load chunks
+        if (!structure.origin().isChunkLoaded()) {
+            return;
+        }
         Fruit fruit = type.newFruit();
         for (Location location : this.structure.locations()) {
             Block block = location.getBlock();

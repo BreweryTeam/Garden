@@ -35,7 +35,12 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
                 return;
             }
             vector3i.sub(offset);
-            world.setBlockData(new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z), blockData);
+            Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
+            Material blockToReplaceType = posToReplace.getBlock().getType();
+            if (blockToReplaceType != Material.FLOWERING_AZALEA_LEAVES && !blockToReplaceType.isAir()) {
+                return;
+            }
+            world.setBlockData(posToReplace, blockData);
         });
     }
 
