@@ -53,11 +53,20 @@ public class GardenPlant {
         if (!structure.origin().isChunkLoaded()) {
             return;
         }
-        this.age = growthStage;
         this.structure.remove();
+        PlantStructure newStructure = type.newStructure(this.structure.origin(), this.age + 1, track);
+        if (!newStructure.locations().stream()
+                .map(Location::getBlock)
+                .map(Block::getType)
+                .allMatch(Material::isAir)
+        ) {
+            this.structure.paste();
+            return;
+        }
+        this.age = growthStage;
         registry.unregisterPlant(this);
-        this.structure = type.newStructure(this.structure.origin(), this.age, track);
-        this.structure.paste();
+        newStructure.paste();
+        this.structure = newStructure;
         registry.registerPlant(this);
         dataType.update(this);
     }
