@@ -31,6 +31,7 @@ public class GardenPlant {
     private final String track;
     private int age;
     private static final Random RANDOM = new Random();
+    private boolean bloomed = false;
 
     public GardenPlant(PlantType type, Location location) {
         this.id = UUID.randomUUID();
@@ -41,7 +42,7 @@ public class GardenPlant {
     }
 
     public boolean isFullyGrown() {
-        return this.age >= config.getFullyGrown();
+        return this.age >= type.stages() - 1;
     }
 
     public void incrementGrowthStage(int amount, PlantRegistry registry, GardenPlantDataType dataType) {
@@ -73,6 +74,7 @@ public class GardenPlant {
                 );
             }
         }
+        this.bloomed = true;
     }
 
     public void placeFruits() {
@@ -94,5 +96,10 @@ public class GardenPlant {
             fruit.placeFruit(block.getRelative(chosenRelative), chosenRelative);
         }
         this.structure.paste(); // Clear all bloom blocks
+        bloomed = false;
+    }
+
+    public boolean hasBloomed() {
+        return bloomed;
     }
 }

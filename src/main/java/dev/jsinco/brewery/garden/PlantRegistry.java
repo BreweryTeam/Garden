@@ -1,7 +1,6 @@
 package dev.jsinco.brewery.garden;
 
 import dev.jsinco.brewery.garden.plant.GardenPlant;
-import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -9,13 +8,9 @@ import org.bukkit.util.BlockVector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class PlantRegistry {
-    @Getter
     private final Map<UUID, Map<BlockVector, GardenPlant>> gardenPlants = new HashMap<>();
     private final Map<UUID, GardenPlant> gardenPlantIds = new HashMap<>();
 
@@ -59,5 +54,9 @@ public class PlantRegistry {
                 gardenPlantIds.remove(gardenPlant.getId());
             }
         }
+    }
+
+    public Collection<GardenPlant> getPlants() {
+        return gardenPlantIds.values();
     }
 }

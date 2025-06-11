@@ -84,7 +84,8 @@ public class GardenPlantDataType {
                                 plantType,
                                 plantType.newStructure(origin, age, track),
                                 track,
-                                age
+                                age,
+                                false
                         )
                 );
             }
