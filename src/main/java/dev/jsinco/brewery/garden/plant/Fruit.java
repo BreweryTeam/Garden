@@ -89,7 +89,7 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
 
     @Nullable
     public static PlantType getPlantType(Block block) {
-        if (block.getType() != Material.PLAYER_HEAD) return null;
+        if (block.getType() != Material.PLAYER_HEAD && block.getType() != Material.PLAYER_WALL_HEAD) return null;
         Skull skull = (Skull) block.getState();
         String key = skull.getPersistentDataContainer().get(PLANT_TYPE_KEY, PersistentDataType.STRING);
         if (key == null) return null;

@@ -4,6 +4,7 @@ import dev.jsinco.brewery.garden.BreweryGarden;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
+import dev.jsinco.brewery.garden.plant.Fruit;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.Seeds;
@@ -108,10 +109,12 @@ public class EventListeners implements Listener {
         if (itemInHand == null || itemInHand.getType() != Material.SHEARS) {
             return;
         }
-
-        Location clickedLocation = clickedBlock.getLocation();
-        
-        clickedLocation.getWorld().playSound(clickedLocation, Sound.ENTITY_SHEEP_SHEAR, 1.0f, 1.0f);
+        PlantType plantType = Fruit.getPlantType(clickedBlock);
+        if (plantType == null) {
+            return;
+        }
+        clickedBlock.setType(Material.AIR);
+        clickedBlock.getWorld().dropItem(clickedBlock.getLocation().toCenterLocation(), plantType.newFruit().newItem(1));
     }
 
     private boolean handleSeedPlacement(ItemStack itemInHand, Block clickedBlock) {
