@@ -8,6 +8,7 @@ import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.Seeds;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -104,7 +105,13 @@ public class EventListeners implements Listener {
     }
 
     private void handlePlantShearing(ItemStack itemInHand, Block clickedBlock) {
-        //TODO
+        if (itemInHand == null || itemInHand.getType() != Material.SHEARS) {
+            return;
+        }
+
+        Location clickedLocation = clickedBlock.getLocation();
+        
+        clickedLocation.getWorld().playSound(clickedLocation, Sound.ENTITY_SHEEP_SHEAR, 1.0f, 1.0f);
     }
 
     private boolean handleSeedPlacement(ItemStack itemInHand, Block clickedBlock) {
