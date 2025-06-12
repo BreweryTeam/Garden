@@ -85,8 +85,14 @@ bukkit {
     apiVersion = "1.21"
     authors = listOf("Jsinco", "Thorinwasher")
     name = rootProject.name
-    commands {
-        register("garden")
+    permissions {
+        register("garden.command") {
+            children = listOf(
+                "garden.command.reload",
+                "garden.command.give",
+                "garden.command.plant"
+            )
+        }
     }
 }
 
