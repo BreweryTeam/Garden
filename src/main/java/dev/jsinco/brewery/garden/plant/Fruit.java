@@ -42,7 +42,7 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
         PersistentDataContainer persistentDataContainer = meta.getPersistentDataContainer();
         persistentDataContainer.set(ITEM_TYPE_KEY, PersistentDataType.STRING, itemType().name());
         persistentDataContainer.set(PLANT_TYPE_KEY, PersistentDataType.STRING, plantType.key().toString());
-        persistentDataContainer.set(TBP_TAG, PersistentDataType.STRING, "garden:" + plantType.key());
+        persistentDataContainer.set(TBP_TAG, PersistentDataType.STRING, plantType.key().toString());
         persistentDataContainer.set(TBP_SCORE, PersistentDataType.DOUBLE, 1D);
         persistentDataContainer.set(TBP_DISPLAY_NAME, PersistentDataType.STRING, plantType.displayName());
         item.setItemMeta(meta);
