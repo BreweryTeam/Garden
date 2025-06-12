@@ -2,7 +2,7 @@
   "display_name": "<red>Raspberry",
   "texture_base64": "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDFkODZhYmVlNzM1MDdkNzU3MzJiOTYxMGY0M2ZhOTJhNzMzNWVhNDE3NjI5OTc4NDg0MmJkYzFmZTBjMzU3YSJ9fX0=",
   "growth_stages": 2,
-  "approximate_growth_time": "10m",
+  "approximate_growth_time": "5m",
   "fruit_placement" : "above",
   "seed_material" : "melon_seeds"
 }

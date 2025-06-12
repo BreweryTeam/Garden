@@ -2,7 +2,7 @@
   "display_name": "<#791826>Cranberry",
   "texture_base64": "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWI0N2UwNjc3MzY3NzgwYjc2NTNkY2ViZjhjZjg4YmViNGRhYzk0Yzk4ZTY0NDYzNzVjYjVlYzhlOWEzOGRiNCJ9fX0=",
   "growth_stages": 2,
-  "approximate_growth_time": "10m",
+  "approximate_growth_time": "5m",
   "fruit_placement" : "above",
   "seed_material" : "melon_seeds"
 }
