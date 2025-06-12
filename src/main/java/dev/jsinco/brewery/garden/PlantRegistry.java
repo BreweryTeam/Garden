@@ -29,10 +29,13 @@ public class PlantRegistry {
 
     public void registerPlant(GardenPlant plant) {
         UUID worldUuid = plant.getStructure().worldUuid();
+        System.out.println(plant.getStructure().transformation());
+        System.out.println(plant.getStructure().offset());
         for (Location location : plant.getStructure().locations()) {
             gardenPlants.computeIfAbsent(worldUuid, ignored -> new HashMap<>()).put(
                     location.toVector().toBlockVector(), plant
             );
+            System.out.println(location);
         }
         gardenPlantIds.put(plant.getId(), plant);
     }

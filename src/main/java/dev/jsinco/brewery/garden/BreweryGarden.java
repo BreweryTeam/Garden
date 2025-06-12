@@ -28,16 +28,10 @@ import java.util.List;
 
 public class BreweryGarden extends JavaPlugin {
 
-    // TODO:
-    //  I'd like to swap to a schematic based system for plants in this addon eventually.
-    //  Having fruit trees would be a really nice feature. Additionally, I want to expand the config
-    //  of this addon eventually.
-
     @Getter
     private static BreweryGarden instance;
     @Getter
     private static PlantRegistry gardenRegistry;
-    private static int taskID;
     @Getter
     private BreweryGardenConfig pluginConfiguration;
     private Database database;
@@ -75,11 +69,6 @@ public class BreweryGarden extends JavaPlugin {
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
         Bukkit.getScheduler().runTaskTimer(this, new GrowthManager(gardenRegistry, gardenPlantDataType)::tick, 0, 200);
-    }
-
-    @Override
-    public void onDisable() {
-        Bukkit.getScheduler().cancelTask(taskID);
     }
 
     public void reload() {

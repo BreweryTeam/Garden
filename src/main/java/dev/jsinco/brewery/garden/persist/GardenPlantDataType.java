@@ -9,6 +9,7 @@ import dev.jsinco.brewery.garden.utility.FileUtil;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.joml.Matrix3d;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -78,11 +79,12 @@ public class GardenPlantDataType {
                 Location origin = new Location(world, resultSet.getInt("origin_x"), resultSet.getInt("origin_y"), resultSet.getInt("origin_z"));
                 int age = resultSet.getInt("age");
                 String track = resultSet.getString("track");
+                Matrix3d transformation = Encoder.deserializeTransformation(resultSet.getString("transformation"));
                 output.add(
                         new GardenPlant(
                                 Encoder.asUuid(resultSet.getBytes("id")),
                                 plantType,
-                                plantType.newStructure(origin, age, track),
+                                plantType.getStructure(origin, age, track, transformation),
                                 track,
                                 age,
                                 false

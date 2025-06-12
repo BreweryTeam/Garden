@@ -138,4 +138,11 @@ public record PlantType(String displayName, String skinBase64, int stages,
                 this
         );
     }
+
+    public PlantStructure getStructure(Location origin, int age, String track, Matrix3d transformation) {
+        Schematic schematic = structures.get(track).get(age);
+        Vector3i size = schematic.size(transformation);
+        Vector3i offset = new Vector3i(size.x() / 2, 0, size.z() / 2);
+        return new PlantStructure(schematic, origin.getBlockX(), origin.getBlockY(), origin.getBlockZ(), transformation, origin.getWorld().getUID(), offset);
+    }
 }

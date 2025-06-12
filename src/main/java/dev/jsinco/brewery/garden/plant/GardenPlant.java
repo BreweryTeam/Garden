@@ -55,7 +55,7 @@ public class GardenPlant {
             return;
         }
         this.structure.remove();
-        PlantStructure newStructure = type.newStructure(this.structure.origin(), this.age + 1, track);
+        PlantStructure newStructure = type.newStructure(this.structure.origin(), growthStage, track);
         if (!newStructure.locations().stream()
                 .map(Location::getBlock)
                 .map(Block::getType)

@@ -96,14 +96,12 @@ public class BlockEventListener implements Listener {
             Block possibleFruit = block.getRelative(blockFace);
             PlantType plantType = Fruit.getPlantType(possibleFruit);
             if (plantType == null) {
-                System.out.println(possibleFruit.getBlockData());
                 continue;
             }
             if (possibleFruit instanceof Skull && blockFace != BlockFace.UP) {
                 continue;
             }
             if (possibleFruit instanceof WallSkull wallSkull && blockFace != wallSkull.getFacing()) {
-                System.out.println("ping");
                 continue;
             }
             possibleFruit.setType(Material.AIR);
