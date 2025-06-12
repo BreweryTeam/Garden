@@ -1,4 +1,4 @@
-package dev.jsinco.brewery.garden.events;
+package dev.jsinco.brewery.garden.listener;
 
 import dev.jsinco.brewery.garden.BreweryGarden;
 import dev.jsinco.brewery.garden.PlantRegistry;
@@ -8,6 +8,7 @@ import dev.jsinco.brewery.garden.plant.Fruit;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.Seeds;
+import dev.jsinco.brewery.garden.utility.WorldUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -16,9 +17,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
@@ -29,10 +27,9 @@ import java.util.Random;
 
 public class EventListeners implements Listener {
 
-    private static final Random RANDOM = new Random();
+    private BreweryGardenConfig config = BreweryGarden.getInstance().getPluginConfiguration();
 
 
-    private final BreweryGardenConfig config = BreweryGarden.getInstance().getPluginConfiguration();
     private final PlantRegistry gardenRegistry;
     private final GardenPlantDataType gardenPlantDataType;
 
@@ -41,33 +38,11 @@ public class EventListeners implements Listener {
         this.gardenPlantDataType = gardenPlantDataType;
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
-    public void onLeafDecay(LeavesDecayEvent event) {
-        if (isBlacklistedWorld(event.getBlock().getLocation())) {
-            return;
-        }
-        GardenPlant gardenPlant = gardenRegistry.getByLocation(event.getBlock());
-        if (gardenPlant != null) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onBlockBreak(BlockBreakEvent event) {
-        if (isBlacklistedWorld(event.getBlock().getLocation())) {
-            return;
-        }
-        Block block = event.getBlock();
-        if (config.getValidSeedDropBlocks().contains(block.getType()) && RANDOM.nextInt(100) <= config.getSeedSpawnChance()) {
-            // TODO drop seed
-        }
-        // TODO: add unregistration of structure
-    }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Block block = event.getClickedBlock();
-        if (block == null || isBlacklistedWorld(block.getLocation())) {
+        if (block == null || WorldUtil.isBlacklistedWorld(block.getLocation())) {
             return;
         }
 
@@ -77,22 +52,6 @@ public class EventListeners implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (isBlacklistedWorld(event.getBlock().getLocation())) {
-            return;
-        }
-        if (Seeds.isSeeds(event.getItemInHand())) {
-            PlantType plantType = Seeds.getSeeds(event.getItemInHand()).plantType();
-            GardenPlant gardenPlant = new GardenPlant(
-                    plantType,
-                    event.getBlock().getLocation()
-            );
-            gardenPlant.getStructure().paste();
-            gardenRegistry.registerPlant(gardenPlant);
-            gardenPlantDataType.insert(gardenPlant);
-        }
-    }
 
     @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
@@ -137,10 +96,5 @@ public class EventListeners implements Listener {
         itemInHand.setAmount(itemInHand.getAmount() - 1);
         location.getWorld().playSound(location, Sound.BLOCK_GRASS_PLACE, 1.0f, 1.0f);
         return true;
-    }
-
-
-    private boolean isBlacklistedWorld(Location location) {
-        return config.getBlacklistedWorlds().contains(location.getWorld().getName());
     }
 }

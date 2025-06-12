@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -115,5 +116,28 @@ public class GardenPlant {
 
     public boolean hasBloomed() {
         return bloomed;
+    }
+
+    public boolean isAlive() {
+        List<Location> lowest = new ArrayList<>();
+        int lowestY = Integer.MAX_VALUE;
+        boolean hasLeaf = false;
+        for (Location location : structure.locations()) {
+            if (Tag.LEAVES.isTagged(location.getBlock().getType())) {
+                hasLeaf = true;
+            }
+            if (location.getBlockY() < lowestY) {
+                lowestY = location.getBlockY();
+                lowest.clear();
+                lowest.add(location);
+            }
+            if (location.getBlockY() == lowestY) {
+                lowest.add(location);
+            }
+        }
+        return hasLeaf && !lowest.stream()
+                .map(Location::getBlock)
+                .map(Block::getType)
+                .allMatch(Material::isAir);
     }
 }

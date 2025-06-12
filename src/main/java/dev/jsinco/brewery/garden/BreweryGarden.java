@@ -3,7 +3,7 @@ package dev.jsinco.brewery.garden;
 import com.dre.brewery.recipe.PluginItem;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
-import dev.jsinco.brewery.garden.events.EventListeners;
+import dev.jsinco.brewery.garden.listener.EventListeners;
 import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.persist.Database;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
