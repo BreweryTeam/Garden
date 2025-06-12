@@ -32,7 +32,7 @@ public class PlantCommand {
     }
 
     private static ArgumentBuilder<CommandSourceStack, ?> growFruitsCommand() {
-        return Commands.literal("grow")
+        return Commands.literal("growfruits")
                 .executes(commandContext -> {
                     if (!(commandContext.getSource().getSender() instanceof Player player)) {
                         throw ERROR_ILLEGAL_SENDER.create();
