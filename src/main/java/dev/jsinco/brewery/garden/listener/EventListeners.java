@@ -1,6 +1,6 @@
 package dev.jsinco.brewery.garden.listener;
 
-import dev.jsinco.brewery.garden.BreweryGarden;
+import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
@@ -23,11 +23,10 @@ import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
-import java.util.Random;
 
 public class EventListeners implements Listener {
 
-    private BreweryGardenConfig config = BreweryGarden.getInstance().getPluginConfiguration();
+    private BreweryGardenConfig config = Garden.getInstance().getPluginConfiguration();
 
 
     private final PlantRegistry gardenRegistry;

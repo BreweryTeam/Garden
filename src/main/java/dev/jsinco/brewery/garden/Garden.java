@@ -26,10 +26,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-public class BreweryGarden extends JavaPlugin {
+public class Garden extends JavaPlugin {
 
     @Getter
-    private static BreweryGarden instance;
+    private static Garden instance;
     @Getter
     private static PlantRegistry gardenRegistry;
     @Getter

@@ -1,6 +1,6 @@
 package dev.jsinco.brewery.garden.plant;
 
-import dev.jsinco.brewery.garden.BreweryGarden;
+import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
@@ -24,7 +24,7 @@ import java.util.UUID;
 @ToString
 @AllArgsConstructor
 public class GardenPlant {
-    private static final BreweryGardenConfig config = BreweryGarden.getInstance().getPluginConfiguration();
+    private static final BreweryGardenConfig config = Garden.getInstance().getPluginConfiguration();
 
     private final UUID id;
     private final PlantType type;

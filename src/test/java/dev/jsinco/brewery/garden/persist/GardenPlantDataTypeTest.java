@@ -1,6 +1,6 @@
 package dev.jsinco.brewery.garden.persist;
 
-import dev.jsinco.brewery.garden.BreweryGarden;
+import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.GardenRegistry;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
@@ -33,7 +33,7 @@ class GardenPlantDataTypeTest {
 
     @BeforeEach
     void setup() {
-        @NotNull BreweryGarden garden = MockBukkit.load(BreweryGarden.class);
+        @NotNull Garden garden = MockBukkit.load(Garden.class);
         this.dataType = garden.getGardenPlantDataType();
         this.world = serverMock.addSimpleWorld("world");
     }
@@ -45,7 +45,7 @@ class GardenPlantDataTypeTest {
         dataType.insert(gardenPlant);
         checkEquals(gardenPlant, dataType.fetch(world).get(0));
         assertEquals(1, dataType.fetch(world).size());
-        gardenPlant.incrementGrowthStage(1, BreweryGarden.getGardenRegistry(), BreweryGarden.getInstance().getGardenPlantDataType());
+        gardenPlant.incrementGrowthStage(1, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
         dataType.update(gardenPlant);
         checkEquals(gardenPlant, dataType.fetch(world).get(0));
         assertEquals(1, dataType.fetch(world).size());

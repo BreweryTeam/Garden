@@ -1,7 +1,7 @@
 package dev.jsinco.brewery.garden.commands;
 
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import dev.jsinco.brewery.garden.BreweryGarden;
+import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.commands.subcomands.GiveCommand;
 import dev.jsinco.brewery.garden.commands.subcomands.PlantCommand;
 import dev.jsinco.brewery.garden.utility.MessageUtil;
@@ -18,7 +18,7 @@ public class GardenCommand {
                 .then(PlantCommand.command())
                 .then(Commands.literal("reload")
                         .executes(context -> {
-                            BreweryGarden.getInstance().reload();
+                            Garden.getInstance().reload();
                             return 1;
                         })
                         .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("garden.command.reload"))

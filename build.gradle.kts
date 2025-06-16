@@ -8,13 +8,12 @@ plugins {
     id("java")
     id("io.github.goooler.shadow") version "8.1.7"
     id("io.papermc.hangar-publish-plugin") version "0.1.2"
-    id("com.modrinth.minotaur") version "2.8.7"
     id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
     id("xyz.jpenilla.run-paper") version "2.3.0"
 }
 
 group = "dev.jsinco.brewery.garden"
-version = "4.0.0"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -48,13 +47,12 @@ tasks {
     }
 
     register("publishRelease") {
-        dependsOn(modrinth)
         finalizedBy("publishPluginPublicationToHangar")
 
         doLast {
             val webhook = DiscordWebhook(System.getenv("DISCORD_WEBHOOK") ?: return@doLast, false)
             webhook.message = "@everyone"
-            webhook.embedTitle = "BreweryGarden - v${project.version}"
+            webhook.embedTitle = "Garden - v${project.version}"
             webhook.embedDescription = readChangeLog()
             webhook.embedThumbnailUrl =
                 "https://cdn.modrinth.com/data/3TaOMjJ9/5e44a541ba38ce5d8567207a4b75183658756d57_96.webp"
@@ -80,7 +78,7 @@ tasks {
 }
 
 bukkit {
-    main = "dev.jsinco.brewery.garden.BreweryGarden"
+    main = "dev.jsinco.brewery.garden.Garden"
     foliaSupported = false
     apiVersion = "1.21"
     authors = listOf("Jsinco", "Thorinwasher")
@@ -114,17 +112,6 @@ hangarPublish {
         }
         changelog.set(readChangeLog())
     }
-}
-
-modrinth {
-    token.set(System.getenv("MODRINTH_TOKEN") ?: return@modrinth)
-    projectId.set(project.name.lowercase())
-    versionNumber.set(project.version.toString())
-    versionType.set("release")
-    uploadFile.set(tasks.jar)
-    loaders.addAll("paper", "purpur", "folia")
-    gameVersions.addAll("1.21.5")
-    changelog.set(readChangeLog())
 }
 
 fun readChangeLog(): String {

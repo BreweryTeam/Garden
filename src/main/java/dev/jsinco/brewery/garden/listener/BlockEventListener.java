@@ -1,6 +1,6 @@
 package dev.jsinco.brewery.garden.listener;
 
-import dev.jsinco.brewery.garden.BreweryGarden;
+import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.GardenRegistry;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
@@ -30,7 +30,7 @@ public class BlockEventListener implements Listener {
     private final PlantRegistry gardenRegistry;
     private static final Random RANDOM = new Random();
     private final GardenPlantDataType gardenPlantDataType;
-    private BreweryGardenConfig config = BreweryGarden.getInstance().getPluginConfiguration();
+    private BreweryGardenConfig config = Garden.getInstance().getPluginConfiguration();
     private static final List<BlockFace> FRUIT_FACES = List.of(BlockFace.UP, BlockFace.SOUTH, BlockFace.NORTH, BlockFace.WEST, BlockFace.EAST);
 
     public BlockEventListener(PlantRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType) {

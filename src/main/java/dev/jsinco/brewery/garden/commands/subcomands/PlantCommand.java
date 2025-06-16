@@ -4,7 +4,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import dev.jsinco.brewery.garden.BreweryGarden;
+import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.utility.MessageUtil;
@@ -49,7 +49,7 @@ public class PlantCommand {
         if (block == null) {
             throw ERROR_NO_PLANT_FOUND.create();
         }
-        PlantRegistry gardenRegistry = BreweryGarden.getGardenRegistry();
+        PlantRegistry gardenRegistry = Garden.getGardenRegistry();
         GardenPlant gardenPlant = gardenRegistry.getByLocation(block);
         if (gardenPlant == null) {
             throw ERROR_NO_PLANT_FOUND.create();
@@ -78,13 +78,13 @@ public class PlantCommand {
 
     private static ArgumentBuilder<CommandSourceStack, ?> setAgeCommand() {
         return Commands.literal("setage")
-                .then(Commands.argument("stage", IntegerArgumentType.integer(1, BreweryGarden.getInstance().getPluginConfiguration().getFullyGrown()))
+                .then(Commands.argument("stage", IntegerArgumentType.integer(1, Garden.getInstance().getPluginConfiguration().getFullyGrown()))
                         .executes(context -> {
                             if (!(context.getSource().getSender() instanceof Player player)) {
                                 throw ERROR_ILLEGAL_SENDER.create();
                             }
                             GardenPlant gardenPlant = getPlant(player, 32);
-                            gardenPlant.setGrowthStage(context.getArgument("stage", Integer.class), BreweryGarden.getGardenRegistry(), BreweryGarden.getInstance().getGardenPlantDataType());
+                            gardenPlant.setGrowthStage(context.getArgument("stage", Integer.class), Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
                             return 1;
                         }));
     }

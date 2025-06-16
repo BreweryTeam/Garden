@@ -1,12 +1,12 @@
 package dev.jsinco.brewery.garden.plant;
 
-import dev.jsinco.brewery.garden.BreweryGarden;
+import dev.jsinco.brewery.garden.Garden;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 
 public interface PlantItem {
-    NamespacedKey PLANT_TYPE_KEY = new NamespacedKey(BreweryGarden.getInstance(), "plant_type");
-    NamespacedKey ITEM_TYPE_KEY = new NamespacedKey(BreweryGarden.getInstance(), "item_type");
+    NamespacedKey PLANT_TYPE_KEY = new NamespacedKey(Garden.getInstance(), "plant_type");
+    NamespacedKey ITEM_TYPE_KEY = new NamespacedKey(Garden.getInstance(), "item_type");
 
     String simpleName();
 
