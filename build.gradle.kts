@@ -82,6 +82,7 @@ bukkit {
     foliaSupported = false
     apiVersion = "1.21"
     authors = listOf("Jsinco", "Thorinwasher")
+    contributors = listOf("fLip")
     name = rootProject.name
     permissions {
         register("garden.command") {
