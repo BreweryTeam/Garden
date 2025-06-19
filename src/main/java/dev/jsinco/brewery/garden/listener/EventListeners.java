@@ -17,6 +17,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
@@ -48,6 +49,13 @@ public class EventListeners implements Listener {
         handlePlantShearing(event.getItem(), block);
         if (event.getBlockFace() == BlockFace.UP && event.getAction().isRightClick() && config.getPlantableBlocks().contains(block.getType())) {
             event.setCancelled(handleSeedPlacement(event.getItem(), block));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerPlace(BlockPlaceEvent event) {
+        if (Seeds.isSeeds(event.getItemInHand())) {
+            event.setCancelled(true);
         }
     }
 
