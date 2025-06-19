@@ -84,7 +84,14 @@ public class GardenPlant {
         if (!structure.origin().isChunkLoaded()) {
             return;
         }
-        for (Location location : this.structure.locations()) {
+        if (structure.locations(blockData -> Tag.LEAVES.isTagged(blockData.getMaterial()))
+                .stream().map(Location::getBlock)
+                .flatMap(block -> type.fruitPlacement().vectors().stream().map(block::getRelative))
+                .anyMatch(block -> Fruit.getPlantType(block) != null)
+        ) {
+            return;
+        }
+        for (Location location : this.structure.locations(blockData -> Tag.LEAVES.isTagged(blockData.getMaterial()))) {
             Block block = location.getBlock();
             if (!Tag.LEAVES.isTagged(block.getType())) {
                 continue;
