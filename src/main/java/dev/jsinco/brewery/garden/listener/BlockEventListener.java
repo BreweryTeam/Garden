@@ -10,6 +10,7 @@ import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.Seeds;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -21,6 +22,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -67,11 +69,13 @@ public class BlockEventListener implements Listener {
         if (gardenPlant == null) {
             return;
         }
-        if (gardenPlant.isAlive()) {
-            return;
-        }
-        gardenRegistry.unregisterPlant(gardenPlant);
-        gardenPlantDataType.remove(gardenPlant);
+        Bukkit.getScheduler().runTask(Garden.getInstance(), () -> {
+            if (gardenPlant.isAlive()) {
+                return;
+            }
+            gardenRegistry.unregisterPlant(gardenPlant);
+            gardenPlantDataType.remove(gardenPlant);
+        });
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -88,6 +92,13 @@ public class BlockEventListener implements Listener {
             gardenPlant.getStructure().paste();
             gardenRegistry.registerPlant(gardenPlant);
             gardenPlantDataType.insert(gardenPlant);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onStructureGrow(StructureGrowEvent event) {
+        if (Garden.getGardenRegistry().getByLocation(event.getLocation().getBlock()) != null) {
+            event.setCancelled(true);
         }
     }
 
