@@ -1,18 +1,11 @@
 # BreweryGarden
 
-### This addon adds plantable seeds and fruits to BreweryX which can be used in recipes and cauldron ingredients.
+### Garden adds fruit trees and berry bushes to the game.
 
-As stated above, this addons adds plants to BreweryX. You can get plant seeds by breaking
-either `short grass` or `tall grass` blocks which are customizable in this addons 
-configuration (<ins>plugins/BreweryX/addons/BreweryGarden/config.yml</ins>).
+Firstly you need to find some seeds, they can be found in short grass or tall grass. To plant the seed, simply place it down on a grass block.
 
-You may also get seeds or plants manually via commands using `/breweryx garden give <args>`.
-
-Plants will grow similarly to normal Minecraft plants or crops.
-
-Data about plants will be saved directly to your assigned BreweryX DataManager (FlatFile, MongoDB, etc.)
-and can be accessed across servers if worlds are identical, and you're using an external database such as Mongo or MySQL.
+It takes time for plants to grow, you can see the progress of the plant growth as it grows in stages. After a while, the plant will be ready to bear fruits, which you can harvest using shears.
 
 ![Plants.png](images/Plants.png)
 
-#### You must be using BreweryX 3.4.5-SNAPSHOT or later to run this addon!
+The plugin has integrations with BreweryX and TheBrewingProject, and is currently mainly meant as an addition to those plugins, but it can still function on its own.
