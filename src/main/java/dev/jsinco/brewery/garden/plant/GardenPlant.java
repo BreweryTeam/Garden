@@ -1,5 +1,6 @@
 package dev.jsinco.brewery.garden.plant;
 
+import com.google.common.collect.ImmutableSet;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
@@ -15,10 +16,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @ToString
@@ -33,6 +31,16 @@ public class GardenPlant {
     private int age;
     private static final Random RANDOM = new Random();
     private boolean bloomed = false;
+    private static final Set<Material> DECORATIVE_PLANT_BLOCKS = compileDecorativePlantBlocks();
+
+    private static Set<Material> compileDecorativePlantBlocks() {
+        ImmutableSet.Builder<Material> builder = new ImmutableSet.Builder<>();
+        builder.addAll(Tag.BUTTONS.getValues());
+        builder.addAll(Tag.SLABS.getValues());
+        builder.addAll(Tag.TRAPDOORS.getValues());
+        builder.add(Material.MOSS_CARPET, Material.PINK_PETALS);
+        return builder.build();
+    }
 
     public GardenPlant(PlantType type, Location location) {
         this.id = UUID.randomUUID();
@@ -56,7 +64,7 @@ public class GardenPlant {
         }
         this.structure.remove();
         PlantStructure newStructure = type.newStructure(this.structure.origin(), growthStage, track);
-        if (!newStructure.locations().stream()
+        if (!newStructure.locations(blockData -> !DECORATIVE_PLANT_BLOCKS.contains(blockData.getMaterial())).stream()
                 .map(Location::getBlock)
                 .map(Block::getType)
                 .allMatch(material -> material.isAir() || Tag.REPLACEABLE_BY_TREES.isTagged(material))
