@@ -93,6 +93,7 @@ bukkit {
             )
         }
     }
+    softDepend = listOf("BreweryX")
 }
 
 java {
