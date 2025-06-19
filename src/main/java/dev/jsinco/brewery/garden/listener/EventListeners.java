@@ -76,7 +76,7 @@ public class EventListeners implements Listener {
     }
 
     private boolean handleSeedPlacement(ItemStack itemInHand, Block clickedBlock) {
-        if (!Seeds.isSeeds(itemInHand)) {
+        if (itemInHand == null || !Seeds.isSeeds(itemInHand)) {
             return false;
         }
 
