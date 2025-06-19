@@ -1,4 +1,4 @@
-# BreweryGarden
+# Garden
 
 ### Garden adds fruit trees and berry bushes to the game.
 
