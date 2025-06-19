@@ -19,14 +19,13 @@ import org.bukkit.block.data.type.WallSkull;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.block.*;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class BlockEventListener implements Listener {
     private final PlantRegistry gardenRegistry;
@@ -69,6 +68,38 @@ public class BlockEventListener implements Listener {
         if (gardenPlant == null) {
             return;
         }
+        checkAlive(gardenPlant);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockExplode(BlockExplodeEvent event) {
+        onMultiBlockDestroy(event.blockList());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityExplode(EntityExplodeEvent event) {
+        onMultiBlockDestroy(event.blockList());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPistonRetract(BlockPistonRetractEvent event) {
+        onMultiBlockDestroy(event.getBlocks());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+        onMultiBlockDestroy(event.getBlocks());
+    }
+
+    private void onMultiBlockDestroy(Collection<Block> blocks) {
+        Set<GardenPlant> plants = blocks.stream()
+                .map(gardenRegistry::getByLocation)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        plants.forEach(this::checkAlive);
+    }
+
+    private void checkAlive(GardenPlant gardenPlant) {
         Bukkit.getScheduler().runTask(Garden.getInstance(), () -> {
             if (gardenPlant.isAlive()) {
                 return;
