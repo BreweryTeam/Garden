@@ -11,6 +11,7 @@ import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.jsinco.brewery.garden.utility.FileUtil;
 import dev.jsinco.brewery.garden.utility.TimeUtil;
 import dev.thorinwasher.schem.Schematic;
+import dev.thorinwasher.schem.SchematicReadException;
 import dev.thorinwasher.schem.SchematicReader;
 import org.bukkit.*;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +21,7 @@ import org.joml.Vector3i;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.logging.Logger;
 
 
 public record PlantType(String displayName, String skinBase64, int stages,
@@ -73,28 +75,33 @@ public record PlantType(String displayName, String skinBase64, int stages,
         ImmutableList.Builder<PlantType> builder = new ImmutableList.Builder<>();
         for (JsonElement item : items) {
             String name = item.getAsString();
-            builder.add(readPlantType(name, FileUtil.readJson("/plants/" + name + ".json")));
+            readPlantType(name, FileUtil.readJson("/plants/" + name + ".json")).ifPresent(builder::add);
         }
         return builder.build();
     }
 
-    private static PlantType readPlantType(String name, JsonElement jsonElement) {
+    private static Optional<PlantType> readPlantType(String name, JsonElement jsonElement) {
         JsonObject jsonObject = jsonElement.getAsJsonObject();
         String displayName = jsonObject.get("display_name").getAsString();
         String skinBase64 = jsonObject.get("texture_base64").getAsString();
         int growthStages = jsonObject.get("growth_stages").getAsInt();
         int growthTime = TimeUtil.parseTime(jsonObject.get("approximate_growth_time").getAsString());
         FruitPlacement fruitPlacement = FruitPlacement.valueOf(jsonObject.get("fruit_placement").getAsString().toUpperCase(Locale.ROOT));
-        return new PlantType(
-                displayName,
-                skinBase64,
-                growthStages,
-                findStructures(name, growthStages),
-                new NamespacedKey("garden", name),
-                growthTime,
-                fruitPlacement,
-                Registry.MATERIAL.get(NamespacedKey.fromString(jsonObject.get("seed_material").getAsString()))
-        );
+        try {
+            return Optional.of(new PlantType(
+                    displayName,
+                    skinBase64,
+                    growthStages,
+                    findStructures(name, growthStages),
+                    new NamespacedKey("garden", name),
+                    growthTime,
+                    fruitPlacement,
+                    Registry.MATERIAL.get(NamespacedKey.fromString(jsonObject.get("seed_material").getAsString()))
+            ));
+        } catch (SchematicReadException e) {
+            Logger.getLogger("Garden").warning("Could not read plant type, outdated version: " + name);
+            return Optional.empty();
+        }
     }
 
     private static Map<String, List<Schematic>> findStructures(String name, int growthStages) {
