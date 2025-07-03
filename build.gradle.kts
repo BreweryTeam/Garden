@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "dev.jsinco.brewery.garden"
-version = "1.0.1"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
@@ -63,6 +63,28 @@ tasks {
     shadowJar {
         archiveBaseName.set(rootProject.name)
         archiveClassifier.unset()
+
+        dependencies {
+            exclude {
+                it.moduleGroup == "org.jetbrains.kotlin"
+                        || it.moduleGroup == "org.jetbrains.kotlinx"
+                        || it.moduleGroup == "org.joml"
+                        || it.moduleGroup == "org.slf4j"
+            }
+        }
+
+        exclude("org/jetbrains/annotations/**")
+        exclude("org/intellij/lang/annotations/**")
+
+        listOf(
+            "com.zaxxer.hikari",
+            "dev.thorinwasher.schem",
+            "net.kyori.adventure.nbt",
+            "net.kyori.examination",
+            "org.simpleyaml",
+            "org.yaml.snakeyaml",
+            "eu.okaeri.configs"
+        ).forEach { relocate(it, "${project.group}.lib.$it") }
     }
 
     test {
