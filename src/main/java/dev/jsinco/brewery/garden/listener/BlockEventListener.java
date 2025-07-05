@@ -48,7 +48,7 @@ public class BlockEventListener implements Listener {
         if (gardenPlant != null) {
             event.setCancelled(true);
         }
-        checkFruits(event.getBlock());
+        checkSurroundingFruits(event.getBlock());
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -63,7 +63,7 @@ public class BlockEventListener implements Listener {
             ItemStack seeds = chosen.newSeeds().newItem(1);
             block.getWorld().dropItem(block.getLocation().toCenterLocation(), seeds);
         }
-        checkFruits(block);
+        checkFruit(block);
         GardenPlant gardenPlant = gardenRegistry.getByLocation(block);
         if (gardenPlant == null) {
             return;
@@ -97,6 +97,7 @@ public class BlockEventListener implements Listener {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         plants.forEach(this::checkAlive);
+        blocks.forEach(this::checkFruit);
     }
 
     private void checkAlive(GardenPlant gardenPlant) {
@@ -133,17 +134,24 @@ public class BlockEventListener implements Listener {
         }
     }
 
-    private void checkFruits(Block block) {
+    private void checkFruit(Block block) {
+        if (Fruit.getPlantType(block) == null) {
+            return;
+        }
+        block.setType(Material.AIR);
+    }
+
+    private void checkSurroundingFruits(Block block) {
         for (BlockFace blockFace : FRUIT_FACES) {
             Block possibleFruit = block.getRelative(blockFace);
             PlantType plantType = Fruit.getPlantType(possibleFruit);
             if (plantType == null) {
                 continue;
             }
-            if (possibleFruit instanceof Skull && blockFace != BlockFace.UP) {
+            if (possibleFruit.getBlockData() instanceof Skull && blockFace != BlockFace.UP) {
                 continue;
             }
-            if (possibleFruit instanceof WallSkull wallSkull && blockFace != wallSkull.getFacing()) {
+            if (possibleFruit.getBlockData() instanceof WallSkull wallSkull && blockFace != wallSkull.getFacing()) {
                 continue;
             }
             possibleFruit.setType(Material.AIR);
