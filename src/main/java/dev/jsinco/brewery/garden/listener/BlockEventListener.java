@@ -112,6 +112,10 @@ public class BlockEventListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent event) {
+        if (Fruit.isFruit(event.getItemInHand())) {
+            event.setCancelled(true);
+            return;
+        }
         if (WorldUtil.isBlacklistedWorld(event.getBlock().getLocation())) {
             return;
         }
