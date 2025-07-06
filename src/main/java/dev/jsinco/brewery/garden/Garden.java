@@ -3,21 +3,24 @@ package dev.jsinco.brewery.garden;
 import com.dre.brewery.recipe.PluginItem;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
+import dev.jsinco.brewery.garden.configuration.SerdesGarden;
+import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.listener.BlockEventListener;
 import dev.jsinco.brewery.garden.listener.EventListeners;
-import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.persist.Database;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.GrowthManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
+import dev.thorinwasher.blockutil.api.BlockUtilAPI;
+import dev.thorinwasher.blockutil.api.event.BlockDisableDropEvent;
 import eu.okaeri.configs.ConfigManager;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
+import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
-import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
-import org.bukkit.World;
+import org.bukkit.*;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -25,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 public class Garden extends JavaPlugin {
 
@@ -37,6 +41,8 @@ public class Garden extends JavaPlugin {
     private Database database;
     @Getter
     private GardenPlantDataType gardenPlantDataType;
+    @Getter
+    private BlockUtilAPI blockUtil;
 
     @Override
     public void onLoad() {
@@ -53,7 +59,17 @@ public class Garden extends JavaPlugin {
         }
         gardenRegistry = new PlantRegistry();
         gardenPlantDataType = new GardenPlantDataType(database);
-
+        this.blockUtil = new BlockUtilAPI.Builder()
+                .withConnectionSupplier(() -> {
+                    try {
+                        return database.getConnection();
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .withDropEventHandler(this::handleBlockDrops)
+                .withPluginOwner(this)
+                .build();
         try {
             PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
         } catch (NoClassDefFoundError ignored) {
@@ -71,13 +87,27 @@ public class Garden extends JavaPlugin {
         Bukkit.getScheduler().runTaskTimer(this, new GrowthManager(gardenRegistry, gardenPlantDataType)::tick, 0, 200);
     }
 
+    private void handleBlockDrops(BlockDisableDropEvent blockDisableDropEvent) {
+        Material material = blockDisableDropEvent.getBlock().getType();
+        if (pluginConfiguration.getDropsDefaultItems().stream().anyMatch(tag -> tag.isTagged(material))) {
+            blockDisableDropEvent.setDisableDrops(false);
+            return;
+        }
+        for (Map.Entry<Tag<Material>, Material> entry : pluginConfiguration.getDropOverride().entrySet()) {
+            if (entry.getKey().isTagged(material)) {
+                blockDisableDropEvent.setDropOverride(List.of(new ItemStack(entry.getValue())));
+                return;
+            }
+        }
+    }
+
     public void reload() {
         this.pluginConfiguration = compileConfig();
     }
 
     private BreweryGardenConfig compileConfig() {
         return ConfigManager.create(BreweryGardenConfig.class, it -> {
-            it.withConfigurer(new YamlBukkitConfigurer());
+            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit(), new SerdesGarden());
             it.withBindFile(new File(this.getDataFolder(), "config.yml"));
             it.saveDefaults();
             it.load(true);

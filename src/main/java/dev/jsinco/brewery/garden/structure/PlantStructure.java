@@ -1,5 +1,6 @@
 package dev.jsinco.brewery.garden.structure;
 
+import dev.jsinco.brewery.garden.Garden;
 import dev.thorinwasher.schem.Schematic;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
@@ -53,6 +54,7 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
                 return;
             }
             world.setBlockData(posToReplace, blockData);
+            Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
         });
     }
 
@@ -67,6 +69,7 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
             if (location.getBlock().getType() == blockData.getMaterial()) {
                 location.getBlock().setType(Material.AIR);
             }
+            Garden.getInstance().getBlockUtil().enableItemDrops(world.getBlockAt(location));
         });
     }
 

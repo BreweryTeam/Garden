@@ -30,9 +30,11 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
     implementation("com.zaxxer:HikariCP:6.2.1")
-    implementation("eu.okaeri:okaeri-configs-yaml-bukkit:5.0.8")
+    implementation("eu.okaeri:okaeri-configs-yaml-bukkit:5.0.9")
+    implementation("eu.okaeri:okaeri-configs-serdes-bukkit:5.0.9")
+
     implementation("dev.thorinwasher.schem:schem-reader:1.0.0")
-    implementation("com.github.Thorinwasher:BlockUtil:v2.1.0")
+    implementation("com.github.Thorinwasher.BlockUtil:blockutil:main-SNAPSHOT")
 
     compileOnly("org.xerial:sqlite-jdbc:3.47.2.0")
 
@@ -81,10 +83,10 @@ tasks {
         listOf(
             "com.zaxxer.hikari",
             "dev.thorinwasher.schem",
+            "dev.thorinwasher.blockutil",
             "net.kyori.adventure.nbt",
             "net.kyori.examination",
             "org.simpleyaml",
-            "org.yaml.snakeyaml",
             "eu.okaeri.configs"
         ).forEach { relocate(it, "${project.group}.lib.$it") }
     }
