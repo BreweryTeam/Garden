@@ -13,13 +13,14 @@ plugins {
 }
 
 group = "dev.jsinco.brewery.garden"
-version = "1.0.2"
+version = "1.0.3"
 
 repositories {
     mavenCentral()
     maven("https://repo.jsinco.dev/releases")
     maven("https://storehouse.okaeri.eu/repository/maven-public/")
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -31,6 +32,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("eu.okaeri:okaeri-configs-yaml-bukkit:5.0.8")
     implementation("dev.thorinwasher.schem:schem-reader:1.0.0")
+    implementation("com.github.Thorinwasher:BlockUtil:v2.1.0")
 
     compileOnly("org.xerial:sqlite-jdbc:3.47.2.0")
 
