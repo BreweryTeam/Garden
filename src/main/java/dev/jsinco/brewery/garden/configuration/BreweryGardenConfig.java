@@ -1,13 +1,15 @@
 package dev.jsinco.brewery.garden.configuration;
 
+import com.google.common.collect.ImmutableMap;
 import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.annotation.Comment;
-import eu.okaeri.configs.annotation.CustomKey;
 import eu.okaeri.configs.annotation.Header;
 import lombok.Getter;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 
 import java.util.List;
+import java.util.Map;
 
 @Header({
         "Welcome to the configuration file for the BreweryGarden addon!",
@@ -20,11 +22,11 @@ import java.util.List;
 public class BreweryGardenConfig extends OkaeriConfig {
 
     @Comment({"How likely it is for a seed to spawn from a broken 'validSeedDropBlocks' block.",
-    "Use an integer from 1 to 100."})
+            "Use an integer from 1 to 100."})
     private int seedSpawnChance = 15;
 
     @Comment({"The integer which determines if a plant is fully grown (has a plant sprouted on it).",
-    "A plant's growth stage has an 80% chance to increase by '1' every 5 minutes. Making '4' equal one full Minecraft day, or 20 minutes."})
+            "A plant's growth stage has an 80% chance to increase by '1' every 5 minutes. Making '4' equal one full Minecraft day, or 20 minutes."})
     private int fullyGrown = 4;
 
     @Comment("A list of materials which a seed may drop from.")
@@ -35,4 +37,13 @@ public class BreweryGardenConfig extends OkaeriConfig {
 
     @Comment("A list of worlds where the BreweryGarden addon is disabled.")
     private List<String> blacklistedWorlds = List.of("resource", "resource_nether");
+
+    @Comment("A list of tags of materials generated through Garden that will drop when broken")
+    private List<Tag<Material>> dropsDefaultItems = List.of(Tag.LOGS);
+
+    @Comment("A map of tags of materials generated through Garden with custom drops")
+    private Map<Tag<Material>, Material> dropOverride = new ImmutableMap.Builder<Tag<Material>, Material>()
+            .put(Tag.WOODEN_STAIRS, Material.STICK)
+            .put(Tag.WOODEN_TRAPDOORS, Material.STICK)
+            .build();
 }
