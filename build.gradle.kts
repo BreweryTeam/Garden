@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "dev.jsinco.brewery.garden"
-version = "1.1.0"
+version = "1.1.1"
 
 repositories {
     mavenCentral()
