@@ -9,6 +9,7 @@ import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.Seeds;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -22,8 +23,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.List;
 
 public class EventListeners implements Listener {
 
@@ -62,8 +61,9 @@ public class EventListeners implements Listener {
 
     @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
-        List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(event.getWorld());
-        gardenPlants.forEach(gardenRegistry::registerPlant);
+        gardenPlantDataType.fetch(event.getWorld())
+                .thenAcceptAsync(gardenPlants -> Bukkit.getScheduler()
+                        .runTask(Garden.getInstance(), () -> gardenPlants.forEach(gardenRegistry::registerPlant)));
     }
 
     @EventHandler

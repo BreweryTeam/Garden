@@ -77,7 +77,7 @@ public class Garden extends JavaPlugin {
         }
         this.pluginConfiguration = compileConfig();
         for (World world : Bukkit.getWorlds()) {
-            List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world);
+            List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
             gardenPlants.forEach(gardenRegistry::registerPlant);
         }
         Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry, gardenPlantDataType), this);
