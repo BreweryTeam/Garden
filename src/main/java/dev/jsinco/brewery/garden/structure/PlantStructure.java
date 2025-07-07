@@ -4,6 +4,7 @@ import dev.jsinco.brewery.garden.Garden;
 import dev.thorinwasher.schem.Schematic;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Leaves;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
 
@@ -46,6 +47,9 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
         schematic.apply(transformation, (vector3i, blockData) -> {
             if (blockData.getMaterial().isAir()) {
                 return;
+            }
+            if (blockData instanceof Leaves leaves) {
+                leaves.setPersistent(false);
             }
             vector3i.sub(offset);
             Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
