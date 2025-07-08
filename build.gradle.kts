@@ -99,6 +99,7 @@ tasks {
         minecraftVersion("1.21.5")
         downloadPlugins {
             modrinth("worldedit", "DlD8WKr9")
+            hangar("thebrewingproject", "1.6.3")
         }
     }
 }
