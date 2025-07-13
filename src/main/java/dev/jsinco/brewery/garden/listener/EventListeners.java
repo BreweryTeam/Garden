@@ -62,8 +62,8 @@ public class EventListeners implements Listener {
     @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
         gardenPlantDataType.fetch(event.getWorld())
-                .thenAcceptAsync(gardenPlants -> Bukkit.getScheduler()
-                        .runTask(Garden.getInstance(), () -> gardenPlants.forEach(gardenRegistry::registerPlant)));
+                .thenAcceptAsync(gardenPlants ->
+                        Bukkit.getGlobalRegionScheduler().run(Garden.getInstance(), task -> gardenPlants.forEach(gardenRegistry::registerPlant)));
     }
 
     @EventHandler
