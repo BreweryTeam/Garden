@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class Garden extends JavaPlugin {
 
@@ -84,7 +85,7 @@ public class Garden extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BlockEventListener(gardenRegistry, gardenPlantDataType), this);
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
-        Bukkit.getScheduler().runTaskTimer(this, new GrowthManager(gardenRegistry, gardenPlantDataType)::tick, 0, 200);
+        Bukkit.getAsyncScheduler().runAtFixedRate(this, task -> new GrowthManager(gardenRegistry, gardenPlantDataType).tick(), 1L, 200L, TimeUnit.MILLISECONDS);
     }
 
     private void handleBlockDrops(BlockDisableDropEvent blockDisableDropEvent) {

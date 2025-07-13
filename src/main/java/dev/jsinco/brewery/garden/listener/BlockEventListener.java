@@ -101,7 +101,7 @@ public class BlockEventListener implements Listener {
     }
 
     private void checkAlive(GardenPlant gardenPlant) {
-        Bukkit.getScheduler().runTask(Garden.getInstance(), () -> {
+        Bukkit.getGlobalRegionScheduler().run(Garden.getInstance(), task -> {
             if (gardenPlant.isAlive()) {
                 return;
             }
