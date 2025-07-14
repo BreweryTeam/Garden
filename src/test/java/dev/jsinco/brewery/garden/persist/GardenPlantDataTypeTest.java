@@ -43,14 +43,14 @@ class GardenPlantDataTypeTest {
     void checkPersistence(PlantType plantType) {
         GardenPlant gardenPlant = new GardenPlant(plantType, new Location(world, 1, 0, 0));
         dataType.insert(gardenPlant);
-        checkEquals(gardenPlant, dataType.fetch(world).get(0));
-        assertEquals(1, dataType.fetch(world).size());
+        checkEquals(gardenPlant, dataType.fetch(world).join().get(0));
+        assertEquals(1, dataType.fetch(world).join().size());
         gardenPlant.incrementGrowthStage(1, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
         dataType.update(gardenPlant);
-        checkEquals(gardenPlant, dataType.fetch(world).get(0));
-        assertEquals(1, dataType.fetch(world).size());
+        checkEquals(gardenPlant, dataType.fetch(world).join().get(0));
+        assertEquals(1, dataType.fetch(world).join().size());
         dataType.remove(gardenPlant);
-        assertTrue(dataType.fetch(world).isEmpty());
+        assertTrue(dataType.fetch(world).join().isEmpty());
     }
 
     void checkEquals(GardenPlant expected, GardenPlant actual) {
