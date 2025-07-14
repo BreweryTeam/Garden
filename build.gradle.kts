@@ -1,6 +1,7 @@
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.papermc.hangarpublishplugin.model.Platforms
+import org.gradle.kotlin.dsl.support.zipTo
 import java.net.HttpURLConnection
 import java.net.URI
 
@@ -101,6 +102,14 @@ tasks {
             modrinth("worldedit", "DlD8WKr9")
             hangar("thebrewingproject", "1.6.3")
         }
+    }
+
+    processResources {
+        mustRunAfter("zipResources")
+    }
+
+    register("zipResources") {
+        zipTo(File("./src/main/resources/plants.zip"), File("./src/main/ziped-resources"))
     }
 }
 

@@ -2,12 +2,10 @@ package dev.jsinco.brewery.garden.utility;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import dev.jsinco.brewery.garden.Garden;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 public class FileUtil {
 
@@ -23,8 +21,12 @@ public class FileUtil {
         }
     }
 
-    public static JsonElement readJson(String path) {
-        try (InputStream inputStream = FileUtil.class.getResourceAsStream(path)) {
+    public static JsonElement readJsonFromFile(String path) {
+        return readJsonFromFile(new File(Garden.getInstance().getDataFolder(), path));
+    }
+
+    public static JsonElement readJsonFromFile(File file) {
+        try (InputStream inputStream = new FileInputStream(file)) {
             return JsonParser.parseReader(new InputStreamReader(inputStream));
         } catch (IOException e) {
             throw new RuntimeException(e);

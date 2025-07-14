@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.jsinco.brewery.garden.utility.FileUtil;
 import dev.jsinco.brewery.garden.utility.TimeUtil;
@@ -18,6 +19,8 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -71,11 +74,13 @@ public record PlantType(String displayName, String skinBase64, int stages,
     }
 
     public static List<PlantType> readPlantTypes() {
-        JsonArray items = FileUtil.readJson("/plants/items.json").getAsJsonArray();
+        File plants = new File(Garden.getInstance().getDataFolder(), "plants");
+        if (!plants.exists()) {
+            return List.of();
+        }
         ImmutableList.Builder<PlantType> builder = new ImmutableList.Builder<>();
-        for (JsonElement item : items) {
-            String name = item.getAsString();
-            readPlantType(name, FileUtil.readJson("/plants/" + name + ".json")).ifPresent(builder::add);
+        for (File file : plants.listFiles()) {
+            readPlantType(file.getName().replace(".json", ""), FileUtil.readJsonFromFile(file)).ifPresent(builder::add);
         }
         return builder.build();
     }
@@ -100,18 +105,19 @@ public record PlantType(String displayName, String skinBase64, int stages,
             ));
         } catch (SchematicReadException e) {
             Logger.getLogger("Garden").warning("Could not read plant type, outdated version: " + name);
+            e.printStackTrace();
             return Optional.empty();
         }
     }
 
     private static Map<String, List<Schematic>> findStructures(String name, int growthStages) {
-        JsonArray tracks = FileUtil.readJson("/structures/" + name + "/tracks.json").getAsJsonArray();
+        JsonArray tracks = FileUtil.readJsonFromFile("structures/" + name + "/tracks.json").getAsJsonArray();
         ImmutableMap.Builder<String, List<Schematic>> builder = ImmutableMap.builder();
         for (JsonElement typeJson : tracks) {
             String track = typeJson.getAsString();
             ImmutableList.Builder<Schematic> schematics = new ImmutableList.Builder<>();
             for (int i = 0; i < growthStages; i++) {
-                try (InputStream inputStream = FileUtil.class.getResourceAsStream("/structures/" + name + "/" + track + "_" + i + ".schem")) {
+                try (InputStream inputStream = new FileInputStream(new File(Garden.getInstance().getDataFolder(), "/structures/" + name + "/" + track + "_" + i + ".schem"))) {
                     schematics.add(new SchematicReader().read(inputStream));
                 } catch (IOException e) {
                     throw new RuntimeException(e);

@@ -24,11 +24,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class Garden extends JavaPlugin {
 
@@ -51,6 +52,7 @@ public class Garden extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        savePlantResources();
         this.database = new Database();
         try {
             database.init(this.getDataFolder());
@@ -85,6 +87,42 @@ public class Garden extends JavaPlugin {
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
         Bukkit.getScheduler().runTaskTimer(this, new GrowthManager(gardenRegistry, gardenPlantDataType)::tick, 0, 200);
+    }
+
+    private void savePlantResources() {
+        try (InputStream inputStream = Garden.class.getResourceAsStream("/plants.zip")) {
+            if (inputStream == null) {
+                throw new IOException("Could not find internal resource: /plants.zip");
+            }
+            try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
+                ZipEntry entry = zipInputStream.getNextEntry();
+                while (entry != null) {
+                    ZipEntry current = entry;
+                    if (current.isDirectory()) {
+                        entry = zipInputStream.getNextEntry();
+                        continue;
+                    }
+                    File destination = new File(this.getDataFolder(), current.getName());
+                    if (destination.exists()) {
+                        entry = zipInputStream.getNextEntry();
+                        continue;
+                    }
+                    File destinationFolder = destination.getParentFile();
+                    if (!destinationFolder.exists() && !destination.getParentFile().mkdirs()) {
+                        throw new IOException("Could not make dirs at: " + destinationFolder);
+                    }
+                    if (!destination.createNewFile()) {
+                        throw new IOException("could not make file: " + destination);
+                    }
+                    try (OutputStream outputStream = new FileOutputStream(destination)) {
+                        zipInputStream.transferTo(outputStream);
+                    }
+                    entry = zipInputStream.getNextEntry();
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void handleBlockDrops(BlockDisableDropEvent blockDisableDropEvent) {
@@ -126,4 +164,5 @@ public class Garden extends JavaPlugin {
             Bukkit.addRecipe(recipe);
         }
     }
+
 }
