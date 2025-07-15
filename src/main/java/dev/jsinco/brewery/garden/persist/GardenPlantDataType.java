@@ -1,5 +1,6 @@
 package dev.jsinco.brewery.garden.persist;
 
+import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.GardenRegistry;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
@@ -92,6 +93,11 @@ public class GardenPlantDataType {
                 while (resultSet.next()) {
                     PlantType plantType = GardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(resultSet.getString("plant_type")));
                     Location origin = new Location(world, resultSet.getInt("origin_x"), resultSet.getInt("origin_y"), resultSet.getInt("origin_z"));
+                    if (plantType == null) {
+                        Garden.getInstance().getLogger().warning("Could not read plant at: " + origin);
+                        Garden.getInstance().getLogger().warning("Unknown plant type: " + resultSet.getString("plant_type"));
+                        continue;
+                    }
                     int age = resultSet.getInt("age");
                     String track = resultSet.getString("track");
                     Matrix3d transformation = Encoder.deserializeTransformation(resultSet.getString("transformation"));
