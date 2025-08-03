@@ -129,7 +129,7 @@ bukkit {
             )
         }
     }
-    softDepend = listOf("BreweryX")
+    loadBefore = listOf("BreweryX")
 }
 
 java {
