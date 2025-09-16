@@ -1,10 +1,14 @@
 package dev.jsinco.brewery.garden;
 
 import com.dre.brewery.recipe.PluginItem;
+import com.google.common.base.Preconditions;
+import dev.jsinco.brewery.bukkit.api.TheBrewingProjectApi;
+import dev.jsinco.brewery.bukkit.api.integration.IntegrationTypes;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.configuration.SerdesGarden;
 import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
+import dev.jsinco.brewery.garden.integration.TBPGardenIntegration;
 import dev.jsinco.brewery.garden.listener.BlockEventListener;
 import dev.jsinco.brewery.garden.listener.EventListeners;
 import dev.jsinco.brewery.garden.persist.Database;
@@ -19,9 +23,11 @@ import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
+import net.kyori.adventure.key.Key;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
@@ -44,15 +50,29 @@ public class Garden extends JavaPlugin {
     private GardenPlantDataType gardenPlantDataType;
     @Getter
     private BlockUtilAPI blockUtil;
+    private boolean loadSuccess = false;
 
     @Override
     public void onLoad() {
         instance = this;
+        savePlantResources();
+        try {
+            PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
+        } catch (NoClassDefFoundError ignored) {
+        }
+        try {
+            RegisteredServiceProvider<TheBrewingProjectApi> provider = Bukkit.getServicesManager().getRegistration(TheBrewingProjectApi.class);
+            if (provider != null) {
+                provider.getProvider().getIntegrationManager().register(IntegrationTypes.ITEM, new TBPGardenIntegration());
+            }
+        } catch (NoClassDefFoundError ignored) {
+        }
+        this.loadSuccess = true;
     }
 
     @Override
     public void onEnable() {
-        savePlantResources();
+        Preconditions.checkState(loadSuccess, "Failed on load, see logs.");
         this.database = new Database();
         try {
             database.init(this.getDataFolder());
@@ -72,11 +92,6 @@ public class Garden extends JavaPlugin {
                 .withDropEventHandler(this::handleBlockDrops)
                 .withPluginOwner(this)
                 .build();
-        try {
-            PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
-        } catch (NoClassDefFoundError ignored) {
-
-        }
         this.pluginConfiguration = compileConfig();
         for (World world : Bukkit.getWorlds()) {
             List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
@@ -163,6 +178,13 @@ public class Garden extends JavaPlugin {
             recipe.addIngredient(plantType.newFruit().newItem(1));
             Bukkit.addRecipe(recipe);
         }
+    }
+
+    public static NamespacedKey key(String key) {
+        if (!Key.parseableValue(key)) {
+            return null;
+        }
+        return new NamespacedKey("garden", key);
     }
 
 }

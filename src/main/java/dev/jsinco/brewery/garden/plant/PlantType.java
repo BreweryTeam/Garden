@@ -14,6 +14,7 @@ import dev.jsinco.brewery.garden.utility.TimeUtil;
 import dev.thorinwasher.schem.Schematic;
 import dev.thorinwasher.schem.SchematicReadException;
 import dev.thorinwasher.schem.SchematicReader;
+import net.kyori.adventure.key.Key;
 import org.bukkit.*;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3d;
@@ -86,6 +87,10 @@ public record PlantType(String displayName, String skinBase64, int stages,
     }
 
     private static Optional<PlantType> readPlantType(String name, JsonElement jsonElement) {
+        if (!Key.parseableValue(name)) {
+            Logger.getLogger("Garden").warning("Could not read plant type, file name has to be a valid namespaced key");
+            return Optional.empty();
+        }
         JsonObject jsonObject = jsonElement.getAsJsonObject();
         String displayName = jsonObject.get("display_name").getAsString();
         String skinBase64 = jsonObject.get("texture_base64").getAsString();
@@ -98,7 +103,7 @@ public record PlantType(String displayName, String skinBase64, int stages,
                     skinBase64,
                     growthStages,
                     findStructures(name, growthStages),
-                    new NamespacedKey("garden", name),
+                    Garden.key(name),
                     growthTime,
                     fruitPlacement,
                     Registry.MATERIAL.get(NamespacedKey.fromString(jsonObject.get("seed_material").getAsString()))

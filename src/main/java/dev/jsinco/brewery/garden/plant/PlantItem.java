@@ -12,6 +12,10 @@ public interface PlantItem {
 
     ItemStack newItem(int amount);
 
+    default ItemStack newItem() {
+        return newItem(1);
+    }
+
     GardenItemType itemType();
 
     PlantType plantType();

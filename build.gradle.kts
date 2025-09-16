@@ -18,6 +18,7 @@ version = "1.2.1"
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven("https://repo.jsinco.dev/releases")
     maven("https://storehouse.okaeri.eu/repository/maven-public/")
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -27,6 +28,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("com.dre.brewery:BreweryX:3.4.10-SNAPSHOT")
+    compileOnly("dev.jsinco.brewery:thebrewingproject:2.0.0-beta.0")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
@@ -97,10 +99,10 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.21.5")
+        minecraftVersion("1.21.8")
         downloadPlugins {
             modrinth("worldedit", "DlD8WKr9")
-            hangar("thebrewingproject", "1.6.3")
+            hangar("thebrewingproject", "2.0.0-beta.0")
         }
     }
 
@@ -129,7 +131,7 @@ bukkit {
             )
         }
     }
-    loadBefore = listOf("BreweryX")
+    softDepend = listOf("BreweryX", "TheBrewingProject")
 }
 
 java {
