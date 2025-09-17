@@ -14,7 +14,8 @@ public final class BreweryGardenIngredient extends PluginItem {
             plantItem = Seeds.getSeeds(itemStack);
         }
         if (plantItem != null) {
-            return plantItem.simpleName().equalsIgnoreCase(this.getItemId());
+            return plantItem.simpleName().equalsIgnoreCase(this.getItemId())
+                    || plantItem.simpleName().replace("_fruit", "").equalsIgnoreCase(this.getItemId());
         }
         return false;
     }

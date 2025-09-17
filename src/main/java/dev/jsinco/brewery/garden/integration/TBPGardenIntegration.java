@@ -1,6 +1,8 @@
 package dev.jsinco.brewery.garden.integration;
 
 import dev.jsinco.brewery.api.ingredient.Ingredient;
+import dev.jsinco.brewery.bukkit.api.TheBrewingProjectApi;
+import dev.jsinco.brewery.bukkit.api.integration.IntegrationTypes;
 import dev.jsinco.brewery.bukkit.api.integration.ItemIntegration;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.GardenRegistry;
@@ -11,13 +13,15 @@ import dev.jsinco.brewery.garden.plant.Seeds;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class TBPGardenIntegration implements ItemIntegration {
+public final class TBPGardenIntegration implements ItemIntegration {
     @Override
     public Optional<ItemStack> createItem(String key) {
         return get(key)
@@ -81,5 +85,18 @@ public class TBPGardenIntegration implements ItemIntegration {
             id = id + "_fruit";
         }
         return ItemIntegration.super.createIngredient(id);
+    }
+
+    public static void loadIfPossible() {
+        try {
+            if (!Bukkit.getServicesManager().isProvidedFor(TheBrewingProjectApi.class)) {
+                return;
+            }
+            RegisteredServiceProvider<TheBrewingProjectApi> provider = Bukkit.getServicesManager().getRegistration(TheBrewingProjectApi.class);
+            if (provider != null) {
+                provider.getProvider().getIntegrationManager().register(IntegrationTypes.ITEM, new TBPGardenIntegration());
+            }
+        } catch (NoClassDefFoundError ignored) {
+        }
     }
 }
