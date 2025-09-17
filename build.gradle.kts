@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "dev.jsinco.brewery.garden"
-version = "1.2.1"
+version = "1.2.2"
 
 repositories {
     mavenCentral()
@@ -102,7 +102,7 @@ tasks {
         minecraftVersion("1.21.8")
         downloadPlugins {
             modrinth("worldedit", "DlD8WKr9")
-            hangar("thebrewingproject", "2.0.0-beta.0")
+            // hangar("thebrewingproject", "2.0.0-beta.0")
         }
     }
 
