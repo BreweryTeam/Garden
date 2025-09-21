@@ -28,9 +28,9 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -103,6 +103,8 @@ public class Garden extends JavaPlugin {
             if (inputStream == null) {
                 throw new IOException("Could not find internal resource: /plants.zip");
             }
+            Set<String> alreadySavedNames = readAlreadySaved();
+            List<String> savedNames = new ArrayList<>();
             try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
                 ZipEntry entry = zipInputStream.getNextEntry();
                 while (entry != null) {
@@ -112,7 +114,7 @@ public class Garden extends JavaPlugin {
                         continue;
                     }
                     File destination = new File(this.getDataFolder(), current.getName());
-                    if (destination.exists()) {
+                    if (destination.exists() || alreadySavedNames.contains(destination.toString())) {
                         entry = zipInputStream.getNextEntry();
                         continue;
                     }
@@ -126,11 +128,52 @@ public class Garden extends JavaPlugin {
                     try (OutputStream outputStream = new FileOutputStream(destination)) {
                         zipInputStream.transferTo(outputStream);
                     }
+                    savedNames.add(destination.toString());
                     entry = zipInputStream.getNextEntry();
                 }
             }
+            writeSaved(savedNames);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void writeSaved(List<String> savedNames) throws IOException {
+        File file = new File(getDataFolder(), "internal/saved_resources.txt");
+        if(!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
+            throw new IOException("Unabled to create new folder: " + file.getParentFile());
+        }
+        if (savedNames.isEmpty()) {
+            return;
+        }
+        if (!file.exists() && !file.createNewFile()) {
+            throw new IOException("Unabled to create new file: " + file);
+        }
+        try (OutputStreamWriter outputStreamWriter = new FileWriter(file, StandardCharsets.UTF_8, true)) {
+            try (BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter)) {
+                for (String line : savedNames) {
+                    bufferedWriter.write(line);
+                    bufferedWriter.newLine();
+                }
+            }
+        }
+    }
+
+    private Set<String> readAlreadySaved() throws IOException {
+        File file = new File(getDataFolder(), "internal/saved_resources.txt");
+        if (!file.exists()) {
+            return Set.of();
+        }
+        try (InputStreamReader inputStream = new FileReader(file, StandardCharsets.UTF_8)) {
+            try (BufferedReader reader = new BufferedReader(inputStream)) {
+                Set<String> output = new HashSet<>();
+                String line = reader.readLine();
+                while (line != null) {
+                    output.add(line);
+                    line = reader.readLine();
+                }
+                return output;
+            }
         }
     }
 
