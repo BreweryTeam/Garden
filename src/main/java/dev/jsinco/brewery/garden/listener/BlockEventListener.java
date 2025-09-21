@@ -1,7 +1,7 @@
 package dev.jsinco.brewery.garden.listener;
 
 import dev.jsinco.brewery.garden.Garden;
-import dev.jsinco.brewery.garden.GardenRegistry;
+import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
@@ -58,7 +58,7 @@ public class BlockEventListener implements Listener {
         }
         Block block = event.getBlock();
         if (config.getValidSeedDropBlocks().contains(block.getType()) && RANDOM.nextInt(100) <= config.getSeedSpawnChance()) {
-            List<PlantType> types = List.copyOf(GardenRegistry.PLANT_TYPE.values());
+            List<PlantType> types = List.copyOf(MutableGardenRegistry.plantType.values());
             PlantType chosen = types.get(RANDOM.nextInt(types.size()));
             ItemStack seeds = chosen.newSeeds().newItem(1);
             block.getWorld().dropItem(block.getLocation().toCenterLocation(), seeds);

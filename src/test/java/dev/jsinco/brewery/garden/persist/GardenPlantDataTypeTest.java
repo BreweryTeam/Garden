@@ -1,7 +1,7 @@
 package dev.jsinco.brewery.garden.persist;
 
 import dev.jsinco.brewery.garden.Garden;
-import dev.jsinco.brewery.garden.GardenRegistry;
+import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import org.bukkit.Location;
@@ -60,7 +60,7 @@ class GardenPlantDataTypeTest {
     }
 
     public static Stream<Arguments> getPlantTypes() {
-        return GardenRegistry.PLANT_TYPE.values()
+        return MutableGardenRegistry.plantType.values()
                 .stream()
                 .map(Arguments::of);
     }

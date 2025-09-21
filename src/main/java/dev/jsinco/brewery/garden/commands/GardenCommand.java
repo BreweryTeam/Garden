@@ -19,6 +19,7 @@ public class GardenCommand {
                 .then(Commands.literal("reload")
                         .executes(context -> {
                             Garden.getInstance().reload();
+                            MessageUtil.sendMessage(context.getSource().getSender(), "Successfully reloaded Garden!");
                             return 1;
                         })
                         .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("garden.command.reload"))

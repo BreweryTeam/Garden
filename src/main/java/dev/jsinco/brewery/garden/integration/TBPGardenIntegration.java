@@ -5,7 +5,7 @@ import dev.jsinco.brewery.bukkit.api.TheBrewingProjectApi;
 import dev.jsinco.brewery.bukkit.api.integration.IntegrationTypes;
 import dev.jsinco.brewery.bukkit.api.integration.ItemIntegration;
 import dev.jsinco.brewery.garden.Garden;
-import dev.jsinco.brewery.garden.GardenRegistry;
+import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.plant.Fruit;
 import dev.jsinco.brewery.garden.plant.PlantItem;
 import dev.jsinco.brewery.garden.plant.PlantType;
@@ -49,7 +49,7 @@ public final class TBPGardenIntegration implements ItemIntegration {
         }
         String plantTypeKey = key.replaceAll("_seeds|_fruit", "");
         return Optional.ofNullable(Garden.key(plantTypeKey))
-                .flatMap(plant -> Optional.ofNullable(GardenRegistry.PLANT_TYPE.get(plant)))
+                .flatMap(plant -> Optional.ofNullable(MutableGardenRegistry.plantType.get(plant)))
                 .map(type -> key.contains("_seeds") ? type.newSeeds() : type.newFruit());
     }
 

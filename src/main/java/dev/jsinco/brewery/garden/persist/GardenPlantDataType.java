@@ -1,7 +1,7 @@
 package dev.jsinco.brewery.garden.persist;
 
 import dev.jsinco.brewery.garden.Garden;
-import dev.jsinco.brewery.garden.GardenRegistry;
+import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
@@ -91,7 +91,7 @@ public class GardenPlantDataType {
                 preparedStatement.setBytes(1, Encoder.asBytes(world.getUID()));
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    PlantType plantType = GardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(resultSet.getString("plant_type")));
+                    PlantType plantType = MutableGardenRegistry.plantType.get(NamespacedKey.fromString(resultSet.getString("plant_type")));
                     Location origin = new Location(world, resultSet.getInt("origin_x"), resultSet.getInt("origin_y"), resultSet.getInt("origin_z"));
                     if (plantType == null) {
                         Garden.getInstance().getLogger().warning("Could not read plant at: " + origin);

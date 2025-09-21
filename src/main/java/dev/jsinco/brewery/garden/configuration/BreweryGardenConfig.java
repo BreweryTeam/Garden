@@ -12,11 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 @Header({
-        "Welcome to the configuration file for the BreweryGarden addon!",
+        "Welcome to the configuration file for the Garden addon!",
         "The settings below is all you're able to customize. If you'd like to request a feature",
         "or report a bug, join our Discord or make an issue on our Github! https://brewery.lumamc.net/",
-        "To add a BreweryGarden item (plant or seeds), use 'Garden:Berry' or 'Garden:Berry_Seeds'.",
-        "To see all available PlantTypes, have a look here: https://github.com/BreweryTeam/BreweryGardenAddon/blob/master/src/main/java/dev/jsinco/brewery/constants/PlantType.java#L38"
+        "To add a BreweryGarden item (plant or seeds), use 'garden:berry' or 'garden:berry_seeds'."
 })
 @Getter
 public class BreweryGardenConfig extends OkaeriConfig {

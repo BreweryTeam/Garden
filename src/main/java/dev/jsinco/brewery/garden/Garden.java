@@ -140,7 +140,7 @@ public class Garden extends JavaPlugin {
 
     private void writeSaved(List<String> savedNames) throws IOException {
         File file = new File(getDataFolder(), "internal/saved_resources.txt");
-        if(!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
+        if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
             throw new IOException("Unabled to create new folder: " + file.getParentFile());
         }
         if (savedNames.isEmpty()) {
@@ -192,7 +192,13 @@ public class Garden extends JavaPlugin {
     }
 
     public void reload() {
+        gardenRegistry.clear();
         this.pluginConfiguration = compileConfig();
+        MutableGardenRegistry.plantType.newBacking(PlantType.readPlantTypes());
+        for (World world : Bukkit.getWorlds()) {
+            List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
+            gardenPlants.forEach(gardenRegistry::registerPlant);
+        }
     }
 
     private BreweryGardenConfig compileConfig() {
@@ -205,7 +211,7 @@ public class Garden extends JavaPlugin {
     }
 
     private void registerPlantRecipes() {
-        for (PlantType plantType : GardenRegistry.PLANT_TYPE.values()) {
+        for (PlantType plantType : MutableGardenRegistry.plantType.values()) {
             NamespacedKey namespacedKey = plantType.key();
             if (Bukkit.getRecipe(namespacedKey) != null) {
                 Bukkit.removeRecipe(namespacedKey);

@@ -1,6 +1,6 @@
 package dev.jsinco.brewery.garden.plant;
 
-import dev.jsinco.brewery.garden.GardenRegistry;
+import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.FoodProperties;
@@ -68,7 +68,7 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
         if (!view.has(PLANT_TYPE_KEY)) {
             return null;
         }
-        PlantType type = GardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(view.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
+        PlantType type = MutableGardenRegistry.plantType.get(NamespacedKey.fromString(view.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
         if (type == null) {
             return null;
         }
@@ -93,6 +93,6 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
         Skull skull = (Skull) block.getState();
         String key = skull.getPersistentDataContainer().get(PLANT_TYPE_KEY, PersistentDataType.STRING);
         if (key == null) return null;
-        return GardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(key));
+        return MutableGardenRegistry.plantType.get(NamespacedKey.fromString(key));
     }
 }

@@ -11,14 +11,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class GardenRegistry<T extends Keyed> {
+public class MutableGardenRegistry<T extends Keyed> {
 
-    public static final GardenRegistry<PlantType> PLANT_TYPE = new GardenRegistry<>(PlantType.readPlantTypes());
+    public static final MutableGardenRegistry<PlantType> plantType = new MutableGardenRegistry<>(PlantType.readPlantTypes());
 
 
     private Map<Key, T> backing;
 
-    private GardenRegistry(Collection<T> values) {
+    private MutableGardenRegistry(Collection<T> values) {
         backing = values.stream().collect(Collectors.toUnmodifiableMap(Keyed::key, value -> value));
     }
 
@@ -28,5 +28,9 @@ public class GardenRegistry<T extends Keyed> {
 
     public Collection<T> values() {
         return backing.values();
+    }
+
+    public void newBacking(Collection<T> values) {
+        backing = values.stream().collect(Collectors.toUnmodifiableMap(Keyed::key, value -> value));
     }
 }

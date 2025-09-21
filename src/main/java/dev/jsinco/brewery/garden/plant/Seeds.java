@@ -1,6 +1,6 @@
 package dev.jsinco.brewery.garden.plant;
 
-import dev.jsinco.brewery.garden.GardenRegistry;
+import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.persistence.PersistentDataContainerView;
 import net.kyori.adventure.text.Component;
@@ -28,7 +28,7 @@ public record Seeds(String simpleName, PlantType plantType) implements PlantItem
         if (!containerView.has(ITEM_TYPE_KEY) || !containerView.has(PLANT_TYPE_KEY) || !containerView.get(ITEM_TYPE_KEY, PersistentDataType.STRING).equals(GardenItemType.SEEDS.name())) {
             return null;
         }
-        PlantType type = GardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(containerView.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
+        PlantType type = MutableGardenRegistry.plantType.get(NamespacedKey.fromString(containerView.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
         return type.newSeeds();
     }
 

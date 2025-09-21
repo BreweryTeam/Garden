@@ -59,4 +59,9 @@ public class PlantRegistry {
     public Collection<GardenPlant> getPlants() {
         return gardenPlantIds.values();
     }
+
+    public void clear() {
+        gardenPlants.clear();
+        gardenPlantIds.clear();
+    }
 }
