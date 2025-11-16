@@ -84,7 +84,11 @@ public class PlantCommand {
                                 throw ERROR_ILLEGAL_SENDER.create();
                             }
                             GardenPlant gardenPlant = getPlant(player, 32);
-                            gardenPlant.setGrowthStage(context.getArgument("stage", Integer.class), Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                            final int oldAge = gardenPlant.getAge();
+                            int newAge = gardenPlant.setGrowthStage(context.getArgument("stage", Integer.class), Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                            if (oldAge == newAge) {
+                                MessageUtil.sendMessage(player, "Plant age was not changed. Either at max stage or invalid stage.");
+                            }
                             return 1;
                         }));
     }
