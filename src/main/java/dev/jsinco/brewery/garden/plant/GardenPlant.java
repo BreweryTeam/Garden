@@ -48,6 +48,9 @@ public class GardenPlant {
         this.age = 0;
         this.track = type.getRandomTrack();
         this.structure = type.newStructure(location, age, track);
+        if (this.structure == null) {
+            throw new IllegalStateException("Could not create plant structure for type " + type.displayName());
+        }
     }
 
     public boolean isFullyGrown() {
@@ -58,19 +61,30 @@ public class GardenPlant {
         this.setGrowthStage(age + amount, registry, dataType);
     }
 
-    public void setGrowthStage(int growthStage, PlantRegistry registry, GardenPlantDataType dataType) {
+    /**
+     * Attempts to set the growth stage of the plant to the specified value.
+     * If the new structure cannot be placed (due to collisions or other reasons),
+     * the growth stage remains unchanged
+     * and the current age is returned.
+     *
+     * @param growthStage The desired growth stage to set.
+     * @param registry The PlantRegistry to manage plant registrations.
+     * @param dataType The GardenPlantDataType for updating plant data.
+     * @return The actual growth stage after the operation.
+     */
+    public int setGrowthStage(int growthStage, PlantRegistry registry, GardenPlantDataType dataType) {
         if (!structure.origin().isChunkLoaded()) {
-            return;
+            return this.age;
         }
         this.structure.remove();
         PlantStructure newStructure = type.newStructure(this.structure.origin(), growthStage, track);
-        if (!newStructure.locations(blockData -> !DECORATIVE_PLANT_BLOCKS.contains(blockData.getMaterial())).stream()
+        if (newStructure == null || !newStructure.locations(blockData -> !DECORATIVE_PLANT_BLOCKS.contains(blockData.getMaterial())).stream()
                 .map(Location::getBlock)
                 .map(Block::getType)
                 .allMatch(material -> material.isAir() || Tag.REPLACEABLE_BY_TREES.isTagged(material))
         ) {
             this.structure.paste();
-            return;
+            return this.age;
         }
         this.age = growthStage;
         registry.unregisterPlant(this);
@@ -78,6 +92,7 @@ public class GardenPlant {
         this.structure = newStructure;
         registry.registerPlant(this);
         dataType.update(this);
+        return this.age;
     }
 
     public void bloom() {
