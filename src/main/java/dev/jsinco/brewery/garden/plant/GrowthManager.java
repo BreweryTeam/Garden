@@ -26,7 +26,7 @@ public class GrowthManager {
                 if (plant.hasBloomed()) {
                     plant.placeFruits();
                 } else {
-                    plant.bloom();
+                    plant.tryBloom();
                 }
                 continue;
             }
