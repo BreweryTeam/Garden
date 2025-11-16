@@ -113,6 +113,10 @@ tasks {
     register("zipResources") {
         zipTo(File("./src/main/resources/plants.zip"), File("./src/main/ziped-resources"))
     }
+
+    build {
+        dependsOn(shadowJar)
+    }
 }
 
 bukkit {
