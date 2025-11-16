@@ -78,7 +78,7 @@ public class PlantCommand {
 
     private static ArgumentBuilder<CommandSourceStack, ?> setAgeCommand() {
         return Commands.literal("setage")
-                .then(Commands.argument("stage", IntegerArgumentType.integer(1, Garden.getInstance().getPluginConfiguration().getFullyGrown()))
+                .then(Commands.argument("stage", IntegerArgumentType.integer(0, Integer.MAX_VALUE))
                         .executes(context -> {
                             if (!(context.getSource().getSender() instanceof Player player)) {
                                 throw ERROR_ILLEGAL_SENDER.create();
