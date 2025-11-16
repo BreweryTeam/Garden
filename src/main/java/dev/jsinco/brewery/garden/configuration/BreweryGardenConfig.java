@@ -11,6 +11,7 @@ import org.bukkit.Tag;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("FieldMayBeFinal")
 @Header({
         "Welcome to the configuration file for the Garden addon!",
         "The settings below is all you're able to customize. If you'd like to request a feature",
@@ -34,7 +35,7 @@ public class BreweryGardenConfig extends OkaeriConfig {
     @Comment("A list of materials which a seed may be planted on.")
     private List<Material> plantableBlocks = List.of(Material.GRASS_BLOCK, Material.DIRT, Material.COARSE_DIRT, Material.PODZOL);
 
-    @Comment("A list of worlds where the BreweryGarden addon is disabled.")
+    @Comment("A list of worlds where the Garden is disabled.")
     private List<String> blacklistedWorlds = List.of("resource", "resource_nether");
 
     @Comment("A list of tags of materials generated through Garden that will drop when broken")
@@ -45,4 +46,16 @@ public class BreweryGardenConfig extends OkaeriConfig {
             .put(Tag.WOODEN_STAIRS, Material.STICK)
             .put(Tag.WOODEN_TRAPDOORS, Material.STICK)
             .build();
+
+    @Comment("A list of materials that can be used to farm fruits from garden plants.")
+    private List<Material> shearTools = List.of(Material.SHEARS);
+
+    @Comment("Allow breaking garden plants without shearing tools.")
+    private boolean allowBreakWithoutShearTools = true;
+
+    @Comment({
+            "The minimum distance a water source block must be from a planted seed in order for it to grow and bloom.",
+            "Set to less than 1 to disable water requirement."
+    })
+    private int minimumWaterDistance = 0;
 }
