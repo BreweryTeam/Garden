@@ -45,8 +45,9 @@ public class EventListeners implements Listener {
             return;
         }
 
-        handlePlantShearing(event.getItem(), block);
-        if (event.getBlockFace() == BlockFace.UP && event.getAction().isRightClick() && config.getPlantableBlocks().contains(block.getType())) {
+        if (handlePlantShearing(event.getItem(), block)) {
+            event.setCancelled(true);
+        } else if (event.getBlockFace() == BlockFace.UP && event.getAction().isRightClick() && config.getPlantableBlocks().contains(block.getType())) {
             event.setCancelled(handleSeedPlacement(event.getItem(), block));
         }
     }
@@ -71,16 +72,32 @@ public class EventListeners implements Listener {
         gardenRegistry.unregisterWorld(event.getWorld());
     }
 
-    private void handlePlantShearing(ItemStack itemInHand, Block clickedBlock) {
-        if (itemInHand == null || itemInHand.getType() != Material.SHEARS) {
-            return;
+    /**
+     * Handles shearing of plant fruits
+     * @param itemInHand The item in the player's hand
+     * @param clickedBlock The block that was clicked
+     * @return True if the calling event should be cancelled, false otherwise
+     */
+    private boolean handlePlantShearing(ItemStack itemInHand, Block clickedBlock) {
+        if (itemInHand == null) {
+            return false;
         }
+
+        boolean validShearTool = !config.getShearTools().contains(itemInHand.getType());
+
+        if (!config.isAllowBreakWithoutShearTools() && !validShearTool) {
+            return true;
+        }
+
+
         PlantType plantType = Fruit.getPlantType(clickedBlock);
         if (plantType == null) {
-            return;
+            return false;
         }
         clickedBlock.setType(Material.AIR);
         clickedBlock.getWorld().dropItem(clickedBlock.getLocation().toCenterLocation(), plantType.newFruit().newItem(1));
+        clickedBlock.getWorld().playSound(clickedBlock.getLocation(), Sound.ENTITY_SHEEP_SHEAR, 1.0f, 1.0f);
+        return true;
     }
 
     private boolean handleSeedPlacement(ItemStack itemInHand, Block clickedBlock) {

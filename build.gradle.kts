@@ -26,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
     compileOnly("com.dre.brewery:BreweryX:3.4.10-SNAPSHOT")
     compileOnly("com.github.BreweryTeam:TheBrewingProject:v2.3.0")
 
@@ -99,9 +99,9 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.21.8")
+        minecraftVersion("1.21.10")
         downloadPlugins {
-            modrinth("worldedit", "DlD8WKr9")
+            modrinth("worldedit", "3ISh7ADm")
             // hangar("thebrewingproject", "2.0.0-beta.0")
         }
     }
