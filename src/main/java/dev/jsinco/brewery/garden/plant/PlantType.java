@@ -17,6 +17,7 @@ import dev.thorinwasher.schem.SchematicReader;
 import net.kyori.adventure.key.Key;
 import org.bukkit.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
 
@@ -64,8 +65,13 @@ public record PlantType(String displayName, String skinBase64, int stages,
         return profile;
     }
 
+    @Nullable
     public PlantStructure newStructure(Location bottomLocation, int age, String track) {
-        Schematic schematic = structures.getOrDefault(track, List.of()).get(age);
+        List<Schematic> schematics = structures.getOrDefault(track, List.of());
+        if (schematics.size() <= age) {
+            return null;
+        }
+        Schematic schematic = schematics.get(age);
         Matrix3d transformation = ALLOWED_TRANSFORMATIONS.get(RANDOM.nextInt(ALLOWED_TRANSFORMATIONS.size()));
         Vector3i size = schematic.size(transformation);
         Vector3i offset = new Vector3i(size.x() / 2, 0, size.z() / 2);
