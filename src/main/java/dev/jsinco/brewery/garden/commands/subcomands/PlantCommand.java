@@ -38,7 +38,7 @@ public class PlantCommand {
                         throw ERROR_ILLEGAL_SENDER.create();
                     }
                     GardenPlant gardenPlant = getPlant(player, 32);
-                    gardenPlant.bloom();
+                    gardenPlant.tryBloom();
                     gardenPlant.placeFruits();
                     return 1;
                 });

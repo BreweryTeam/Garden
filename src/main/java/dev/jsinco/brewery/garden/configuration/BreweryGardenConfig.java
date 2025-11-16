@@ -52,4 +52,10 @@ public class BreweryGardenConfig extends OkaeriConfig {
 
     @Comment("Allow breaking garden plants without shearing tools.")
     private boolean allowBreakWithoutShearTools = true;
+
+    @Comment({
+            "The minimum distance a water source block must be from a planted seed in order for it to grow and bloom.",
+            "Set to less than 1 to disable water requirement."
+    })
+    private int minimumWaterDistance = 0;
 }

@@ -8,6 +8,7 @@ import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,6 +16,7 @@ import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockType;
+import org.bukkit.block.data.BlockData;
 
 import java.util.*;
 
@@ -23,15 +25,18 @@ import java.util.*;
 @AllArgsConstructor
 public class GardenPlant {
     private static final BreweryGardenConfig config = Garden.getInstance().getPluginConfiguration();
+    private static final Random RANDOM = new Random();
+    private static final Set<Material> DECORATIVE_PLANT_BLOCKS = compileDecorativePlantBlocks();
+    private static final BlockData AZALEA_BLOCK_DATA = BlockType.FLOWERING_AZALEA_LEAVES.createBlockData();
+    private static final BlockData PALE_OAK_LEAF_BLOCK_DATA = BlockType.PALE_OAK_LEAVES.createBlockData();
 
     private final UUID id;
     private final PlantType type;
     private PlantStructure structure;
     private final String track;
     private int age;
-    private static final Random RANDOM = new Random();
     private boolean bloomed = false;
-    private static final Set<Material> DECORATIVE_PLANT_BLOCKS = compileDecorativePlantBlocks();
+    private boolean hasWater = true;
 
     private static Set<Material> compileDecorativePlantBlocks() {
         ImmutableSet.Builder<Material> builder = new ImmutableSet.Builder<>();
@@ -80,7 +85,7 @@ public class GardenPlant {
         dataType.update(this);
     }
 
-    public void bloom() {
+    public void tryBloom() {
         if (!structure.origin().isChunkLoaded()) {
             return;
         }
@@ -91,22 +96,27 @@ public class GardenPlant {
         ) {
             return;
         }
+
+        this.hasWater = this.hasWater();
+
         for (Location location : this.structure.locations(blockData -> Tag.LEAVES.isTagged(blockData.getMaterial()))) {
             Block block = location.getBlock();
             if (!Tag.LEAVES.isTagged(block.getType())) {
                 continue;
             }
             if (RANDOM.nextBoolean()) {
-                block.setBlockData(
-                        BlockType.FLOWERING_AZALEA_LEAVES.createBlockData()
-                );
+                if (hasWater) {
+                    block.setBlockData(AZALEA_BLOCK_DATA);
+                } else {
+                    block.setBlockData(PALE_OAK_LEAF_BLOCK_DATA);
+                }
                 this.bloomed = true;
             }
         }
     }
 
     public void placeFruits() {
-        if (!structure.origin().isChunkLoaded()) {
+        if (!structure.origin().isChunkLoaded() || !hasWater) {
             return;
         }
         Fruit fruit = type.newFruit();
@@ -126,7 +136,7 @@ public class GardenPlant {
             fruit.placeFruit(block.getRelative(chosenRelative), chosenRelative);
         }
         this.structure.paste(); // Clear all bloom blocks
-        bloomed = false;
+        this.bloomed = false;
     }
 
     public boolean hasBloomed() {
@@ -141,5 +151,30 @@ public class GardenPlant {
             }
         }
         return hasLeaf && !structure.origin().getBlock().getType().isAir();
+    }
+
+
+
+    public boolean hasWater() {
+        int minDistance = config.getMinimumWaterDistance();
+        if (minDistance < 1) {
+            return true;
+        }
+        Location origin = structure.origin();
+        for (int x = -minDistance; x <= minDistance; x++) {
+            // Should y level be considered here? I don't know how vanilla does its checks.
+            for (int y = -minDistance; y <= minDistance; y++) {
+                for (int z = -minDistance; z <= minDistance; z++) {
+                    Location checkLocation = origin.clone().add(x, y, z);
+                    if (checkLocation.getBlock().getType() == Material.WATER) {
+                        double distance = origin.distance(checkLocation);
+                        if (distance <= minDistance) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

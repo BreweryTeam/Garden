@@ -108,7 +108,8 @@ public class GardenPlantDataType {
                                     plantType.getStructure(origin, age, track, transformation),
                                     track,
                                     age,
-                                    false
+                                    false,
+                                    true
                             )
                     );
                 }
