@@ -83,17 +83,18 @@ public class EventListeners implements Listener {
             return false;
         }
 
-        boolean validShearTool = !config.getShearTools().contains(itemInHand.getType());
+        PlantType plantType = Fruit.getPlantType(clickedBlock);
+        if (plantType == null) {
+            return false;
+        }
+
+        boolean validShearTool = config.getShearTools().contains(itemInHand.getType());
 
         if (!config.isAllowBreakWithoutShearTools() && !validShearTool) {
             return true;
         }
 
 
-        PlantType plantType = Fruit.getPlantType(clickedBlock);
-        if (plantType == null) {
-            return false;
-        }
         clickedBlock.setType(Material.AIR);
         clickedBlock.getWorld().dropItem(clickedBlock.getLocation().toCenterLocation(), plantType.newFruit().newItem(1));
         clickedBlock.getWorld().playSound(clickedBlock.getLocation(), Sound.ENTITY_SHEEP_SHEAR, 1.0f, 1.0f);
