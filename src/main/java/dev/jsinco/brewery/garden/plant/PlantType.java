@@ -74,7 +74,7 @@ public record PlantType(String displayName, String skinBase64, int stages,
                 transformation, bottomLocation.getWorld().getUID(), offset);
     }
 
-    public static List<PlantType> readPlantTypes() {
+    public static List<PlantType>  readPlantTypes() {
         File plants = new File(Garden.getInstance().getDataFolder(), "plants");
         if (!plants.exists()) {
             return List.of();

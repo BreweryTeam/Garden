@@ -27,6 +27,7 @@ public class PlantCommand {
         return Commands.literal("plant")
                 .then(infoCommand())
                 .then(setAgeCommand())
+                .then(growCommand())
                 .then(growFruitsCommand())
                 .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("garden.command.plant"));
     }
@@ -94,5 +95,23 @@ public class PlantCommand {
                             }
                             return 1;
                         }));
+    }
+
+    private static ArgumentBuilder<CommandSourceStack, ?> growCommand() {
+        return Commands.literal("grow")
+                .executes(context -> {
+                    if (!(context.getSource().getSender() instanceof Player player)) {
+                        throw ERROR_ILLEGAL_SENDER.create();
+                    }
+                    GardenPlant gardenPlant = getPlant(player, 32);
+                    try {
+                        gardenPlant.incrementGrowthStage(1, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        throw new SimpleCommandExceptionType(() ->
+                                gardenPlant.getType().displayName() + " is already fully grown!"
+                        ).create();
+                    }
+                    return 1;
+                });
     }
 }
