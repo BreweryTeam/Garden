@@ -89,9 +89,8 @@ public class PlantCommand {
                             try {
                                 gardenPlant.setGrowthStage(stage, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
                             } catch (ArrayIndexOutOfBoundsException e) {
-                                throw new SimpleCommandExceptionType(() ->
-                                        "Age " + stage + " isn't defined for plant " + gardenPlant.getType().displayName() + "!"
-                                ).create();
+                                String msg = "<red>Age " + stage + " isn't defined for plant " + gardenPlant.getType().displayName() + "<red>!";
+                                throw new SimpleCommandExceptionType(() -> msg).create();
                             }
                             return 1;
                         }));
@@ -107,9 +106,8 @@ public class PlantCommand {
                     try {
                         gardenPlant.incrementGrowthStage(1, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
                     } catch (ArrayIndexOutOfBoundsException e) {
-                        throw new SimpleCommandExceptionType(() ->
-                                gardenPlant.getType().displayName() + " is already fully grown!"
-                        ).create();
+                        String msg = gardenPlant.getType().displayName() + " <yellow>plant is already fully grown!";
+                        throw new SimpleCommandExceptionType(() -> msg).create();
                     }
                     return 1;
                 });
