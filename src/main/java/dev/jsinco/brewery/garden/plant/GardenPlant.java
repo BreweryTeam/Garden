@@ -62,8 +62,8 @@ public class GardenPlant {
         if (!structure.origin().isChunkLoaded()) {
             return;
         }
-        this.structure.remove();
         PlantStructure newStructure = type.newStructure(this.structure.origin(), growthStage, track);
+        this.structure.remove();
         if (!newStructure.locations(blockData -> !DECORATIVE_PLANT_BLOCKS.contains(blockData.getMaterial())).stream()
                 .map(Location::getBlock)
                 .map(Block::getType)
