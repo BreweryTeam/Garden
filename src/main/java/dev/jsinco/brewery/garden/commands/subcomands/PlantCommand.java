@@ -84,7 +84,14 @@ public class PlantCommand {
                                 throw ERROR_ILLEGAL_SENDER.create();
                             }
                             GardenPlant gardenPlant = getPlant(player, 32);
-                            gardenPlant.setGrowthStage(context.getArgument("stage", Integer.class), Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                            int stage = context.getArgument("stage", Integer.class);
+                            try {
+                                gardenPlant.setGrowthStage(stage, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                            } catch (ArrayIndexOutOfBoundsException e) {
+                                throw new SimpleCommandExceptionType(() ->
+                                        "Age " + stage + " isn't defined for plant " + gardenPlant.getType().displayName() + "!"
+                                ).create();
+                            }
                             return 1;
                         }));
     }
