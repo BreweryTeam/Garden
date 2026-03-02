@@ -9,10 +9,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlantRegistry {
-    private final Map<UUID, Map<BlockVector, GardenPlant>> gardenPlants = new HashMap<>();
-    private final Map<UUID, GardenPlant> gardenPlantIds = new HashMap<>();
+    private final Map<UUID, Map<BlockVector, GardenPlant>> gardenPlants = new ConcurrentHashMap<>();
+    private final Map<UUID, GardenPlant> gardenPlantIds = new ConcurrentHashMap<>();
 
 
     @Nullable
