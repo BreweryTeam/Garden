@@ -1,7 +1,6 @@
 package dev.jsinco.brewery.garden.structure;
 
 import dev.jsinco.brewery.garden.Garden;
-import dev.jsinco.brewery.garden.utility.SchedulerUtil;
 import dev.thorinwasher.schem.Schematic;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
@@ -58,16 +57,13 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
             vector3i.sub(offset);
             Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
 
-            SchedulerUtil.inRegion(posToReplace, () -> {
+            Bukkit.getRegionScheduler().run(Garden.getInstance(), posToReplace, t -> {
                 Material blockToReplaceType = posToReplace.getBlock().getType();
                 if (!Tag.REPLACEABLE_BY_TREES.isTagged(blockToReplaceType) && !blockToReplaceType.isAir()) {
                     return;
                 }
                 world.setBlockData(posToReplace, blockData);
                 Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
-            });
-            Bukkit.getRegionScheduler().run(Garden.getInstance(), posToReplace, t -> {
-
             });
         });
     }
@@ -84,7 +80,7 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
             vector3i.sub(offset);
             Location location = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
 
-            SchedulerUtil.inRegion(location, () -> {
+            Bukkit.getRegionScheduler().run(Garden.getInstance(), location, t -> {
                 if (location.getBlock().getType() == blockData.getMaterial()) {
                     location.getBlock().setType(Material.AIR);
                 }

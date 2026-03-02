@@ -10,7 +10,6 @@ import java.util.*;
 public class GrowthManager {
 
     private final PlantRegistry registry;
-    //private final Map<UUID, Long> growths = new HashMap<>();
     private final static Random RANDOM = new Random();
     private final GardenPlantDataType dataType;
 
