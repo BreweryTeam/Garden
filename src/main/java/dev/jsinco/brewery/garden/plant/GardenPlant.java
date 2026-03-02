@@ -142,4 +142,9 @@ public class GardenPlant {
         }
         return hasLeaf && !structure.origin().getBlock().getType().isAir();
     }
+
+
+    public Location origin() {
+        return structure.origin();
+    }
 }

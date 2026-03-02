@@ -31,6 +31,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -95,7 +96,8 @@ public class Garden extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BlockEventListener(gardenRegistry, gardenPlantDataType), this);
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
-        Bukkit.getScheduler().runTaskTimer(this, new GrowthManager(gardenRegistry, gardenPlantDataType)::tick, 0, 200);
+        GrowthManager growthManager = new GrowthManager(gardenRegistry, gardenPlantDataType);
+        Bukkit.getAsyncScheduler().runAtFixedRate(this, t -> growthManager.tick(), 0, 10, TimeUnit.SECONDS);
     }
 
     private void savePlantResources() {
