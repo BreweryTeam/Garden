@@ -11,6 +11,7 @@ import org.joml.Vector3i;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
 public record PlantStructure(Schematic schematic, int originX, int originY, int originZ,
@@ -68,25 +69,28 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
         });
     }
 
-    public void remove() {
+    public CompletableFuture<Void> remove() {
         World world = Bukkit.getWorld(worldUuid);
         if (world == null) {
-            return;
+            return CompletableFuture.completedFuture(null);
         }
-        schematic.apply(transformation, (vector3i, blockData) -> {
-            if (blockData.getMaterial().isAir()) {
-                return;
-            }
-            vector3i.sub(offset);
-            Location location = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
+        CompletableFuture<Void> output = new CompletableFuture<>();
+        Bukkit.getRegionScheduler().run(Garden.getInstance(), origin(), ignored -> {
+            schematic.apply(transformation, (vector3i, blockData) -> {
+                if (blockData.getMaterial().isAir()) {
+                    return;
+                }
+                vector3i.sub(offset);
+                Location location = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
 
-            Bukkit.getRegionScheduler().run(Garden.getInstance(), location, t -> {
                 if (location.getBlock().getType() == blockData.getMaterial()) {
                     location.getBlock().setType(Material.AIR);
                 }
                 Garden.getInstance().getBlockUtil().enableItemDrops(world.getBlockAt(location));
             });
+            output.complete(null);
         });
+        return output;
     }
 
     public Location origin() {
