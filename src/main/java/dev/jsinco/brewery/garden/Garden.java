@@ -23,6 +23,7 @@ import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
@@ -55,7 +56,6 @@ public class Garden extends JavaPlugin {
     @Override
     public void onLoad() {
         instance = this;
-        translator = new GardenTranslator(new File(this.getDataFolder(), "locale"));
         savePlantResources();
         try {
             PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
@@ -91,6 +91,9 @@ public class Garden extends JavaPlugin {
                 .withPluginOwner(this)
                 .build();
         this.pluginConfiguration = compileConfig();
+        translator = new GardenTranslator(new File(this.getDataFolder(), "locale"));
+        translator.reload();
+        GlobalTranslator.translator().addSource(translator);
         for (World world : Bukkit.getWorlds()) {
             List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
             gardenPlants.forEach(gardenRegistry::registerPlant);
