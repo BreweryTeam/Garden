@@ -43,22 +43,23 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
         return locations;
     }
 
-    public void paste() {
+    public CompletableFuture<Void> paste() {
         World world = Bukkit.getWorld(worldUuid);
         if (world == null) {
-            return;
+            return CompletableFuture.completedFuture(null);
         }
-        schematic.apply(transformation, (vector3i, blockData) -> {
-            if (blockData.getMaterial().isAir()) {
-                return;
-            }
-            if (blockData instanceof Leaves leaves) {
-                leaves.setPersistent(false);
-            }
-            vector3i.sub(offset);
-            Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
+        CompletableFuture<Void> output = new CompletableFuture<>();
+        Bukkit.getRegionScheduler().run(Garden.getInstance(), origin(), t -> {
+            schematic.apply(transformation, (vector3i, blockData) -> {
+                if (blockData.getMaterial().isAir()) {
+                    return;
+                }
+                if (blockData instanceof Leaves leaves) {
+                    leaves.setPersistent(false);
+                }
+                vector3i.sub(offset);
+                Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
 
-            Bukkit.getRegionScheduler().run(Garden.getInstance(), posToReplace, t -> {
                 Material blockToReplaceType = posToReplace.getBlock().getType();
                 if (!Tag.REPLACEABLE_BY_TREES.isTagged(blockToReplaceType) && !blockToReplaceType.isAir()) {
                     return;
@@ -66,7 +67,9 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
                 world.setBlockData(posToReplace, blockData);
                 Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
             });
+            output.complete(null);
         });
+        return output;
     }
 
     public CompletableFuture<Void> remove() {
