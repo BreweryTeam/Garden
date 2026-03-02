@@ -11,10 +11,15 @@ plugins {
     id("io.papermc.hangar-publish-plugin") version "0.1.2"
     id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
     id("xyz.jpenilla.run-paper") version "2.3.1"
+    id("com.modrinth.minotaur") version "2.8.7"
 }
 
 group = "dev.jsinco.brewery.garden"
-version = "1.2.3"
+version = "1.3.0"
+
+val targetMinecraftVersions = listOf(
+    "1.21.5", "1.21.8", "1.21.10", "1.21.11"
+)
 
 repositories {
     mavenCentral()
@@ -64,6 +69,7 @@ tasks {
 
     register("publishRelease") {
         finalizedBy("publishPluginPublicationToHangar")
+        finalizedBy("modrinth")
 
         doLast {
             val webhook = DiscordWebhook(System.getenv("DISCORD_WEBHOOK") ?: return@doLast, false)
@@ -159,12 +165,25 @@ hangarPublish {
         apiKey.set(System.getenv("HANGAR_TOKEN") ?: return@register)
         platforms {
             register(Platforms.PAPER) {
-                jar.set(tasks.jar.flatMap { it.archiveFile })
-                platformVersions.set(listOf("1.21.5"))
+                jar.set(tasks.shadowJar.flatMap { it.archiveFile })
+                platformVersions.set(targetMinecraftVersions)
             }
         }
         changelog.set(readChangeLog())
     }
+}
+
+modrinth {
+    token.set(System.getenv("MODRINTH_TOKEN") ?: run {
+        return@modrinth
+    })
+    projectId.set("ePND7F16")
+    versionNumber.set(project.version.toString())
+    versionType.set("release")
+    uploadFile.set(tasks.shadowJar)
+    loaders.addAll("paper", "purpur", "folia")
+    gameVersions.addAll(targetMinecraftVersions)
+    changelog.set(readChangeLog())
 }
 
 fun readChangeLog(): String {
