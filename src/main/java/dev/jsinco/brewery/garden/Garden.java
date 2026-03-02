@@ -103,7 +103,7 @@ public class Garden extends JavaPlugin {
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
         GrowthManager growthManager = new GrowthManager(gardenRegistry, gardenPlantDataType);
-        Bukkit.getAsyncScheduler().runAtFixedRate(this, t -> growthManager.tick(), 0, 10, TimeUnit.SECONDS);
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> growthManager.tick(), 1, 200);
     }
 
     private void savePlantResources() {

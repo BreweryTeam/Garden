@@ -6,11 +6,11 @@ import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import org.bukkit.Bukkit;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class GrowthManager {
 
     private final PlantRegistry registry;
-    private final static Random RANDOM = new Random();
     private final GardenPlantDataType dataType;
 
     public GrowthManager(PlantRegistry registry, GardenPlantDataType dataType) {
@@ -19,9 +19,10 @@ public class GrowthManager {
     }
 
     public void tick() {
-        for (GardenPlant plant : List.copyOf(registry.getPlants())) {
+        Random random = ThreadLocalRandom.current();
+        for (GardenPlant plant : registry.getPlants()) {
             if (plant.isFullyGrown()) {
-                if (RANDOM.nextDouble() > 1 - Math.pow(0.5, (double) 400 / plant.getType().growthTime())) {
+                if (random.nextDouble() > 1 - Math.pow(0.5, (double) 400 / plant.getType().growthTime())) {
                     continue;
                 }
                 Bukkit.getRegionScheduler().run(Garden.getInstance(), plant.origin(), t -> {
@@ -33,7 +34,7 @@ public class GrowthManager {
                 });
             } else {
                 double probability = 1 - Math.pow(0.5, (double) 200 / plant.getType().growthTime());
-                if (RANDOM.nextDouble() < probability) {
+                if (random.nextDouble() < probability) {
                     Bukkit.getRegionScheduler().run(Garden.getInstance(), plant.origin(), t -> {
                         plant.incrementGrowthStage(1, registry, dataType);
                     });
