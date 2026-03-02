@@ -16,7 +16,10 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockType;
 
-import java.util.*;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @ToString
@@ -63,21 +66,22 @@ public class GardenPlant {
             return;
         }
         PlantStructure newStructure = type.newStructure(this.structure.origin(), growthStage, track);
-        this.structure.remove();
-        if (!newStructure.locations(blockData -> !DECORATIVE_PLANT_BLOCKS.contains(blockData.getMaterial())).stream()
-                .map(Location::getBlock)
-                .map(Block::getType)
-                .allMatch(material -> material.isAir() || Tag.REPLACEABLE_BY_TREES.isTagged(material))
-        ) {
-            this.structure.paste();
-            return;
-        }
-        this.age = growthStage;
-        registry.unregisterPlant(this);
-        newStructure.paste();
-        this.structure = newStructure;
-        registry.registerPlant(this);
-        dataType.update(this);
+        this.structure.remove().thenAccept(empty -> {
+            if (!newStructure.locations(blockData -> !DECORATIVE_PLANT_BLOCKS.contains(blockData.getMaterial())).stream()
+                    .map(Location::getBlock)
+                    .map(Block::getType)
+                    .allMatch(material -> material.isAir() || Tag.REPLACEABLE_BY_TREES.isTagged(material))
+            ) {
+                this.structure.paste();
+                return;
+            }
+            this.age = growthStage;
+            registry.unregisterPlant(this);
+            newStructure.paste();
+            this.structure = newStructure;
+            registry.registerPlant(this);
+            dataType.update(this);
+        });
     }
 
     public void bloom() {
