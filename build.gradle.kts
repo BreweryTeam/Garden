@@ -121,7 +121,7 @@ tasks {
 
     register("zipResources") {
         doFirst {
-            val dest = File(project.projectDir, "src/main/resources/exposed_resources.zip")
+            val dest = File(project.projectDir, "src/main/resources/plants.zip")
             dest.createNewFile()
             zipTo(dest, File(project.projectDir, "src/main/exposed_resources"))
         }
