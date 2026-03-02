@@ -6,6 +6,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.jsinco.brewery.garden.commands.argument.PlantItemArgument;
 import dev.jsinco.brewery.garden.plant.PlantItem;
+import dev.jsinco.brewery.garden.utility.MessageUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -15,8 +16,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public class GiveCommand {
-    private static final SimpleCommandExceptionType ERROR_ILLEGAL_SENDER = new SimpleCommandExceptionType(() ->
-            "You have to specify a player to use this command!"
+    private static final SimpleCommandExceptionType ERROR_ILLEGAL_SENDER = new SimpleCommandExceptionType(
+            MessageUtil.brigadierTranslatable("garden.command.illegal-sender")
     );
 
     public static ArgumentBuilder<CommandSourceStack, ?> command() {

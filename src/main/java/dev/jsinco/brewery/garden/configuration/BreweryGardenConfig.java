@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.Tag;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Header({
@@ -19,6 +20,12 @@ import java.util.Map;
 })
 @Getter
 public class BreweryGardenConfig extends OkaeriConfig {
+
+    @Comment("The language to use for garden")
+    private Locale language = Locale.US;
+
+    @Comment("Whether some translations should be determined by the client")
+    private boolean clientSidedTranslations = false;
 
     @Comment({"How likely it is for a seed to spawn from a broken 'validSeedDropBlocks' block.",
             "Use an integer from 1 to 100."})
