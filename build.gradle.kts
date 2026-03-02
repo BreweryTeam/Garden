@@ -116,11 +116,15 @@ tasks {
     }
 
     processResources {
-        mustRunAfter("zipResources")
+        dependsOn("zipResources")
     }
 
     register("zipResources") {
-        zipTo(File("./src/main/resources/plants.zip"), File("./src/main/ziped-resources"))
+        doFirst {
+            val dest = File(project.projectDir, "src/main/resources/exposed_resources.zip")
+            dest.createNewFile()
+            zipTo(dest, File(project.projectDir, "src/main/exposed_resources"))
+        }
     }
 }
 
