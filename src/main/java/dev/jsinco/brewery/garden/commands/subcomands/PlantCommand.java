@@ -27,6 +27,7 @@ public class PlantCommand {
         return Commands.literal("plant")
                 .then(infoCommand())
                 .then(setAgeCommand())
+                .then(growCommand())
                 .then(growFruitsCommand())
                 .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("garden.command.plant"));
     }
@@ -38,7 +39,7 @@ public class PlantCommand {
                         throw ERROR_ILLEGAL_SENDER.create();
                     }
                     GardenPlant gardenPlant = getPlant(player, 32);
-                    gardenPlant.tryBloom();
+                    gardenPlant.bloom();
                     gardenPlant.placeFruits();
                     return 1;
                 });
@@ -78,18 +79,37 @@ public class PlantCommand {
 
     private static ArgumentBuilder<CommandSourceStack, ?> setAgeCommand() {
         return Commands.literal("setage")
-                .then(Commands.argument("stage", IntegerArgumentType.integer(0, Integer.MAX_VALUE))
+                .then(Commands.argument("stage", IntegerArgumentType.integer(1, Garden.getInstance().getPluginConfiguration().getFullyGrown()))
                         .executes(context -> {
                             if (!(context.getSource().getSender() instanceof Player player)) {
                                 throw ERROR_ILLEGAL_SENDER.create();
                             }
                             GardenPlant gardenPlant = getPlant(player, 32);
-                            final int oldAge = gardenPlant.getAge();
-                            int newAge = gardenPlant.setGrowthStage(context.getArgument("stage", Integer.class), Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
-                            if (oldAge == newAge) {
-                                MessageUtil.sendMessage(player, "Plant age was not changed. Either at max stage or invalid stage.");
+                            int stage = context.getArgument("stage", Integer.class);
+                            try {
+                                gardenPlant.setGrowthStage(stage, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                            } catch (ArrayIndexOutOfBoundsException e) {
+                                String msg = "<red>Age " + stage + " isn't defined for plant " + gardenPlant.getType().displayName() + "<red>!";
+                                throw new SimpleCommandExceptionType(() -> msg).create();
                             }
                             return 1;
                         }));
+    }
+
+    private static ArgumentBuilder<CommandSourceStack, ?> growCommand() {
+        return Commands.literal("grow")
+                .executes(context -> {
+                    if (!(context.getSource().getSender() instanceof Player player)) {
+                        throw ERROR_ILLEGAL_SENDER.create();
+                    }
+                    GardenPlant gardenPlant = getPlant(player, 32);
+                    try {
+                        gardenPlant.incrementGrowthStage(1, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        String msg = gardenPlant.getType().displayName() + " <yellow>plant is already fully grown!";
+                        throw new SimpleCommandExceptionType(() -> msg).create();
+                    }
+                    return 1;
+                });
     }
 }

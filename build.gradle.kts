@@ -49,6 +49,15 @@ dependencies {
 
 
 tasks {
+
+    jar {
+        enabled = false // shadowJar
+    }
+
+    build {
+        dependsOn(shadowJar)
+    }
+
     withType<JavaCompile> {
         options.encoding = "UTF-8"
     }
@@ -121,7 +130,7 @@ tasks {
 
 bukkit {
     main = "dev.jsinco.brewery.garden.Garden"
-    foliaSupported = false
+    foliaSupported = true
     apiVersion = "1.21"
     authors = listOf("Jsinco", "Thorinwasher")
     contributors = listOf("fLip")

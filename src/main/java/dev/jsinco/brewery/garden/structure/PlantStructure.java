@@ -44,6 +44,9 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
 
     public void paste() {
         World world = Bukkit.getWorld(worldUuid);
+        if (world == null) {
+            return;
+        }
         schematic.apply(transformation, (vector3i, blockData) -> {
             if (blockData.getMaterial().isAir()) {
                 return;
@@ -53,27 +56,36 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
             }
             vector3i.sub(offset);
             Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
-            Material blockToReplaceType = posToReplace.getBlock().getType();
-            if (!Tag.REPLACEABLE_BY_TREES.isTagged(blockToReplaceType) && !blockToReplaceType.isAir()) {
-                return;
-            }
-            world.setBlockData(posToReplace, blockData);
-            Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
+
+            Bukkit.getRegionScheduler().run(Garden.getInstance(), posToReplace, t -> {
+                Material blockToReplaceType = posToReplace.getBlock().getType();
+                if (!Tag.REPLACEABLE_BY_TREES.isTagged(blockToReplaceType) && !blockToReplaceType.isAir()) {
+                    return;
+                }
+                world.setBlockData(posToReplace, blockData);
+                Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
+            });
         });
     }
 
     public void remove() {
         World world = Bukkit.getWorld(worldUuid);
+        if (world == null) {
+            return;
+        }
         schematic.apply(transformation, (vector3i, blockData) -> {
             if (blockData.getMaterial().isAir()) {
                 return;
             }
             vector3i.sub(offset);
             Location location = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
-            if (location.getBlock().getType() == blockData.getMaterial()) {
-                location.getBlock().setType(Material.AIR);
-            }
-            Garden.getInstance().getBlockUtil().enableItemDrops(world.getBlockAt(location));
+
+            Bukkit.getRegionScheduler().run(Garden.getInstance(), location, t -> {
+                if (location.getBlock().getType() == blockData.getMaterial()) {
+                    location.getBlock().setType(Material.AIR);
+                }
+                Garden.getInstance().getBlockUtil().enableItemDrops(world.getBlockAt(location));
+            });
         });
     }
 

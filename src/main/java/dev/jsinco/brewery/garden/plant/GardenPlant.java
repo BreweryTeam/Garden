@@ -8,7 +8,6 @@ import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -100,7 +99,7 @@ public class GardenPlant {
         return this.age;
     }
 
-    public void tryBloom() {
+    public void bloom() {
         if (!structure.origin().isChunkLoaded()) {
             return;
         }
@@ -168,8 +167,6 @@ public class GardenPlant {
         return hasLeaf && !structure.origin().getBlock().getType().isAir();
     }
 
-
-
     public boolean hasWater() {
         int minDistance = config.getMinimumWaterDistance();
         if (minDistance < 1) {
@@ -177,7 +174,6 @@ public class GardenPlant {
         }
         Location origin = structure.origin();
         for (int x = -minDistance; x <= minDistance; x++) {
-            // Should y level be considered here? I don't know how vanilla does its checks.
             for (int y = -minDistance; y <= minDistance; y++) {
                 for (int z = -minDistance; z <= minDistance; z++) {
                     Location checkLocation = origin.clone().add(x, y, z);
@@ -191,5 +187,9 @@ public class GardenPlant {
             }
         }
         return false;
+    }
+
+    public Location origin() {
+        return structure.origin();
     }
 }
