@@ -8,5 +8,6 @@ public class SerdesGarden implements OkaeriSerdesPack {
     @Override
     public void register(@NonNull SerdesRegistry registry) {
         registry.register(new TagSerializer());
+        registry.register(new LocaleSerializer());
     }
 }

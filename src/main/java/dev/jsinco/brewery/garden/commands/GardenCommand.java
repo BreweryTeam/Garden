@@ -8,6 +8,7 @@ import dev.jsinco.brewery.garden.utility.MessageUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent;
+import net.kyori.adventure.text.Component;
 
 public class GardenCommand {
 
@@ -19,15 +20,11 @@ public class GardenCommand {
                 .then(Commands.literal("reload")
                         .executes(context -> {
                             Garden.getInstance().reload();
-                            MessageUtil.sendMessage(context.getSource().getSender(), "Successfully reloaded Garden!");
+                            context.getSource().getSender().sendMessage(Component.translatable("garden.command.reloaded"));
                             return 1;
                         })
                         .requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("garden.command.reload"))
                 )
-                .executes((context) -> {
-                    MessageUtil.sendMessage(context.getSource().getSender(), "Provide a subcommand.");
-                    return 1;
-                })
                 .build();
     }
 

@@ -4,6 +4,7 @@ import com.dre.brewery.recipe.PluginItem;
 import com.google.common.base.Preconditions;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
+import dev.jsinco.brewery.garden.configuration.GardenTranslator;
 import dev.jsinco.brewery.garden.configuration.SerdesGarden;
 import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.integration.TBPGardenIntegration;
@@ -48,11 +49,13 @@ public class Garden extends JavaPlugin {
     private GardenPlantDataType gardenPlantDataType;
     @Getter
     private BlockUtilAPI blockUtil;
+    private GardenTranslator translator;
     private boolean loadSuccess = false;
 
     @Override
     public void onLoad() {
         instance = this;
+        translator = new GardenTranslator(new File(this.getDataFolder(), "locale"));
         savePlantResources();
         try {
             PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
@@ -194,6 +197,7 @@ public class Garden extends JavaPlugin {
     }
 
     public void reload() {
+        translator.reload();
         gardenRegistry.clear();
         this.pluginConfiguration = compileConfig();
         MutableGardenRegistry.plantType.newBacking(PlantType.readPlantTypes());
