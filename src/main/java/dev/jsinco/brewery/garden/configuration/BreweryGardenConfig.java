@@ -52,4 +52,7 @@ public class BreweryGardenConfig extends OkaeriConfig {
             .put(Tag.WOODEN_STAIRS, Material.STICK)
             .put(Tag.WOODEN_TRAPDOORS, Material.STICK)
             .build();
+
+    @Comment("Let fruits fall to the ground as items after a while")
+    private boolean fallFruit = true;
 }
