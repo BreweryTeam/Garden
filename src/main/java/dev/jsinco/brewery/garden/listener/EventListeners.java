@@ -9,12 +9,10 @@ import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.Seeds;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -45,7 +43,7 @@ public class EventListeners implements Listener {
             return;
         }
 
-        handlePlantShearing(event.getItem(), block);
+        handlePlantShearing(event.getItem(), block, event.getPlayer());
         if (event.getBlockFace() == BlockFace.UP && event.getAction().isRightClick() && config.getPlantableBlocks().contains(block.getType())) {
             event.setCancelled(handleSeedPlacement(event.getItem(), block));
         }
@@ -76,13 +74,16 @@ public class EventListeners implements Listener {
         gardenRegistry.unregisterWorld(event.getWorld());
     }
 
-    private void handlePlantShearing(ItemStack itemInHand, Block clickedBlock) {
+    private void handlePlantShearing(ItemStack itemInHand, Block clickedBlock, Player player) {
         if (itemInHand == null || itemInHand.getType() != Material.SHEARS) {
             return;
         }
         PlantType plantType = Fruit.getPlantType(clickedBlock);
         if (plantType == null) {
             return;
+        }
+        if (player.getGameMode() != GameMode.CREATIVE) {
+            itemInHand.damage(1, player);
         }
         clickedBlock.setType(Material.AIR);
         clickedBlock.getWorld().dropItem(clickedBlock.getLocation().toCenterLocation(), plantType.newFruit().newItem(1));
