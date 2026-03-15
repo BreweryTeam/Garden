@@ -152,6 +152,17 @@ public class BlockEventListener implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPhysics(BlockPhysicsEvent event) {
+        if (Garden.getInstance().getPluginConfiguration().isFallFruit()) {
+            return;
+        }
+        PlantType plantType = Fruit.getPlantType(event.getBlock());
+        if (plantType != null) {
+            event.setCancelled(true);
+        }
+    }
+
     private void checkFruit(Block block) {
         if (Fruit.getPlantType(block) == null) {
             return;
