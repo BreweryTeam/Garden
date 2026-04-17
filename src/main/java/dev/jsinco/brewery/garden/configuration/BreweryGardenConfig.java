@@ -55,4 +55,10 @@ public class BreweryGardenConfig extends OkaeriConfig {
 
     @Comment("Let fruits fall to the ground as items after a while")
     private boolean fallFruit = true;
+
+    @Comment("Whether players can use bone meal to advance a garden plant's growth")
+    private boolean bonemealGrowth = true;
+
+    @Comment("The percent chance that using bone meal on a garden plant advances its growth by one stage (0-100)")
+    private int bonemealChance = 25;
 }
