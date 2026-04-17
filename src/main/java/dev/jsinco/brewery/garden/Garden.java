@@ -21,6 +21,7 @@ import eu.okaeri.configs.ConfigManager;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.Getter;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
@@ -52,6 +53,7 @@ public class Garden extends JavaPlugin {
     private BlockUtilAPI blockUtil;
     private GardenTranslator translator;
     private boolean loadSuccess = false;
+    private ScheduledTask growthTask;
 
     @Override
     public void onLoad() {
@@ -103,7 +105,7 @@ public class Garden extends JavaPlugin {
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
         GrowthManager growthManager = new GrowthManager(gardenRegistry, gardenPlantDataType);
-        Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> growthManager.tick(), 1, 200);
+        growthTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> growthManager.tick(), 1, 200);
     }
 
     private void savePlantResources() {
@@ -196,6 +198,17 @@ public class Garden extends JavaPlugin {
                 blockDisableDropEvent.setDropOverride(List.of(new ItemStack(entry.getValue())));
                 return;
             }
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        if (growthTask != null) {
+            growthTask.cancel();
+        }
+        GlobalTranslator.translator().removeSource(translator);
+        if (database != null) {
+            database.close();
         }
     }
 
