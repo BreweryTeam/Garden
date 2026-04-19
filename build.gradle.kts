@@ -23,17 +23,18 @@ val targetMinecraftVersions = listOf(
 
 repositories {
     mavenCentral()
-    mavenLocal()
     maven("https://repo.jsinco.dev/releases")
     maven("https://storehouse.okaeri.eu/repository/maven-public/")
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.breweryteam.dev/releases")
     maven("https://jitpack.io")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("com.dre.brewery:BreweryX:3.4.10-SNAPSHOT")
-    compileOnly("com.github.BreweryTeam:TheBrewingProject:v2.3.0")
+    compileOnly("dev.jsinco.brewery:thebrewingproject-bukkit:3.0.0")
+
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
@@ -117,7 +118,7 @@ tasks {
         minecraftVersion("1.21.8")
         downloadPlugins {
             modrinth("worldedit", "DlD8WKr9")
-            // hangar("thebrewingproject", "2.0.0-beta.0")
+            hangar("thebrewingproject", "3.0.0")
         }
     }
 
