@@ -69,6 +69,13 @@ public class Database {
         return hikariConfig;
     }
 
+    public void close() {
+        executor.shutdown();
+        if (hikariDataSource != null) {
+            hikariDataSource.close();
+        }
+    }
+
     private void executeMultiple(String resourceString) throws SQLException {
         try (Connection connection = hikariDataSource.getConnection()) {
             for (String statement : FileUtil.readInternalResource(resourceString).split(";")) {

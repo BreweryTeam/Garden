@@ -11,6 +11,7 @@ import dev.jsinco.brewery.garden.plant.Seeds;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import java.util.Random;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,6 +26,7 @@ import org.bukkit.inventory.ItemStack;
 public class EventListeners implements Listener {
 
     private BreweryGardenConfig config = Garden.getInstance().getPluginConfiguration();
+    private static final Random RANDOM = new Random();
 
 
     private final PlantRegistry gardenRegistry;
@@ -44,6 +46,7 @@ public class EventListeners implements Listener {
         }
 
         handlePlantShearing(event.getItem(), block, event.getPlayer());
+        handleBonemeal(event, event.getItem(), block);
         if (event.getBlockFace() == BlockFace.UP && event.getAction().isRightClick() && config.getPlantableBlocks().contains(block.getType())) {
             event.setCancelled(handleSeedPlacement(event.getItem(), block));
         }
@@ -72,6 +75,32 @@ public class EventListeners implements Listener {
     @EventHandler
     public void onWorldUnload(WorldUnloadEvent event) {
         gardenRegistry.unregisterWorld(event.getWorld());
+    }
+
+    private void handleBonemeal(PlayerInteractEvent event, ItemStack itemInHand, Block block) {
+        if (itemInHand == null || itemInHand.getType() != Material.BONE_MEAL) {
+            return;
+        }
+        if (!event.getAction().isRightClick()) {
+            return;
+        }
+        GardenPlant plant = gardenRegistry.getByLocation(block);
+        if (plant == null) {
+            return;
+        }
+        event.setCancelled(true);
+        if (!config.isBonemealGrowth() || plant.isFullyGrown()) {
+            return;
+        }
+        if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
+            itemInHand.setAmount(itemInHand.getAmount() - 1);
+        }
+        plant.origin().getWorld().playEffect(plant.origin(), Effect.BONE_MEAL_USE, 5);
+        if (RANDOM.nextInt(100) >= config.getBonemealChance()) {
+            return;
+        }
+        Bukkit.getRegionScheduler().run(Garden.getInstance(), plant.origin(), t ->
+                plant.incrementGrowthStage(1, gardenRegistry, gardenPlantDataType));
     }
 
     private void handlePlantShearing(ItemStack itemInHand, Block clickedBlock, Player player) {
