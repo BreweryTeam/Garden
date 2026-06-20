@@ -1,33 +1,50 @@
 package dev.jsinco.brewery.garden.configuration.serdes;
 
-import eu.okaeri.configs.schema.GenericsDeclaration;
-import eu.okaeri.configs.serdes.DeserializationData;
-import eu.okaeri.configs.serdes.ObjectSerializer;
-import eu.okaeri.configs.serdes.SerializationData;
-import lombok.NonNull;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Tag;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializer;
 
-public class TagSerializer implements ObjectSerializer<Tag<?>> {
+import java.lang.reflect.Type;
+
+@NullMarked
+public final class TagSerializer implements TypeSerializer<Tag<Material>> {
+
+    public static final TagSerializer INSTANCE = new TagSerializer();
+
+    private static final String TAG_PREFIX = "#";
 
     @Override
-    public boolean supports(@NonNull Class<? super Tag<?>> type) {
-        return Tag.class.isAssignableFrom(type);
-    }
-
-    @Override
-    public void serialize(@NonNull Tag object, @NonNull SerializationData data, @NonNull GenericsDeclaration generics) {
-        data.setValue("#" + object.key());
-    }
-
-    @Override
-    public Tag<?> deserialize(@NonNull DeserializationData data, @NonNull GenericsDeclaration generics) {
-        String serialized = data.getValue(String.class);
-        if (!serialized.startsWith("#")) {
-            throw new IllegalArgumentException("Expected string to start with '#'");
+    public Tag<Material> deserialize(Type type, ConfigurationNode node) throws SerializationException {
+        String serialized = node.getString();
+        if (serialized == null) {
+            throw new SerializationException(node, type, "missing tag value");
         }
-        return Bukkit.getTag(Tag.REGISTRY_BLOCKS, NamespacedKey.fromString(serialized.substring(1)), Material.class);
+        if (!serialized.startsWith(TAG_PREFIX)) {
+            throw new SerializationException(node, type, "expected tag string to start with '#': " + serialized);
+        }
+        NamespacedKey key = NamespacedKey.fromString(serialized.substring(TAG_PREFIX.length()));
+        if (key == null) {
+            throw new SerializationException(node, type, "invalid tag key: " + serialized);
+        }
+        Tag<Material> tag = Bukkit.getTag(Tag.REGISTRY_BLOCKS, key, Material.class);
+        if (tag == null) {
+            throw new SerializationException(node, type, "unknown block tag: " + serialized);
+        }
+        return tag;
+    }
+
+    @Override
+    public void serialize(Type type, @Nullable Tag<Material> tag, ConfigurationNode node) throws SerializationException {
+        if (tag == null) {
+            node.raw(null);
+            return;
+        }
+        node.set(TAG_PREFIX + tag.getKey());
     }
 }

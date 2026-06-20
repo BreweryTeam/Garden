@@ -1,28 +1,34 @@
 package dev.jsinco.brewery.garden.configuration.serdes;
 
-import eu.okaeri.configs.schema.GenericsDeclaration;
-import eu.okaeri.configs.serdes.DeserializationData;
-import eu.okaeri.configs.serdes.ObjectSerializer;
-import eu.okaeri.configs.serdes.SerializationData;
-import lombok.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializer;
 
+import java.lang.reflect.Type;
 import java.util.Locale;
 
-public class LocaleSerializer implements ObjectSerializer<Locale> {
+@NullMarked
+public final class LocaleSerializer implements TypeSerializer<Locale> {
 
+    public static final LocaleSerializer INSTANCE = new LocaleSerializer();
 
     @Override
-    public boolean supports(@NonNull Class<? super Locale> type) {
-        return Locale.class == type;
+    public Locale deserialize(Type type, ConfigurationNode node) throws SerializationException {
+        String serialized = node.getString();
+        if (serialized == null) {
+            throw new SerializationException(node, type, "missing locale value");
+        }
+        return Locale.forLanguageTag(serialized);
     }
 
     @Override
-    public void serialize(@NonNull Locale object, @NonNull SerializationData data, @NonNull GenericsDeclaration generics) {
-        data.setValue(object.toLanguageTag());
-    }
-
-    @Override
-    public Locale deserialize(@NonNull DeserializationData data, @NonNull GenericsDeclaration generics) {
-        return Locale.forLanguageTag(data.getValue(String.class));
+    public void serialize(Type type, @Nullable Locale locale, ConfigurationNode node) throws SerializationException {
+        if (locale == null) {
+            node.raw(null);
+            return;
+        }
+        node.set(locale.toLanguageTag());
     }
 }

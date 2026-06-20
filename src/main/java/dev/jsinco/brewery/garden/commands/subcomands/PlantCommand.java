@@ -6,6 +6,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
+import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.utility.MessageUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -82,7 +83,7 @@ public class PlantCommand {
 
     private static ArgumentBuilder<CommandSourceStack, ?> setAgeCommand() {
         return Commands.literal("setage")
-                .then(Commands.argument("stage", IntegerArgumentType.integer(1, Garden.getInstance().getPluginConfiguration().getFullyGrown()))
+                .then(Commands.argument("stage", IntegerArgumentType.integer(1, GardenConfig.instance().fullyGrown()))
                         .executes(context -> {
                             if (!(context.getSource().getSender() instanceof Player player)) {
                                 throw ERROR_ILLEGAL_SENDER.create();

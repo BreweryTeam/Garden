@@ -3,9 +3,8 @@ package dev.jsinco.brewery.garden;
 import com.dre.brewery.recipe.PluginItem;
 import com.google.common.base.Preconditions;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
-import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
+import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.configuration.GardenTranslator;
-import dev.jsinco.brewery.garden.configuration.serdes.SerdesGarden;
 import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.integration.TBPGardenIntegration;
 import dev.jsinco.brewery.garden.listener.BlockEventListener;
@@ -17,9 +16,6 @@ import dev.jsinco.brewery.garden.plant.GrowthManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.thorinwasher.blockutil.api.BlockUtilAPI;
 import dev.thorinwasher.blockutil.api.event.BlockDisableDropEvent;
-import eu.okaeri.configs.ConfigManager;
-import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
-import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.Getter;
@@ -49,8 +45,6 @@ public class Garden extends JavaPlugin {
     private static Garden instance;
     @Getter
     private static PlantRegistry gardenRegistry;
-    @Getter
-    private BreweryGardenConfig pluginConfiguration;
     private Database database;
     @Getter
     private GardenPlantDataType gardenPlantDataType;
@@ -97,7 +91,7 @@ public class Garden extends JavaPlugin {
                 .withDropEventHandler(this::handleBlockDrops)
                 .withPluginOwner(this)
                 .build();
-        this.pluginConfiguration = compileConfig();
+
         translator = new GardenTranslator(new File(this.getDataFolder(), "locale"));
         translator.reload();
         GlobalTranslator.translator().addSource(translator);
@@ -159,11 +153,11 @@ public class Garden extends JavaPlugin {
 
     private void handleBlockDrops(BlockDisableDropEvent blockDisableDropEvent) {
         Material material = blockDisableDropEvent.getBlock().getType();
-        if (pluginConfiguration.getDropsDefaultItems().stream().anyMatch(tag -> tag.isTagged(material))) {
+        if (GardenConfig.instance().dropsDefaultItems().stream().anyMatch(tag -> tag.isTagged(material))) {
             blockDisableDropEvent.setDisableDrops(false);
             return;
         }
-        for (Map.Entry<Tag<Material>, Material> entry : pluginConfiguration.getDropOverride().entrySet()) {
+        for (Map.Entry<Tag<Material>, Material> entry : GardenConfig.instance().dropOverride().entrySet()) {
             if (entry.getKey().isTagged(material)) {
                 blockDisableDropEvent.setDropOverride(List.of(new ItemStack(entry.getValue())));
                 return;
@@ -183,23 +177,14 @@ public class Garden extends JavaPlugin {
     }
 
     public void reload() {
+        GardenConfig.MEMORIZED.reload();
         translator.reload();
         gardenRegistry.clear();
-        this.pluginConfiguration = compileConfig();
         MutableGardenRegistry.PLANT_TYPE.newBacking(PlantType.readPlantTypes());
         for (World world : Bukkit.getWorlds()) {
             List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
             gardenPlants.forEach(gardenRegistry::registerPlant);
         }
-    }
-
-    private BreweryGardenConfig compileConfig() {
-        return ConfigManager.create(BreweryGardenConfig.class, it -> {
-            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit(), new SerdesGarden());
-            it.withBindFile(new File(this.getDataFolder(), "config.yml"));
-            it.saveDefaults();
-            it.load(true);
-        });
     }
 
     private void registerPlantRecipes() {

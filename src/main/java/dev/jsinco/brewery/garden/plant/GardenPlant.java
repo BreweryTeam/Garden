@@ -107,7 +107,7 @@ public class GardenPlant {
     }
 
     public void placeFruits() {
-        if (!structure.origin().isChunkLoaded()) {
+        if (!structure.origin().isChunkLoaded() || !type.bearFruits()) {
             return;
         }
         Fruit fruit = type.newFruit();

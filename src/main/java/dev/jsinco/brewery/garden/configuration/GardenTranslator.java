@@ -116,7 +116,7 @@ public class GardenTranslator extends MiniMessageTranslator {
             }
         }
         this.translations = translationsBuilder.build();
-        Preconditions.checkArgument(translations.containsKey(Garden.getInstance().getPluginConfiguration().getLanguage()), "Unknown translation: " + Garden.getInstance().getPluginConfiguration().getLanguage());
+        Preconditions.checkArgument(translations.containsKey(GardenConfig.instance().language()), "Unknown translation: " + GardenConfig.instance().language());
     }
 
     @Override
@@ -127,11 +127,11 @@ public class GardenTranslator extends MiniMessageTranslator {
     @Override
     public @Nullable String getMiniMessageString(@NotNull String key, @NotNull Locale locale) {
         Properties translations = null;
-        if (Garden.getInstance().getPluginConfiguration().isClientSidedTranslations()) {
+        if (GardenConfig.instance().clientSidedTranslations()) {
             translations = this.translations.get(locale);
         }
         if (translations == null) {
-            translations = this.translations.get(Garden.getInstance().getPluginConfiguration().getLanguage());
+            translations = this.translations.get(GardenConfig.instance().language());
         }
         Preconditions.checkState(translations != null, "Should have found a translation!");
         return translations.getProperty(key);

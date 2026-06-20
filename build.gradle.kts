@@ -1,7 +1,6 @@
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.papermc.hangarpublishplugin.model.Platforms
-import org.gradle.kotlin.dsl.support.zipTo
 import java.net.HttpURLConnection
 import java.net.URI
 
@@ -40,8 +39,6 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
     implementation("com.zaxxer:HikariCP:6.2.1")
-    implementation("eu.okaeri:okaeri-configs-yaml-bukkit:5.0.9")
-    implementation("eu.okaeri:okaeri-configs-serdes-bukkit:5.0.9")
 
     implementation("dev.thorinwasher.schem:schem-reader:1.0.0")
     implementation("com.github.Thorinwasher.BlockUtil:blockutil:main-SNAPSHOT")
@@ -106,9 +103,7 @@ tasks {
             "dev.thorinwasher.schem",
             "dev.thorinwasher.blockutil",
             "net.kyori.adventure.nbt",
-            "net.kyori.examination",
-            "org.simpleyaml",
-            "eu.okaeri.configs"
+            "net.kyori.examination"
         ).forEach { relocate(it, "${project.group}.lib.$it") }
     }
 

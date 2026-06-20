@@ -3,7 +3,7 @@ package dev.jsinco.brewery.garden.listener;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.PlantRegistry;
-import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
+import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.Fruit;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
@@ -31,7 +31,7 @@ public class BlockEventListener implements Listener {
     private final PlantRegistry gardenRegistry;
     private static final Random RANDOM = new Random();
     private final GardenPlantDataType gardenPlantDataType;
-    private BreweryGardenConfig config = Garden.getInstance().getPluginConfiguration();
+    private final GardenConfig config = GardenConfig.instance();
     private static final List<BlockFace> FRUIT_FACES = List.of(BlockFace.UP, BlockFace.SOUTH, BlockFace.NORTH, BlockFace.WEST, BlockFace.EAST);
 
     public BlockEventListener(PlantRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType) {
@@ -57,7 +57,7 @@ public class BlockEventListener implements Listener {
             return;
         }
         Block block = event.getBlock();
-        if (config.getValidSeedDropBlocks().contains(block.getType()) && RANDOM.nextInt(100) <= config.getSeedSpawnChance()) {
+        if (config.validSeedDropBlocks().contains(block.getType()) && RANDOM.nextInt(100) <= config.seedSpawnChance()) {
             List<PlantType> types = List.copyOf(MutableGardenRegistry.PLANT_TYPE.values());
             PlantType chosen = types.get(RANDOM.nextInt(types.size()));
             ItemStack seeds = chosen.newSeeds().newItem(1);
@@ -154,7 +154,7 @@ public class BlockEventListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockPhysics(BlockPhysicsEvent event) {
-        if (Garden.getInstance().getPluginConfiguration().isFallFruit()) {
+        if (GardenConfig.instance().fallFruit()) {
             return;
         }
         PlantType plantType = Fruit.getPlantType(event.getBlock());

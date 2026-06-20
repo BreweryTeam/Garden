@@ -7,6 +7,7 @@ import dev.jsinco.brewery.garden.utility.TimeUtil;
 import dev.thorinwasher.schem.Schematic;
 import dev.thorinwasher.schem.SchematicReader;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Material;
 import org.jspecify.annotations.NullMarked;
@@ -32,6 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Getter
+@Accessors(fluent = true)
 @NullMarked
 @ConfigSerializable
 @SuppressWarnings({"unused", "NotNullFieldNotInitialized"})
@@ -40,7 +42,7 @@ public final class PlantTypeTemplate {
     private static final char FILE_NAME_END_DELIMITER = '.';
     private static final String SCHEM_EXTENSION = FILE_NAME_END_DELIMITER + "schem";
     private static final String RANDOM_TRACK = "*";
-    private static final String PLANT_FILE = "plant.yml"; // I'm thinking of having this just be dynamic (e.g., look for the firs .yml in dir)
+    private static final String PLANT_FILE = "plant.yml";
     private static final Path PLANTS_DIRECTORY = Garden.getInstance().getDataPath().resolve("plants");
     private static final Logger LOGGER = Logger.getLogger("Garden");
 
@@ -54,6 +56,7 @@ public final class PlantTypeTemplate {
     private String approximateGrowthTime;
     private FruitPlacement fruitPlacement;
     private Material seedMaterial;
+    private @Nullable Boolean bearFruits;
 
 
     public Optional<PlantType> asPlantType() {
@@ -73,15 +76,11 @@ public final class PlantTypeTemplate {
         Map<String, List<Schematic>> tracks = this.tracks();
         int stages = this.stagesOrFallback(tracks, resolvedTrack);
         return Optional.of(new PlantType(
-            resolvedTrack,
-            displayName,
-            textureBase64,
-            stages,
-            tracks,
             Garden.key(name),
+            resolvedTrack,
             this.growthTime(),
-            fruitPlacement,
-            seedMaterial
+            tracks,
+            this
         ));
     }
 
@@ -169,7 +168,7 @@ public final class PlantTypeTemplate {
         try {
             return Integer.parseInt(base.substring(start, end));
         } catch (NumberFormatException e) {
-            return Integer.MAX_VALUE;
+            return Integer.MAX_VALUE; // TODO: better handling
         }
     }
 

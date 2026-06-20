@@ -1,12 +1,12 @@
 package dev.jsinco.brewery.garden.utility;
 
-import dev.jsinco.brewery.garden.Garden;
+import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import org.bukkit.Location;
 
 public class WorldUtil {
 
 
     public static boolean isBlacklistedWorld(Location location) {
-        return Garden.getInstance().getPluginConfiguration().getBlacklistedWorlds().contains(location.getWorld().getName());
+        return GardenConfig.instance().blacklistedWorlds().contains(location.getWorld().getName());
     }
 }
