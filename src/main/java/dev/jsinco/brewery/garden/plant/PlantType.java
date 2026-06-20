@@ -44,7 +44,8 @@ public record PlantType(
     }
 
     public boolean bearFruits() {
-        return Boolean.TRUE.equals(template.bearFruits());
+        Boolean value = template.bearFruits();
+        return value != null ? value : true;
     }
 
     private static List<Matrix3d> compileAllowedTransformations() {
