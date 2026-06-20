@@ -91,7 +91,7 @@ public class GardenPlantDataType {
                 preparedStatement.setBytes(1, Encoder.asBytes(world.getUID()));
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    PlantType plantType = MutableGardenRegistry.plantType.get(NamespacedKey.fromString(resultSet.getString("plant_type")));
+                    PlantType plantType = MutableGardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(resultSet.getString("plant_type")));
                     Location origin = new Location(world, resultSet.getInt("origin_x"), resultSet.getInt("origin_y"), resultSet.getInt("origin_z"));
                     if (plantType == null) {
                         Garden.getInstance().getLogger().warning("Could not read plant at: " + origin);

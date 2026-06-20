@@ -49,7 +49,7 @@ public class PlantItemArgument implements CustomArgumentType.Converted<PlantItem
 
     private Map<String, PlantItem> compileItems() {
         Map<String, PlantItem> output = new HashMap<>();
-        for (var plant : MutableGardenRegistry.plantType.values()) {
+        for (var plant : MutableGardenRegistry.PLANT_TYPE.values()) {
             Seeds seeds = plant.newSeeds();
             output.put(seeds.simpleName(), seeds);
             Fruit fruit = plant.newFruit();

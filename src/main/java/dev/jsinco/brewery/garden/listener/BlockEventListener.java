@@ -58,7 +58,7 @@ public class BlockEventListener implements Listener {
         }
         Block block = event.getBlock();
         if (config.getValidSeedDropBlocks().contains(block.getType()) && RANDOM.nextInt(100) <= config.getSeedSpawnChance()) {
-            List<PlantType> types = List.copyOf(MutableGardenRegistry.plantType.values());
+            List<PlantType> types = List.copyOf(MutableGardenRegistry.PLANT_TYPE.values());
             PlantType chosen = types.get(RANDOM.nextInt(types.size()));
             ItemStack seeds = chosen.newSeeds().newItem(1);
             block.getWorld().dropItem(block.getLocation().toCenterLocation(), seeds);

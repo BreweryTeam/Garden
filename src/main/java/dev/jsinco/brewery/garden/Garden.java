@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.configuration.GardenTranslator;
-import dev.jsinco.brewery.garden.configuration.SerdesGarden;
+import dev.jsinco.brewery.garden.configuration.serdes.SerdesGarden;
 import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.integration.TBPGardenIntegration;
 import dev.jsinco.brewery.garden.listener.BlockEventListener;
@@ -31,13 +31,17 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.stream.Stream;
 
 public class Garden extends JavaPlugin {
 
@@ -110,89 +114,45 @@ public class Garden extends JavaPlugin {
     }
 
     private void savePlantResources() {
-        Path path = this.getDataPath();
-        File plantsFolder = path.resolve("plants").toFile();
-        File schemsFolder = path.resolve("structures").toFile();
-
-        // Only do this if the folders don't exist yet
-        if (plantsFolder.exists() || schemsFolder.exists()) {
+        File plantsFolder = getDataPath().resolve("plants").toFile();
+        if (plantsFolder.exists()) {
             return;
         }
+        URL resource = Garden.class.getResource("/plants");
+        if (resource == null) {
+            throw new RuntimeException("Could not find internal resource: '/plants' :(");
+        }
 
-        try (InputStream inputStream = Garden.class.getResourceAsStream("/plants.zip")) {
-            if (inputStream == null) {
-                throw new IOException("Could not find internal resource: /plants.zip");
-            }
-            Set<String> alreadySavedNames = readAlreadySaved();
-            List<String> savedNames = new ArrayList<>();
-            try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
-                ZipEntry entry = zipInputStream.getNextEntry();
-                while (entry != null) {
-                    ZipEntry current = entry;
-                    if (current.isDirectory()) {
-                        entry = zipInputStream.getNextEntry();
-                        continue;
-                    }
-                    File destination = new File(this.getDataFolder(), current.getName());
-                    if (destination.exists() || alreadySavedNames.contains(destination.toString())) {
-                        entry = zipInputStream.getNextEntry();
-                        continue;
-                    }
-                    File destinationFolder = destination.getParentFile();
-                    if (!destinationFolder.exists() && !destination.getParentFile().mkdirs()) {
-                        throw new IOException("Could not make dirs at: " + destinationFolder);
-                    }
-                    if (!destination.createNewFile()) {
-                        throw new IOException("could not make file: " + destination);
-                    }
-                    try (OutputStream outputStream = new FileOutputStream(destination)) {
-                        zipInputStream.transferTo(outputStream);
-                    }
-                    savedNames.add(destination.toString());
-                    entry = zipInputStream.getNextEntry();
+        try {
+            URI uri = resource.toURI();
+            if ("jar".equals(uri.getScheme())) {
+                try (FileSystem fileSystem = FileSystems.newFileSystem(uri, Map.of())) {
+                    copyResourceTree(fileSystem.getPath("/plants"), plantsFolder.toPath());
                 }
+            } else {
+                copyResourceTree(Path.of(uri), plantsFolder.toPath());
             }
-            writeSaved(savedNames);
-        } catch (IOException e) {
+        } catch (URISyntaxException | IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void writeSaved(List<String> savedNames) throws IOException {
-        File file = new File(getDataFolder(), "internal/saved_resources.txt");
-        if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
-            throw new IOException("Unabled to create new folder: " + file.getParentFile());
-        }
-        if (savedNames.isEmpty()) {
-            return;
-        }
-        if (!file.exists() && !file.createNewFile()) {
-            throw new IOException("Unabled to create new file: " + file);
-        }
-        try (OutputStreamWriter outputStreamWriter = new FileWriter(file, StandardCharsets.UTF_8, true)) {
-            try (BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter)) {
-                for (String line : savedNames) {
-                    bufferedWriter.write(line);
-                    bufferedWriter.newLine();
+    private void copyResourceTree(Path source, Path target) throws IOException {
+        try (Stream<Path> stream = Files.walk(source)) {
+            Iterator<Path> iterator = stream.iterator();
+            while (iterator.hasNext()) {
+                Path path = iterator.next();
+                String relative = source.relativize(path).toString();
+                Path destination = target.resolve(relative);
+                if (Files.isDirectory(path)) {
+                    Files.createDirectories(destination);
+                } else {
+                    Path parent = destination.getParent();
+                    if (parent != null) {
+                        Files.createDirectories(parent);
+                    }
+                    Files.copy(path, destination, StandardCopyOption.REPLACE_EXISTING);
                 }
-            }
-        }
-    }
-
-    private Set<String> readAlreadySaved() throws IOException {
-        File file = new File(getDataFolder(), "internal/saved_resources.txt");
-        if (!file.exists()) {
-            return Set.of();
-        }
-        try (InputStreamReader inputStream = new FileReader(file, StandardCharsets.UTF_8)) {
-            try (BufferedReader reader = new BufferedReader(inputStream)) {
-                Set<String> output = new HashSet<>();
-                String line = reader.readLine();
-                while (line != null) {
-                    output.add(line);
-                    line = reader.readLine();
-                }
-                return output;
             }
         }
     }
@@ -226,7 +186,7 @@ public class Garden extends JavaPlugin {
         translator.reload();
         gardenRegistry.clear();
         this.pluginConfiguration = compileConfig();
-        MutableGardenRegistry.plantType.newBacking(PlantType.readPlantTypes());
+        MutableGardenRegistry.PLANT_TYPE.newBacking(PlantType.readPlantTypes());
         for (World world : Bukkit.getWorlds()) {
             List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
             gardenPlants.forEach(gardenRegistry::registerPlant);
@@ -243,7 +203,7 @@ public class Garden extends JavaPlugin {
     }
 
     private void registerPlantRecipes() {
-        for (PlantType plantType : MutableGardenRegistry.plantType.values()) {
+        for (PlantType plantType : MutableGardenRegistry.PLANT_TYPE.values()) {
             NamespacedKey namespacedKey = plantType.key();
             if (Bukkit.getRecipe(namespacedKey) != null) {
                 Bukkit.removeRecipe(namespacedKey);

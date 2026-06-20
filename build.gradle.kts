@@ -18,7 +18,7 @@ group = "dev.jsinco.brewery.garden"
 version = "1.5.0"
 
 val targetMinecraftVersions = listOf(
-    "1.21.5", "1.21.8", "1.21.10", "1.21.11"
+    "1.21.5", "1.21.8", "1.21.10", "1.21.11", "26.1.2", "26.2"
 )
 
 repositories {
@@ -34,6 +34,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("com.dre.brewery:BreweryX:3.4.10-SNAPSHOT")
     compileOnly("dev.jsinco.brewery:thebrewingproject-bukkit:3.0.0")
+    compileOnly("org.spongepowered:configurate-yaml:4.2.0")
 
 
     compileOnly("org.projectlombok:lombok:1.18.30")
@@ -51,6 +52,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.50.0")
     testImplementation("org.xerial:sqlite-jdbc:3.47.2.0")
+    testImplementation("org.spongepowered:configurate-yaml:4.2.0")
 }
 
 
@@ -122,17 +124,6 @@ tasks {
         }
     }
 
-    processResources {
-        dependsOn("zipResources")
-    }
-
-    register("zipResources") {
-        doFirst {
-            val dest = File(project.projectDir, "src/main/resources/plants.zip")
-            dest.createNewFile()
-            zipTo(dest, File(project.projectDir, "src/main/exposed_resources"))
-        }
-    }
 }
 
 bukkit {

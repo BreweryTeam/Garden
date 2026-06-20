@@ -68,7 +68,7 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
         if (!view.has(PLANT_TYPE_KEY)) {
             return null;
         }
-        PlantType type = MutableGardenRegistry.plantType.get(NamespacedKey.fromString(view.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
+        PlantType type = MutableGardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(view.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
         if (type == null) {
             return null;
         }
@@ -93,6 +93,6 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
         Skull skull = (Skull) block.getState();
         String key = skull.getPersistentDataContainer().get(PLANT_TYPE_KEY, PersistentDataType.STRING);
         if (key == null) return null;
-        return MutableGardenRegistry.plantType.get(NamespacedKey.fromString(key));
+        return MutableGardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(key));
     }
 }

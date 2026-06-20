@@ -38,7 +38,7 @@ class GardenPlantDataTypeTest {
 
     @TestFactory
     Stream<DynamicTest> checkPersistence() {
-        return MutableGardenRegistry.plantType.values()
+        return MutableGardenRegistry.PLANT_TYPE.values()
                 .stream()
                 .map(plantType -> DynamicTest.dynamicTest(
                         "checkPersistence(" + plantType + ")",
