@@ -32,6 +32,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -109,6 +110,15 @@ public class Garden extends JavaPlugin {
     }
 
     private void savePlantResources() {
+        Path path = this.getDataPath();
+        File plantsFolder = path.resolve("plants").toFile();
+        File schemsFolder = path.resolve("structures").toFile();
+
+        // Only do this if the folders don't exist yet
+        if (plantsFolder.exists() || schemsFolder.exists()) {
+            return;
+        }
+
         try (InputStream inputStream = Garden.class.getResourceAsStream("/plants.zip")) {
             if (inputStream == null) {
                 throw new IOException("Could not find internal resource: /plants.zip");
