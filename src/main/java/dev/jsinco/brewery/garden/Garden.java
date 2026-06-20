@@ -107,6 +107,17 @@ public class Garden extends JavaPlugin {
         growthTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> growthManager.tick(), 1, 200);
     }
 
+    @Override
+    public void onDisable() {
+        if (growthTask != null) {
+            growthTask.cancel();
+        }
+        GlobalTranslator.translator().removeSource(translator);
+        if (database != null) {
+            database.close();
+        }
+    }
+
     private void savePlantResources() {
         File plantsFolder = getDataPath().resolve("plants").toFile();
         if (plantsFolder.exists()) {
@@ -162,17 +173,6 @@ public class Garden extends JavaPlugin {
                 blockDisableDropEvent.setDropOverride(List.of(new ItemStack(entry.getValue())));
                 return;
             }
-        }
-    }
-
-    @Override
-    public void onDisable() {
-        if (growthTask != null) {
-            growthTask.cancel();
-        }
-        GlobalTranslator.translator().removeSource(translator);
-        if (database != null) {
-            database.close();
         }
     }
 

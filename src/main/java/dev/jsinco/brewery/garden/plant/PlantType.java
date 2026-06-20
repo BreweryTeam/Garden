@@ -6,13 +6,21 @@ import com.google.common.collect.ImmutableList;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.thorinwasher.schem.Schematic;
 import lombok.experimental.Delegate;
-import org.bukkit.*;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.Bukkit;
+import org.bukkit.Keyed;
+import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
+import org.jspecify.annotations.NullMarked;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
+import java.util.UUID;
 
+@NullMarked
 public record PlantType(
     // Stuff that needs to be cached
     NamespacedKey key,
@@ -86,7 +94,7 @@ public record PlantType(
     }
 
     @Override
-    public @NotNull NamespacedKey getKey() {
+    public NamespacedKey getKey() {
         return key();
     }
 

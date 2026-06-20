@@ -4,7 +4,7 @@ import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import org.bukkit.Location;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -25,13 +25,13 @@ class GardenPlantDataTypeTest {
     @MockBukkitInject
     ServerMock serverMock;
 
-    private @NotNull WorldMock world;
+    private @NonNull WorldMock world;
     private GardenPlantDataType dataType;
 
 
     @BeforeEach
     void setup() {
-        @NotNull Garden garden = MockBukkit.load(Garden.class);
+        @NonNull Garden garden = MockBukkit.load(Garden.class);
         this.dataType = garden.getGardenPlantDataType();
         this.world = serverMock.addSimpleWorld("world");
     }
