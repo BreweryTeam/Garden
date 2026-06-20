@@ -48,7 +48,7 @@ public class PlantCommand {
                     if (!(commandContext.getSource().getSender() instanceof Player player)) {
                         throw ERROR_ILLEGAL_SENDER.create();
                     }
-                    GardenPlant gardenPlant = getPlant(player, 32);
+                    GardenPlant gardenPlant = getPlant(player, MAX_DISTANCE);
                     gardenPlant.bloom();
                     gardenPlant.placeFruits();
                     return 1;
@@ -74,7 +74,7 @@ public class PlantCommand {
                     if (!(context.getSource().getSender() instanceof Player player)) {
                         throw ERROR_ILLEGAL_SENDER.create();
                     }
-                    sendPlantMessage(player, 32);
+                    sendPlantMessage(player, MAX_DISTANCE);
                     return 1;
                 });
     }
