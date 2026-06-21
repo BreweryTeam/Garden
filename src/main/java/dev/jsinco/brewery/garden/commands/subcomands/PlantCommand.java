@@ -6,7 +6,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
-import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.utility.MessageUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -18,6 +17,9 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 public class PlantCommand {
+
+    private static final int MAX_DISTANCE = 32;
+    private static final int DEFAULT_MAX_STAGE = 4;
 
     private static final SimpleCommandExceptionType ERROR_ILLEGAL_SENDER = new SimpleCommandExceptionType(
             MessageUtil.brigadierTranslatable("garden.command.illegal-sender")
@@ -46,7 +48,7 @@ public class PlantCommand {
                     if (!(commandContext.getSource().getSender() instanceof Player player)) {
                         throw ERROR_ILLEGAL_SENDER.create();
                     }
-                    GardenPlant gardenPlant = getPlant(player, 32);
+                    GardenPlant gardenPlant = getPlant(player, MAX_DISTANCE);
                     gardenPlant.bloom();
                     gardenPlant.placeFruits();
                     return 1;
@@ -72,7 +74,7 @@ public class PlantCommand {
                     if (!(context.getSource().getSender() instanceof Player player)) {
                         throw ERROR_ILLEGAL_SENDER.create();
                     }
-                    sendPlantMessage(player, 32);
+                    sendPlantMessage(player, MAX_DISTANCE);
                     return 1;
                 });
     }
@@ -83,25 +85,39 @@ public class PlantCommand {
 
     private static ArgumentBuilder<CommandSourceStack, ?> setAgeCommand() {
         return Commands.literal("setage")
-                .then(Commands.argument("stage", IntegerArgumentType.integer(1, GardenConfig.instance().fullyGrown()))
-                        .executes(context -> {
-                            if (!(context.getSource().getSender() instanceof Player player)) {
-                                throw ERROR_ILLEGAL_SENDER.create();
-                            }
-                            GardenPlant gardenPlant = getPlant(player, 32);
-                            int stage = context.getArgument("stage", Integer.class);
-                            try {
-                                gardenPlant.setGrowthStage(stage, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
-                            } catch (ArrayIndexOutOfBoundsException e) {
-                                throw new SimpleCommandExceptionType(
-                                        MessageUtil.brigadierTranslatable("garden.command.unknown-age",
-                                                Argument.numeric("age", stage),
-                                                Argument.tagResolver(Placeholder.parsed("plant", gardenPlant.getType().displayName()))
-                                        )
-                                ).create();
-                            }
-                            return 1;
-                        }));
+            .then(Commands.argument("stage", IntegerArgumentType.integer(1))
+                .suggests((context, builder) -> {
+                    int maxStages = DEFAULT_MAX_STAGE;
+                    if (context.getSource().getSender() instanceof Player player) {
+                        try {
+                            maxStages = getPlant(player, MAX_DISTANCE).getType().stages();
+                        } catch (CommandSyntaxException ignored) {
+                        }
+                    }
+                    for (int i = 1; i <= maxStages; i++) {
+                        builder.suggest(i);
+                    }
+                    return builder.buildFuture();
+                })
+                .executes(context -> {
+                    if (!(context.getSource().getSender() instanceof Player player)) {
+                        throw ERROR_ILLEGAL_SENDER.create();
+                    }
+                    GardenPlant gardenPlant = getPlant(player, MAX_DISTANCE);
+
+                    int stage = context.getArgument("stage", Integer.class) - 1;
+                    try {
+                        gardenPlant.setGrowthStage(stage, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        throw new SimpleCommandExceptionType(
+                            MessageUtil.brigadierTranslatable("garden.command.unknown-age",
+                                Argument.numeric("age", stage),
+                                Argument.tagResolver(Placeholder.parsed("plant", gardenPlant.getType().displayName()))
+                            )
+                        ).create();
+                    }
+                    return 1;
+                }));
     }
 
     private static ArgumentBuilder<CommandSourceStack, ?> growCommand() {
@@ -110,7 +126,7 @@ public class PlantCommand {
                     if (!(context.getSource().getSender() instanceof Player player)) {
                         throw ERROR_ILLEGAL_SENDER.create();
                     }
-                    GardenPlant gardenPlant = getPlant(player, 32);
+                    GardenPlant gardenPlant = getPlant(player, MAX_DISTANCE);
                     if (gardenPlant.isFullyGrown()) {
                         throw FULLY_GROWN.create();
                     }
