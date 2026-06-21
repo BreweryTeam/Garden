@@ -6,6 +6,7 @@ import dev.jsinco.brewery.garden.plant.GardenPlant;
 import org.bukkit.Location;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,7 @@ class GardenPlantDataTypeTest {
         this.world = serverMock.addSimpleWorld("world");
     }
 
+    @Disabled("MockBukkit not supporting newer block properties")
     @TestFactory
     Stream<DynamicTest> checkPersistence() {
         return MutableGardenRegistry.PLANT_TYPE.values()
