@@ -184,7 +184,6 @@ public final class PlantTypeTemplate {
             .file(plantFile)
             .nodeStyle(NodeStyle.BLOCK)
             .indent(2)
-            .defaultOptions(opts -> opts.header("https://docs.breweryteam.dev"))
             .build();
         try {
             CommentedConfigurationNode root = loader.load();

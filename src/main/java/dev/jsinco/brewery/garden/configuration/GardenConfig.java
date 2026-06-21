@@ -68,6 +68,8 @@ public final class GardenConfig {
     private int bonemealChance = 25;
 
 
+    private static final String HEADER = "This is the global configuration file for Garden.\n" +
+        "For documentation, visit: https://docs.breweryteam.dev/docs/garden";
 
     private static final Lazy<YamlConfigurationLoader> LOADER = Lazy.of(() -> {
         Path file = Garden.getInstance().getDataPath().resolve("config.yml");
@@ -76,7 +78,7 @@ public final class GardenConfig {
             .nodeStyle(NodeStyle.BLOCK)
             .indent(2)
             .defaultOptions(opts ->
-                opts.header("https://docs.breweryteam.dev")
+                opts.header(HEADER)
                     .serializers(serdes -> serdes
                         .register(typeToken -> Tag.class.isAssignableFrom(GenericTypeReflector.erase(typeToken)), TagSerializer.INSTANCE)
                         .register(Locale.class, LocaleSerializer.INSTANCE)
