@@ -1,0 +1,7 @@
+# https://docs.breweryteam.dev/docs/garden/config/plant
+
+display-name: "<#FCCCC4>Peach"
+texture-base64: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmFkYmJhYjM4ODFhYWNiYTU3N2UyN2JiZWUxZmJlNGI5YTUwZTE5ZjVhODdmOGQ0OWI2MzYwNTRmYTE3ODhmYyJ9fX0="
+approximate-growth-time: "1d"
+fruit-placement: ADJACENT
+seed-material: PUMPKIN_SEEDS

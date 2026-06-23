@@ -3,9 +3,8 @@ package dev.jsinco.brewery.garden;
 import com.dre.brewery.recipe.PluginItem;
 import com.google.common.base.Preconditions;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
-import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
+import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.configuration.GardenTranslator;
-import dev.jsinco.brewery.garden.configuration.SerdesGarden;
 import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.integration.TBPGardenIntegration;
 import dev.jsinco.brewery.garden.listener.BlockEventListener;
@@ -17,9 +16,6 @@ import dev.jsinco.brewery.garden.plant.GrowthManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.thorinwasher.blockutil.api.BlockUtilAPI;
 import dev.thorinwasher.blockutil.api.event.BlockDisableDropEvent;
-import eu.okaeri.configs.ConfigManager;
-import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
-import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.Getter;
@@ -31,13 +27,17 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.stream.Stream;
 
 public class Garden extends JavaPlugin {
 
@@ -45,8 +45,6 @@ public class Garden extends JavaPlugin {
     private static Garden instance;
     @Getter
     private static PlantRegistry gardenRegistry;
-    @Getter
-    private BreweryGardenConfig pluginConfiguration;
     private Database database;
     @Getter
     private GardenPlantDataType gardenPlantDataType;
@@ -93,7 +91,7 @@ public class Garden extends JavaPlugin {
                 .withDropEventHandler(this::handleBlockDrops)
                 .withPluginOwner(this)
                 .build();
-        this.pluginConfiguration = compileConfig();
+
         translator = new GardenTranslator(new File(this.getDataFolder(), "locale"));
         translator.reload();
         GlobalTranslator.translator().addSource(translator);
@@ -109,108 +107,6 @@ public class Garden extends JavaPlugin {
         growthTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> growthManager.tick(), 1, 200);
     }
 
-    private void savePlantResources() {
-        Path path = this.getDataPath();
-        File plantsFolder = path.resolve("plants").toFile();
-        File schemsFolder = path.resolve("structures").toFile();
-
-        // Only do this if the folders don't exist yet
-        if (plantsFolder.exists() || schemsFolder.exists()) {
-            return;
-        }
-
-        try (InputStream inputStream = Garden.class.getResourceAsStream("/plants.zip")) {
-            if (inputStream == null) {
-                throw new IOException("Could not find internal resource: /plants.zip");
-            }
-            Set<String> alreadySavedNames = readAlreadySaved();
-            List<String> savedNames = new ArrayList<>();
-            try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
-                ZipEntry entry = zipInputStream.getNextEntry();
-                while (entry != null) {
-                    ZipEntry current = entry;
-                    if (current.isDirectory()) {
-                        entry = zipInputStream.getNextEntry();
-                        continue;
-                    }
-                    File destination = new File(this.getDataFolder(), current.getName());
-                    if (destination.exists() || alreadySavedNames.contains(destination.toString())) {
-                        entry = zipInputStream.getNextEntry();
-                        continue;
-                    }
-                    File destinationFolder = destination.getParentFile();
-                    if (!destinationFolder.exists() && !destination.getParentFile().mkdirs()) {
-                        throw new IOException("Could not make dirs at: " + destinationFolder);
-                    }
-                    if (!destination.createNewFile()) {
-                        throw new IOException("could not make file: " + destination);
-                    }
-                    try (OutputStream outputStream = new FileOutputStream(destination)) {
-                        zipInputStream.transferTo(outputStream);
-                    }
-                    savedNames.add(destination.toString());
-                    entry = zipInputStream.getNextEntry();
-                }
-            }
-            writeSaved(savedNames);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void writeSaved(List<String> savedNames) throws IOException {
-        File file = new File(getDataFolder(), "internal/saved_resources.txt");
-        if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
-            throw new IOException("Unabled to create new folder: " + file.getParentFile());
-        }
-        if (savedNames.isEmpty()) {
-            return;
-        }
-        if (!file.exists() && !file.createNewFile()) {
-            throw new IOException("Unabled to create new file: " + file);
-        }
-        try (OutputStreamWriter outputStreamWriter = new FileWriter(file, StandardCharsets.UTF_8, true)) {
-            try (BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter)) {
-                for (String line : savedNames) {
-                    bufferedWriter.write(line);
-                    bufferedWriter.newLine();
-                }
-            }
-        }
-    }
-
-    private Set<String> readAlreadySaved() throws IOException {
-        File file = new File(getDataFolder(), "internal/saved_resources.txt");
-        if (!file.exists()) {
-            return Set.of();
-        }
-        try (InputStreamReader inputStream = new FileReader(file, StandardCharsets.UTF_8)) {
-            try (BufferedReader reader = new BufferedReader(inputStream)) {
-                Set<String> output = new HashSet<>();
-                String line = reader.readLine();
-                while (line != null) {
-                    output.add(line);
-                    line = reader.readLine();
-                }
-                return output;
-            }
-        }
-    }
-
-    private void handleBlockDrops(BlockDisableDropEvent blockDisableDropEvent) {
-        Material material = blockDisableDropEvent.getBlock().getType();
-        if (pluginConfiguration.getDropsDefaultItems().stream().anyMatch(tag -> tag.isTagged(material))) {
-            blockDisableDropEvent.setDisableDrops(false);
-            return;
-        }
-        for (Map.Entry<Tag<Material>, Material> entry : pluginConfiguration.getDropOverride().entrySet()) {
-            if (entry.getKey().isTagged(material)) {
-                blockDisableDropEvent.setDropOverride(List.of(new ItemStack(entry.getValue())));
-                return;
-            }
-        }
-    }
-
     @Override
     public void onDisable() {
         if (growthTask != null) {
@@ -222,24 +118,73 @@ public class Garden extends JavaPlugin {
         }
     }
 
+    private void savePlantResources() {
+        File plantsFolder = getDataPath().resolve("plants").toFile();
+        if (plantsFolder.exists()) {
+            return;
+        }
+        URL resource = Garden.class.getResource("/plants");
+        if (resource == null) {
+            throw new RuntimeException("Could not find internal resource: '/plants' :(");
+        }
+
+        try {
+            URI uri = resource.toURI();
+            if ("jar".equals(uri.getScheme())) {
+                try (FileSystem fileSystem = FileSystems.newFileSystem(uri, Map.of())) {
+                    copyResourceTree(fileSystem.getPath("/plants"), plantsFolder.toPath());
+                }
+            } else {
+                copyResourceTree(Path.of(uri), plantsFolder.toPath());
+            }
+        } catch (URISyntaxException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void copyResourceTree(Path source, Path target) throws IOException {
+        try (Stream<Path> stream = Files.walk(source)) {
+            Iterator<Path> iterator = stream.iterator();
+            while (iterator.hasNext()) {
+                Path path = iterator.next();
+                String relative = source.relativize(path).toString();
+                Path destination = target.resolve(relative);
+                if (Files.isDirectory(path)) {
+                    Files.createDirectories(destination);
+                } else {
+                    Path parent = destination.getParent();
+                    if (parent != null) {
+                        Files.createDirectories(parent);
+                    }
+                    Files.copy(path, destination, StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+        }
+    }
+
+    private void handleBlockDrops(BlockDisableDropEvent blockDisableDropEvent) {
+        Material material = blockDisableDropEvent.getBlock().getType();
+        if (GardenConfig.instance().dropsDefaultItems().stream().anyMatch(tag -> tag.isTagged(material))) {
+            blockDisableDropEvent.setDisableDrops(false);
+            return;
+        }
+        for (Map.Entry<Tag<Material>, Material> entry : GardenConfig.instance().dropOverride().entrySet()) {
+            if (entry.getKey().isTagged(material)) {
+                blockDisableDropEvent.setDropOverride(List.of(new ItemStack(entry.getValue())));
+                return;
+            }
+        }
+    }
+
     public void reload() {
+        GardenConfig.MEMORIZED.reload();
         translator.reload();
         gardenRegistry.clear();
-        this.pluginConfiguration = compileConfig();
         MutableGardenRegistry.plantType.newBacking(PlantType.readPlantTypes());
         for (World world : Bukkit.getWorlds()) {
             List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
             gardenPlants.forEach(gardenRegistry::registerPlant);
         }
-    }
-
-    private BreweryGardenConfig compileConfig() {
-        return ConfigManager.create(BreweryGardenConfig.class, it -> {
-            it.withConfigurer(new YamlBukkitConfigurer(), new SerdesBukkit(), new SerdesGarden());
-            it.withBindFile(new File(this.getDataFolder(), "config.yml"));
-            it.saveDefaults();
-            it.load(true);
-        });
     }
 
     private void registerPlantRecipes() {
@@ -257,7 +202,7 @@ public class Garden extends JavaPlugin {
 
     public static NamespacedKey key(String key) {
         if (!Key.parseableValue(key)) {
-            return null;
+            throw new IllegalArgumentException("Invalid key: " + key);
         }
         return new NamespacedKey("garden", key);
     }

@@ -8,8 +8,7 @@ public enum FruitPlacement {
     ABOVE(BlockFace.UP),
     ADJACENT(BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH, BlockFace.NORTH);
 
-    private List<BlockFace> vectors;
-
+    private final List<BlockFace> vectors;
 
     FruitPlacement(BlockFace... vectors) {
         this.vectors = List.of(vectors);
