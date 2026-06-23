@@ -2,11 +2,13 @@ package dev.jsinco.brewery.garden;
 
 import com.dre.brewery.recipe.PluginItem;
 import com.google.common.base.Preconditions;
+import dev.jsinco.brewery.garden.api.integration.ItemIntegration;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.configuration.GardenTranslator;
-import dev.jsinco.brewery.garden.integration.BreweryGardenIngredient;
-import dev.jsinco.brewery.garden.integration.TBPGardenIntegration;
+import dev.jsinco.brewery.garden.integration.exported.BreweryGardenIngredient;
+import dev.jsinco.brewery.garden.integration.exported.TBPGardenIntegration;
+import dev.jsinco.brewery.garden.integration.imported.IntegrationRegistryImpl;
 import dev.jsinco.brewery.garden.listener.BlockEventListener;
 import dev.jsinco.brewery.garden.listener.EventListeners;
 import dev.jsinco.brewery.garden.persist.Database;
@@ -21,12 +23,17 @@ import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.Getter;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Tag;
+import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -36,7 +43,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class Garden extends JavaPlugin {
@@ -53,10 +62,13 @@ public class Garden extends JavaPlugin {
     private GardenTranslator translator;
     private boolean loadSuccess = false;
     private ScheduledTask growthTask;
+    private IntegrationRegistryImpl integrationRegistry;
 
     @Override
     public void onLoad() {
         instance = this;
+        this.integrationRegistry = new IntegrationRegistryImpl();
+        integrationRegistry.registerDefaults(this);
         savePlantResources();
         try {
             PluginItem.registerForConfig(this.getName(), BreweryGardenIngredient::new);
@@ -71,6 +83,7 @@ public class Garden extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        integrationRegistry.itemIntegrations().forEach(ItemIntegration::initialize);
         Preconditions.checkState(loadSuccess, "Failed on load, see logs.");
         this.database = new Database();
         try {

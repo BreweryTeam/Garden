@@ -22,11 +22,18 @@ val targetMinecraftVersions = listOf(
 
 repositories {
     mavenCentral()
+    maven("https://repo.breweryteam.dev/mirror")
     maven("https://repo.jsinco.dev/releases")
     maven("https://storehouse.okaeri.eu/repository/maven-public/")
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.breweryteam.dev/releases")
     maven("https://jitpack.io")
+    maven("https://repo.momirealms.net/releases/")
+    maven("https://maven.devs.beer/")
+    maven("https://nexus.phoenixdevt.fr/repository/maven-public/")
+    maven("https://mvn.lumine.io/repository/maven-public/")
+    maven("https://repo.nexomc.com/releases")
+    maven("https://repo.oraxen.com/releases")
 }
 
 dependencies {
@@ -35,9 +42,19 @@ dependencies {
     compileOnly("dev.jsinco.brewery:thebrewingproject-bukkit:3.0.0")
     compileOnly("org.spongepowered:configurate-yaml:4.2.0")
 
+    compileOnly("net.momirealms:craft-engine-bukkit:26.5")
+    compileOnly("net.momirealms:craft-engine-core:26.5")
+    compileOnly("dev.lone:api-itemsadder:4.0.10")
+    compileOnly("net.Indyuce:MMOItems-API:6.10.1-SNAPSHOT")
+    compileOnly("io.lumine:MythicLib-dist:1.7.1-SNAPSHOT")
+    compileOnly("io.lumine:Mythic-Dist:5.10.1")
+    compileOnly("com.nexomc:nexo:1.15.0")
+    compileOnly("io.th0rgal:oraxen:1.190.0")
+
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
+    implementation(project(":api"))
     implementation("com.zaxxer:HikariCP:6.2.1")
 
     implementation("dev.thorinwasher.schem:schem-reader:1.0.0")

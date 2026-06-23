@@ -1,4 +1,4 @@
-package dev.jsinco.brewery.garden.integration;
+package dev.jsinco.brewery.garden.integration.exported;
 
 import com.dre.brewery.recipe.PluginItem;
 import dev.jsinco.brewery.garden.plant.Fruit;
