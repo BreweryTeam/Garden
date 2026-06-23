@@ -1,4 +1,4 @@
-package dev.jsinco.brewery.garden.integration;
+package dev.jsinco.brewery.garden.integration.exported;
 
 import dev.jsinco.brewery.api.ingredient.Ingredient;
 import dev.jsinco.brewery.bukkit.api.TheBrewingProjectApi;
