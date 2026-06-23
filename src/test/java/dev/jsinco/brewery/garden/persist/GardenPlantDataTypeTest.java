@@ -40,7 +40,7 @@ class GardenPlantDataTypeTest {
     @Disabled("MockBukkit not supporting newer block properties")
     @TestFactory
     Stream<DynamicTest> checkPersistence() {
-        return MutableGardenRegistry.PLANT_TYPE.values()
+        return MutableGardenRegistry.plantType.values()
                 .stream()
                 .map(plantType -> DynamicTest.dynamicTest(
                         "checkPersistence(" + plantType + ")",

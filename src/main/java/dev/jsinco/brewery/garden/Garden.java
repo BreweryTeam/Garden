@@ -180,7 +180,7 @@ public class Garden extends JavaPlugin {
         GardenConfig.MEMORIZED.reload();
         translator.reload();
         gardenRegistry.clear();
-        MutableGardenRegistry.PLANT_TYPE.newBacking(PlantType.readPlantTypes());
+        MutableGardenRegistry.plantType.newBacking(PlantType.readPlantTypes());
         for (World world : Bukkit.getWorlds()) {
             List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
             gardenPlants.forEach(gardenRegistry::registerPlant);
@@ -188,7 +188,7 @@ public class Garden extends JavaPlugin {
     }
 
     private void registerPlantRecipes() {
-        for (PlantType plantType : MutableGardenRegistry.PLANT_TYPE.values()) {
+        for (PlantType plantType : MutableGardenRegistry.plantType.values()) {
             NamespacedKey namespacedKey = plantType.key();
             if (Bukkit.getRecipe(namespacedKey) != null) {
                 Bukkit.removeRecipe(namespacedKey);
@@ -202,7 +202,7 @@ public class Garden extends JavaPlugin {
 
     public static NamespacedKey key(String key) {
         if (!Key.parseableValue(key)) {
-            return null;
+            throw new IllegalArgumentException("Invalid key: " + key);
         }
         return new NamespacedKey("garden", key);
     }

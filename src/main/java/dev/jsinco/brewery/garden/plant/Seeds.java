@@ -28,7 +28,7 @@ public record Seeds(String simpleName, PlantType plantType) implements PlantItem
         if (!containerView.has(ITEM_TYPE_KEY) || !containerView.has(PLANT_TYPE_KEY) || !containerView.get(ITEM_TYPE_KEY, PersistentDataType.STRING).equals(GardenItemType.SEEDS.name())) {
             return null;
         }
-        PlantType type = MutableGardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(containerView.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
+        PlantType type = MutableGardenRegistry.plantType.get(NamespacedKey.fromString(containerView.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
         return type.newSeeds();
     }
 

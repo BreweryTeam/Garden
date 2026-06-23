@@ -39,8 +39,7 @@ import java.util.logging.Logger;
 @SuppressWarnings({"unused", "NotNullFieldNotInitialized"})
 public final class PlantTypeTemplate {
 
-    private static final char FILE_NAME_END_DELIMITER = '.';
-    private static final String SCHEM_EXTENSION = FILE_NAME_END_DELIMITER + "schem";
+    private static final String SCHEM_EXTENSION = ".schem";
     private static final String RANDOM_TRACK = "*";
     private static final String PLANT_FILE = "plant.yml";
     private static final Path PLANTS_DIRECTORY = Garden.getInstance().getDataPath().resolve("plants");
@@ -152,7 +151,7 @@ public final class PlantTypeTemplate {
 
 
     private static int extractStageNumber(String fileName) {
-        int extensionIndex = fileName.lastIndexOf(FILE_NAME_END_DELIMITER);
+        int extensionIndex = fileName.lastIndexOf('.');
         String base = extensionIndex == -1 ? fileName : fileName.substring(0, extensionIndex);
         int end = base.length();
         while (end > 0 && !Character.isDigit(base.charAt(end - 1))) {

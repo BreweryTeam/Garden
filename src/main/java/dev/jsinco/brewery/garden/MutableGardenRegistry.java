@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class MutableGardenRegistry<T extends Keyed> {
 
-    public static final MutableGardenRegistry<PlantType> PLANT_TYPE = new MutableGardenRegistry<>(PlantType.readPlantTypes());
+    public static final MutableGardenRegistry<PlantType> plantType = new MutableGardenRegistry<>(PlantType.readPlantTypes());
 
     private Map<Key, T> backing;
 

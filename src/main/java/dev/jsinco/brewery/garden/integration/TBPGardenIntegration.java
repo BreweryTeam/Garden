@@ -49,7 +49,7 @@ public final class TBPGardenIntegration implements ItemIntegration {
         }
         String plantTypeKey = key.replaceAll("_seeds|_fruit", "");
         return Optional.ofNullable(Garden.key(plantTypeKey))
-                .flatMap(plant -> Optional.ofNullable(MutableGardenRegistry.PLANT_TYPE.get(plant)))
+                .flatMap(plant -> Optional.ofNullable(MutableGardenRegistry.plantType.get(plant)))
                 .map(type -> key.contains("_seeds") ? type.newSeeds() : type.newFruit());
     }
 
