@@ -43,7 +43,7 @@ dependencies {
     implementation("eu.okaeri:okaeri-configs-serdes-bukkit:5.0.9")
 
     implementation("dev.thorinwasher.schem:schem-reader:1.0.0")
-    implementation("com.github.Thorinwasher.BlockUtil:blockutil:main-SNAPSHOT")
+    implementation("com.github.Thorinwasher.BlockUtil:blockutil:v2.1.4")
 
     compileOnly("org.xerial:sqlite-jdbc:3.47.2.0")
 
