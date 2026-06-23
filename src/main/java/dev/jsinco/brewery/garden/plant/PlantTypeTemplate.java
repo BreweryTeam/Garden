@@ -31,6 +31,8 @@ import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Getter
 @Accessors(fluent = true)
@@ -44,6 +46,7 @@ public final class PlantTypeTemplate {
     private static final String PLANT_FILE = "plant.yml";
     private static final Path PLANTS_DIRECTORY = Garden.getInstance().getDataPath().resolve("plants");
     private static final Logger LOGGER = Logger.getLogger("Garden");
+    private static final Pattern STAGE_NUMBER = Pattern.compile("(\\d+)(?=\\D*\\.schem$)");
 
     private transient String name;
     private transient File directory;
@@ -151,24 +154,11 @@ public final class PlantTypeTemplate {
 
 
     private static int extractStageNumber(String fileName) {
-        int extensionIndex = fileName.lastIndexOf('.');
-        String base = extensionIndex == -1 ? fileName : fileName.substring(0, extensionIndex);
-        int end = base.length();
-        while (end > 0 && !Character.isDigit(base.charAt(end - 1))) {
-            end--;
-        }
-        int start = end;
-        while (start > 0 && Character.isDigit(base.charAt(start - 1))) {
-            start--;
-        }
-        if (start == end) {
+        Matcher matcher = STAGE_NUMBER.matcher(fileName);
+        if (!matcher.find()) {
             return -1;
         }
-        try {
-            return Integer.parseInt(base.substring(start, end));
-        } catch (NumberFormatException e) {
-            return Integer.MAX_VALUE; // TODO: better handling
-        }
+        return Integer.parseInt(matcher.group(1));
     }
 
 
