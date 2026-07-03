@@ -163,6 +163,9 @@ public final class PlantTypeTemplate {
                     throw new RuntimeException(e);
                 }
             }
+            if(ordered.isEmpty()) {
+                continue;
+            }
             builder.put(track, ImmutableList.copyOf(ordered.values()));
         }
         return builder.build();
