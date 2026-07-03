@@ -5,10 +5,10 @@ import com.destroystokyo.paper.profile.ProfileProperty;
 import com.google.common.collect.ImmutableList;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.thorinwasher.schem.Schematic;
-import lombok.experimental.Delegate;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
@@ -22,14 +22,16 @@ import java.util.UUID;
 
 @NullMarked
 public record PlantType(
-    // Stuff that needs to be cached
     NamespacedKey key,
     String track,
     int growthTime,
     Map<String, List<Schematic>> structures,
-
-    // Straight from the file
-    @Delegate PlantTypeTemplate template
+    int stages,
+    String displayName,
+    String textureBase64,
+    FruitPlacement fruitPlacement,
+    Material seedMaterial,
+    boolean bearFruits
 ) implements Keyed {
 
     // Forever constant UUID so that all plant ItemStacks are stackable. AKA. Don't change me!
@@ -37,24 +39,6 @@ public record PlantType(
     private static final List<Matrix3d> ALLOWED_TRANSFORMATIONS = compileAllowedTransformations();
     private static final Random RANDOM = new Random();
 
-    // Explicit accessor overrides
-
-    public String track() {
-        return this.track;
-    }
-
-    public int stages() {
-        return template.stagesOrFallback(template.tracks(), this.track);
-    }
-
-    public int growthTime() {
-        return this.growthTime;
-    }
-
-    public boolean bearFruits() {
-        Boolean value = template.bearFruits();
-        return value != null ? value : true;
-    }
 
     private static List<Matrix3d> compileAllowedTransformations() {
         ImmutableList.Builder<Matrix3d> builder = new ImmutableList.Builder<>();
@@ -79,7 +63,7 @@ public record PlantType(
 
     public PlayerProfile getPlayerProfile() {
         PlayerProfile profile = Bukkit.createProfile(CONSTANT_UUID);
-        profile.getProperties().add(new ProfileProperty("textures", template.textureBase64()));
+        profile.getProperties().add(new ProfileProperty("textures", this.textureBase64));
         return profile;
     }
 

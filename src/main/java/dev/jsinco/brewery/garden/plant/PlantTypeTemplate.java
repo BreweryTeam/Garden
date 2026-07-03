@@ -82,7 +82,12 @@ public final class PlantTypeTemplate {
             resolvedTrack,
             this.growthTime(),
             tracks,
-            this
+            stages,
+            displayName,
+            textureBase64,
+            fruitPlacement,
+            seedMaterial,
+            bearFruits != null ? bearFruits : true
         ));
     }
 
