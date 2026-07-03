@@ -140,7 +140,7 @@ public final class PlantTypeTemplate {
             }
             String track = trackDirectory.getName();
             File[] schematicFiles = trackDirectory.listFiles();
-            if (schematicFiles == null) {
+            if (schematicFiles == null || schematicFiles.length == 0) {
                 continue;
             }
             TreeMap<Integer, Schematic> ordered = new TreeMap<>();
