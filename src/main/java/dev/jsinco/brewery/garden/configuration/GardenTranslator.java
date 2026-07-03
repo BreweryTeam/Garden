@@ -2,19 +2,36 @@ package dev.jsinco.brewery.garden.configuration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import dev.jsinco.brewery.garden.Garden;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.minimessage.translation.MiniMessageTranslator;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
-import java.util.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
 public class GardenTranslator extends MiniMessageTranslator {
 
@@ -116,22 +133,22 @@ public class GardenTranslator extends MiniMessageTranslator {
             }
         }
         this.translations = translationsBuilder.build();
-        Preconditions.checkArgument(translations.containsKey(Garden.getInstance().getPluginConfiguration().getLanguage()), "Unknown translation: " + Garden.getInstance().getPluginConfiguration().getLanguage());
+        Preconditions.checkArgument(translations.containsKey(GardenConfig.instance().language()), "Unknown translation: " + GardenConfig.instance().language());
     }
 
     @Override
-    public @NotNull Key name() {
+    public @NonNull Key name() {
         return Key.key("brewery:global_translator");
     }
 
     @Override
-    public @Nullable String getMiniMessageString(@NotNull String key, @NotNull Locale locale) {
+    public @Nullable String getMiniMessageString(@NonNull String key, @NonNull Locale locale) {
         Properties translations = null;
-        if (Garden.getInstance().getPluginConfiguration().isClientSidedTranslations()) {
+        if (GardenConfig.instance().clientSidedTranslations()) {
             translations = this.translations.get(locale);
         }
         if (translations == null) {
-            translations = this.translations.get(Garden.getInstance().getPluginConfiguration().getLanguage());
+            translations = this.translations.get(GardenConfig.instance().language());
         }
         Preconditions.checkState(translations != null, "Should have found a translation!");
         return translations.getProperty(key);

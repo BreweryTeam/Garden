@@ -5,10 +5,14 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.util.BlockVector;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlantRegistry {
@@ -48,7 +52,7 @@ public class PlantRegistry {
         }
     }
 
-    public void unregisterWorld(@NotNull World world) {
+    public void unregisterWorld(@NonNull World world) {
         gardenPlants.remove(world.getUID());
         for (GardenPlant gardenPlant : List.copyOf(gardenPlantIds.values())) {
             if (gardenPlant.getStructure().origin().getWorld() == world) {

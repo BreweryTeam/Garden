@@ -2,6 +2,7 @@ package dev.jsinco.brewery.garden.utility;
 
 import com.mojang.brigadier.Message;
 import dev.jsinco.brewery.garden.Garden;
+import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -16,7 +17,7 @@ public class MessageUtil {
 
     public static Message brigadierTranslatable(String translationKey, ComponentLike... arguments) {
         return MessageComponentSerializer.message().serialize(
-                GlobalTranslator.render(Component.translatable(translationKey, arguments), Garden.getInstance().getPluginConfiguration().getLanguage())
+                GlobalTranslator.render(Component.translatable(translationKey, arguments), GardenConfig.instance().language())
         );
     }
 }

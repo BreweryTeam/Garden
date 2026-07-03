@@ -1,7 +1,6 @@
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.papermc.hangarpublishplugin.model.Platforms
-import org.gradle.kotlin.dsl.support.zipTo
 import java.net.HttpURLConnection
 import java.net.URI
 
@@ -18,7 +17,7 @@ group = "dev.jsinco.brewery.garden"
 version = "1.5.0"
 
 val targetMinecraftVersions = listOf(
-    "1.21.5", "1.21.8", "1.21.10", "1.21.11"
+    "1.21.5", "1.21.8", "1.21.10", "1.21.11", "26.1.2", "26.2"
 )
 
 repositories {
@@ -34,13 +33,12 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("com.dre.brewery:BreweryX:3.4.10-SNAPSHOT")
     compileOnly("dev.jsinco.brewery:thebrewingproject-bukkit:3.0.0")
+    compileOnly("org.spongepowered:configurate-yaml:4.2.0")
 
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
     implementation("com.zaxxer:HikariCP:6.2.1")
-    implementation("eu.okaeri:okaeri-configs-yaml-bukkit:5.0.9")
-    implementation("eu.okaeri:okaeri-configs-serdes-bukkit:5.0.9")
 
     implementation("dev.thorinwasher.schem:schem-reader:1.0.0")
     implementation("com.github.Thorinwasher.BlockUtil:blockutil:v2.1.4")
@@ -51,6 +49,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.50.0")
     testImplementation("org.xerial:sqlite-jdbc:3.47.2.0")
+    testImplementation("org.spongepowered:configurate-yaml:4.2.0")
 }
 
 
@@ -104,9 +103,7 @@ tasks {
             "dev.thorinwasher.schem",
             "dev.thorinwasher.blockutil",
             "net.kyori.adventure.nbt",
-            "net.kyori.examination",
-            "org.simpleyaml",
-            "eu.okaeri.configs"
+            "net.kyori.examination"
         ).forEach { relocate(it, "${project.group}.lib.$it") }
     }
 
@@ -122,17 +119,6 @@ tasks {
         }
     }
 
-    processResources {
-        dependsOn("zipResources")
-    }
-
-    register("zipResources") {
-        doFirst {
-            val dest = File(project.projectDir, "src/main/resources/plants.zip")
-            dest.createNewFile()
-            zipTo(dest, File(project.projectDir, "src/main/exposed_resources"))
-        }
-    }
 }
 
 bukkit {

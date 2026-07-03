@@ -3,7 +3,7 @@ package dev.jsinco.brewery.garden.persist;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import dev.jsinco.brewery.garden.utility.FileUtil;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +57,7 @@ public class Database {
         return hikariDataSource.getConnection();
     }
 
-    private static @NotNull HikariConfig getHikariConfigForSqlite(File dataFolder) throws IOException {
+    private static @NonNull HikariConfig getHikariConfigForSqlite(File dataFolder) throws IOException {
         File databaseFile = new File(dataFolder, "garden.db");
         if (!databaseFile.exists() && !databaseFile.getParentFile().mkdirs() && !databaseFile.createNewFile()) {
             throw new IOException("Could not create file or dirs");

@@ -1,9 +1,7 @@
 package dev.jsinco.brewery.garden.plant;
 
 import com.google.common.collect.ImmutableSet;
-import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
-import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import lombok.AllArgsConstructor;
@@ -25,7 +23,6 @@ import java.util.UUID;
 @ToString
 @AllArgsConstructor
 public class GardenPlant {
-    private static final BreweryGardenConfig config = Garden.getInstance().getPluginConfiguration();
 
     private final UUID id;
     private final PlantType type;
@@ -49,7 +46,7 @@ public class GardenPlant {
         this.id = UUID.randomUUID();
         this.type = type;
         this.age = 0;
-        this.track = type.getRandomTrack();
+        this.track = type.track();
         this.structure = type.newStructure(location, age, track);
     }
 
@@ -110,7 +107,7 @@ public class GardenPlant {
     }
 
     public void placeFruits() {
-        if (!structure.origin().isChunkLoaded()) {
+        if (!structure.origin().isChunkLoaded() || !type.bearFruits()) {
             return;
         }
         Fruit fruit = type.newFruit();

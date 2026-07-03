@@ -2,7 +2,7 @@ package dev.jsinco.brewery.garden.listener;
 
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
-import dev.jsinco.brewery.garden.configuration.BreweryGardenConfig;
+import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.Fruit;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
@@ -25,7 +25,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class EventListeners implements Listener {
 
-    private BreweryGardenConfig config = Garden.getInstance().getPluginConfiguration();
+    private final GardenConfig config = GardenConfig.instance();
     private static final Random RANDOM = new Random();
 
 
@@ -47,7 +47,7 @@ public class EventListeners implements Listener {
 
         handlePlantShearing(event.getItem(), block, event.getPlayer());
         handleBonemeal(event, event.getItem(), block);
-        if (event.getBlockFace() == BlockFace.UP && event.getAction().isRightClick() && config.getPlantableBlocks().contains(block.getType())) {
+        if (event.getBlockFace() == BlockFace.UP && event.getAction().isRightClick() && config.plantableBlocks().contains(block.getType())) {
             event.setCancelled(handleSeedPlacement(event.getItem(), block));
         }
     }
@@ -89,14 +89,14 @@ public class EventListeners implements Listener {
             return;
         }
         event.setCancelled(true);
-        if (!config.isBonemealGrowth() || plant.isFullyGrown()) {
+        if (!config.bonemealGrowth() || plant.isFullyGrown()) {
             return;
         }
         if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
             itemInHand.setAmount(itemInHand.getAmount() - 1);
         }
         plant.origin().getWorld().playEffect(plant.origin(), Effect.BONE_MEAL_USE, 5);
-        if (RANDOM.nextInt(100) >= config.getBonemealChance()) {
+        if (RANDOM.nextInt(100) >= config.bonemealChance()) {
             return;
         }
         Bukkit.getRegionScheduler().run(Garden.getInstance(), plant.origin(), t ->

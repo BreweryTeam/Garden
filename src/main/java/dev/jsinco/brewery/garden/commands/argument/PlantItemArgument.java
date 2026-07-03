@@ -15,12 +15,13 @@ import io.papermc.paper.command.brigadier.MessageComponentSerializer;
 import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+@SuppressWarnings("UnstableApiUsage")
 public class PlantItemArgument implements CustomArgumentType.Converted<PlantItem, String> {
     private static final DynamicCommandExceptionType ERROR_ILLEGAL_ARGUMENT = new DynamicCommandExceptionType(invalidArgument ->
             MessageComponentSerializer.message().serialize(MiniMessage.miniMessage().deserialize("Illegal argument <argument>", Placeholder.unparsed("argument", invalidArgument.toString())))
@@ -40,7 +41,7 @@ public class PlantItemArgument implements CustomArgumentType.Converted<PlantItem
         return StringArgumentType.string();
     }
 
-    public <S> CompletableFuture<Suggestions> listSuggestions(@NotNull CommandContext<S> context, SuggestionsBuilder builder) {
+    public <S> CompletableFuture<Suggestions> listSuggestions(@NonNull CommandContext<S> context, SuggestionsBuilder builder) {
         compileItems().keySet().stream()
                 .filter(itemName -> itemName.startsWith(builder.getRemainingLowerCase()))
                 .forEach(builder::suggest);
