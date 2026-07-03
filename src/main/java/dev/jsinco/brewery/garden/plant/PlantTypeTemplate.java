@@ -51,7 +51,7 @@ public final class PlantTypeTemplate {
     private transient String name;
     private transient File directory;
 
-    private @Nullable String track;
+    private List<String> tracks;
     private String displayName;
     private String textureBase64;
     private @Nullable Integer growthStages; // TODO: remove me? if someone doesnt want a stage just remove the schem?
@@ -101,10 +101,21 @@ public final class PlantTypeTemplate {
         if (children == null) {
             return null;
         }
-        if (track != null && !RANDOM_TRACK.equals(track)) {
-            File trackDirectory = new File(directory, track);
-            return trackDirectory.isDirectory() ? track : null;
+
+        if (!tracks.contains(RANDOM_TRACK)) { // pick from the following tracks
+            List<String> availableTracks = new ArrayList<>();
+            for (String track : tracks) {
+                File trackDirectory = new File(directory, track);
+                if (trackDirectory.isDirectory()) {
+                    availableTracks.add(track);
+                }
+            }
+            if (availableTracks.isEmpty()) {
+                return null;
+            }
+            return availableTracks.get(ThreadLocalRandom.current().nextInt(availableTracks.size()));
         }
+
         List<String> trackNames = new ArrayList<>();
         for (File child : children) {
             if (child.isDirectory()) {
