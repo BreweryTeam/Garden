@@ -22,6 +22,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -32,6 +33,7 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -62,10 +64,13 @@ public class EventListeners implements Listener {
             return;
         }
 
-        handlePlantShearing(event.getItem(), block, event.getPlayer());
+        Player player = event.getPlayer();
+        EquipmentSlot hand = event.getHand();
+
+        handlePlantShearing(event.getItem(), block, player);
         handleBonemeal(event, event.getItem(), block);
         if (event.getBlockFace() == BlockFace.UP && event.getAction().isRightClick() && config.plantableBlocks().contains(block.getType())) {
-            event.setCancelled(handleSeedPlacement(event.getItem(), block));
+            event.setCancelled(handleSeedPlacement(player, hand, event.getItem(), block));
         }
     }
 
@@ -183,12 +188,20 @@ public class EventListeners implements Listener {
                 .ifPresent(item -> clickedBlock.getWorld().dropItem(clickedBlock.getLocation().toCenterLocation(), item));
     }
 
-    private boolean handleSeedPlacement(ItemStack itemInHand, Block clickedBlock) {
+    private boolean handleSeedPlacement(Player player, EquipmentSlot hand, ItemStack itemInHand, Block clickedBlock) {
         if (itemInHand == null || !PlantItem.isSeeds(itemInHand)) {
             return false;
         }
 
         Location location = clickedBlock.getLocation().add(0, 1, 0); // Need the block above
+
+        Block placedBlock = location.getBlock();
+        BlockState replacedBlockState = placedBlock.getState();
+        boolean canBuild = true; // No way to grab this value without internals :(
+        BlockPlaceEvent event = new BlockPlaceEvent(placedBlock, replacedBlockState, clickedBlock, itemInHand, player, canBuild, hand);
+        if (!event.callEvent()) {
+            return false;
+        }
 
         PlantType plantType = PlantItem.plantType(itemInHand);
         if (plantType == null) {
