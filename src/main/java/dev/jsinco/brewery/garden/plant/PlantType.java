@@ -1,44 +1,32 @@
 package dev.jsinco.brewery.garden.plant;
 
-import com.destroystokyo.paper.profile.PlayerProfile;
-import com.destroystokyo.paper.profile.ProfileProperty;
 import com.google.common.collect.ImmutableList;
-import dev.jsinco.brewery.garden.integration.imported.IntegrationItemResolver;
+import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.thorinwasher.schem.Schematic;
-import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
 
 @NullMarked
 public record PlantType(
         NamespacedKey key,
-        String track,
         int growthTime,
         Map<String, List<Schematic>> structures,
-        int stages,
-        String displayName,
-        String textureBase64,
+        int maxStages,
         FruitPlacement fruitPlacement,
-        String seedMaterial,
-        @Nullable String fruitMaterial,
+        PlantItem seedItem,
+        PlantItem fruitItem,
         boolean bearFruits
 ) implements Keyed {
-
-    // Forever constant UUID so that all plant ItemStacks are stackable. AKA. Don't change me!
-    private static final UUID CONSTANT_UUID = UUID.fromString("f714a407-f7c9-425c-958d-c9914aeac05c");
     private static final List<Matrix3d> ALLOWED_TRANSFORMATIONS = compileAllowedTransformations();
     private static final Random RANDOM = new Random();
 
@@ -64,12 +52,6 @@ public record PlantType(
         return new Matrix3d(array[0], array[1], array[2], array[3], array[4], array[5], array[6], array[7], array[8]);
     }
 
-    public PlayerProfile getPlayerProfile() {
-        PlayerProfile profile = Bukkit.createProfile(CONSTANT_UUID);
-        profile.getProperties().add(new ProfileProperty("textures", this.textureBase64));
-        return profile;
-    }
-
     public PlantStructure newStructure(Location bottomLocation, int age, String track) {
         Schematic schematic = structures.getOrDefault(track, List.of()).get(age);
         Matrix3d transformation = ALLOWED_TRANSFORMATIONS.get(RANDOM.nextInt(ALLOWED_TRANSFORMATIONS.size()));
@@ -83,24 +65,6 @@ public record PlantType(
     @Override
     public NamespacedKey getKey() {
         return key();
-    }
-
-    public Seeds newSeeds() {
-        return new Seeds(
-                this.key().getKey() + "_seeds",
-                this,
-                IntegrationItemResolver.resolve(seedMaterial).orElse(null)
-        );
-    }
-
-    public Fruit newFruit() {
-        return new Fruit(
-                this.key().getKey() + "_fruit",
-                this,
-                Optional.ofNullable(fruitMaterial)
-                        .flatMap(IntegrationItemResolver::resolve)
-                        .orElse(null)
-        );
     }
 
     public PlantStructure getStructure(Location origin, int age, String track, Matrix3d transformation) {

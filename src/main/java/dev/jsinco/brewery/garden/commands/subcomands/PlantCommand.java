@@ -85,39 +85,39 @@ public class PlantCommand {
 
     private static ArgumentBuilder<CommandSourceStack, ?> setAgeCommand() {
         return Commands.literal("setage")
-            .then(Commands.argument("stage", IntegerArgumentType.integer(1))
-                .suggests((context, builder) -> {
-                    int maxStages = DEFAULT_MAX_STAGE;
-                    if (context.getSource().getSender() instanceof Player player) {
-                        try {
-                            maxStages = getPlant(player, MAX_DISTANCE).getType().stages();
-                        } catch (CommandSyntaxException ignored) {
-                        }
-                    }
-                    for (int i = 1; i <= maxStages; i++) {
-                        builder.suggest(i);
-                    }
-                    return builder.buildFuture();
-                })
-                .executes(context -> {
-                    if (!(context.getSource().getSender() instanceof Player player)) {
-                        throw ERROR_ILLEGAL_SENDER.create();
-                    }
-                    GardenPlant gardenPlant = getPlant(player, MAX_DISTANCE);
+                .then(Commands.argument("stage", IntegerArgumentType.integer(1))
+                        .suggests((context, builder) -> {
+                            int maxStages = DEFAULT_MAX_STAGE;
+                            if (context.getSource().getSender() instanceof Player player) {
+                                try {
+                                    maxStages = getPlant(player, MAX_DISTANCE).getType().maxStages();
+                                } catch (CommandSyntaxException ignored) {
+                                }
+                            }
+                            for (int i = 1; i <= maxStages; i++) {
+                                builder.suggest(i);
+                            }
+                            return builder.buildFuture();
+                        })
+                        .executes(context -> {
+                            if (!(context.getSource().getSender() instanceof Player player)) {
+                                throw ERROR_ILLEGAL_SENDER.create();
+                            }
+                            GardenPlant gardenPlant = getPlant(player, MAX_DISTANCE);
 
-                    int stage = context.getArgument("stage", Integer.class) - 1;
-                    try {
-                        gardenPlant.setGrowthStage(stage, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        throw new SimpleCommandExceptionType(
-                            MessageUtil.brigadierTranslatable("garden.command.unknown-age",
-                                Argument.numeric("age", stage),
-                                Argument.tagResolver(Placeholder.parsed("plant", gardenPlant.getType().displayName()))
-                            )
-                        ).create();
-                    }
-                    return 1;
-                }));
+                            int stage = context.getArgument("stage", Integer.class) - 1;
+                            try {
+                                gardenPlant.setGrowthStage(stage, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                            } catch (ArrayIndexOutOfBoundsException e) {
+                                throw new SimpleCommandExceptionType(
+                                        MessageUtil.brigadierTranslatable("garden.command.unknown-age",
+                                                Argument.numeric("age", stage),
+                                                Argument.tagResolver(Placeholder.unparsed("plant", Garden.minimized(gardenPlant.getType().key())))
+                                        )
+                                ).create();
+                            }
+                            return 1;
+                        }));
     }
 
     private static ArgumentBuilder<CommandSourceStack, ?> growCommand() {

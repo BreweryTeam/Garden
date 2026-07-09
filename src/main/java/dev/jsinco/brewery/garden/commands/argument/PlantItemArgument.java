@@ -7,10 +7,10 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
-import dev.jsinco.brewery.garden.plant.Fruit;
-import dev.jsinco.brewery.garden.plant.PlantItem;
-import dev.jsinco.brewery.garden.plant.Seeds;
+import dev.jsinco.brewery.garden.plant.item.PlantItem;
+import dev.jsinco.brewery.garden.plant.item.PlantItemContainer;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
 import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -22,14 +22,14 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("UnstableApiUsage")
-public class PlantItemArgument implements CustomArgumentType.Converted<PlantItem, String> {
+public class PlantItemArgument implements CustomArgumentType.Converted<PlantItemContainer, String> {
     private static final DynamicCommandExceptionType ERROR_ILLEGAL_ARGUMENT = new DynamicCommandExceptionType(invalidArgument ->
             MessageComponentSerializer.message().serialize(MiniMessage.miniMessage().deserialize("Illegal argument <argument>", Placeholder.unparsed("argument", invalidArgument.toString())))
     );
 
     @Override
-    public PlantItem convert(String string) throws CommandSyntaxException {
-        PlantItem plantType = compileItems().get(string);
+    public PlantItemContainer convert(String string) throws CommandSyntaxException {
+        PlantItemContainer plantType = compileItems().get(string);
         if (plantType == null) {
             throw ERROR_ILLEGAL_ARGUMENT.create(string);
         }
@@ -48,13 +48,13 @@ public class PlantItemArgument implements CustomArgumentType.Converted<PlantItem
         return builder.buildFuture();
     }
 
-    private Map<String, PlantItem> compileItems() {
-        Map<String, PlantItem> output = new HashMap<>();
+    private Map<String, PlantItemContainer> compileItems() {
+        Map<String, PlantItemContainer> output = new HashMap<>();
         for (var plant : MutableGardenRegistry.PLANT_TYPE.values()) {
-            Seeds seeds = plant.newSeeds();
-            output.put(seeds.simpleName(), seeds);
-            Fruit fruit = plant.newFruit();
-            output.put(fruit.simpleName(), fruit);
+            PlantItem seeds = plant.seedItem();
+            output.put(Garden.minimized(PlantItem.key(plant, PlantItem.PlantItemType.SEEDS)), new PlantItemContainer(seeds, plant, PlantItem.PlantItemType.SEEDS));
+            PlantItem fruit = plant.fruitItem();
+            output.put(Garden.minimized(PlantItem.key(plant, PlantItem.PlantItemType.FRUIT)), new PlantItemContainer(fruit, plant, PlantItem.PlantItemType.FRUIT));
         }
         return output;
     }

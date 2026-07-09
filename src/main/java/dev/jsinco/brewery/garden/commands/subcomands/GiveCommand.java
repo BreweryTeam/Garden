@@ -5,7 +5,7 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.jsinco.brewery.garden.commands.argument.PlantItemArgument;
-import dev.jsinco.brewery.garden.plant.PlantItem;
+import dev.jsinco.brewery.garden.plant.item.PlantItemContainer;
 import dev.jsinco.brewery.garden.utility.MessageUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -19,6 +19,9 @@ public class GiveCommand {
     private static final SimpleCommandExceptionType ERROR_ILLEGAL_SENDER = new SimpleCommandExceptionType(
             MessageUtil.brigadierTranslatable("garden.command.illegal-sender")
     );
+    private static final SimpleCommandExceptionType ERROR_INVALID_ITEM = new SimpleCommandExceptionType(
+            MessageUtil.brigadierTranslatable("garden.command.invalid-items")
+    );
 
     public static ArgumentBuilder<CommandSourceStack, ?> command() {
         return Commands.literal("give")
@@ -26,20 +29,21 @@ public class GiveCommand {
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
                                 .then(Commands.argument("player", ArgumentTypes.player())
                                         .executes(context -> {
-                                            ItemStack itemStack = context.getArgument("item", PlantItem.class).newItem(context.getArgument("amount", Integer.class));
-                                            giveSender(itemStack, context.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst());
+                                            CommandSender sender = context.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst();
+                                            giveSender(context.getArgument("item", PlantItemContainer.class).toItem(context.getArgument("amount", Integer.class))
+                                                    .orElseThrow(ERROR_INVALID_ITEM::create), sender);
                                             return 1;
                                         })
                                 )
                                 .executes(context -> {
-                                    ItemStack itemStack = context.getArgument("item", PlantItem.class).newItem(context.getArgument("amount", Integer.class));
-                                    giveSender(itemStack, context.getSource().getSender());
+                                    giveSender(context.getArgument("item", PlantItemContainer.class).toItem(context.getArgument("amount", Integer.class))
+                                            .orElseThrow(ERROR_INVALID_ITEM::create), context.getSource().getSender());
                                     return 1;
                                 })
                         )
                         .executes(context -> {
-                            ItemStack itemStack = context.getArgument("item", PlantItem.class).newItem(1);
-                            giveSender(itemStack, context.getSource().getSender());
+                            giveSender(context.getArgument("item", PlantItemContainer.class).toItem(1)
+                                    .orElseThrow(ERROR_INVALID_ITEM::create), context.getSource().getSender());
                             return 1;
                         })
                 ).requires(commandSourceStack -> commandSourceStack.getSender().hasPermission("garden.command.give"));

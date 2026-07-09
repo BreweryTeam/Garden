@@ -3,7 +3,9 @@ package dev.jsinco.brewery.garden.plant;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import dev.jsinco.brewery.garden.Garden;
-import dev.jsinco.brewery.garden.integration.imported.IntegrationItemResolver;
+import dev.jsinco.brewery.garden.configuration.serdes.ComponentSerializer;
+import dev.jsinco.brewery.garden.configuration.serdes.PlantItemSerializer;
+import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.utility.Logger;
 import dev.jsinco.brewery.garden.utility.TimeUtil;
 import dev.thorinwasher.schem.Schematic;
@@ -11,6 +13,7 @@ import dev.thorinwasher.schem.SchematicReader;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,13 +54,10 @@ public final class PlantTypeTemplate {
     private transient File directory;
 
     private @Nullable List<String> tracks;
-    private String displayName;
-    private String textureBase64;
-    private @Nullable Integer growthStages; // TODO: remove me? if someone doesnt want a stage just remove the schem?
     private String approximateGrowthTime;
     private FruitPlacement fruitPlacement;
-    private @Nullable String seedMaterial;
-    private @Nullable String fruitMaterial;
+    private PlantItem seeds;
+    private PlantItem fruit;
     private @Nullable Boolean bearFruits;
 
 
@@ -65,40 +66,34 @@ public final class PlantTypeTemplate {
             Logger.logWarn("Could not read plant type, file name has to be a valid namespaced key: " + name);
             return Optional.empty();
         }
-        String resolvedTrack = resolveTrack();
-        if (resolvedTrack == null) {
-            Logger.logWarn("Could not read plant type, no usable track folder found: " + name);
+        if (seeds == null) {
+            Logger.logWarn("Undefined seeds material in plant type %s".formatted(name));
             return Optional.empty();
         }
-        if (seedMaterial == null) {
-            Logger.logWarn("Undefined seed material in plant type %s".formatted(name));
+        if (fruit == null) {
+            Logger.logWarn("Undefined fruit material in plant type %s".formatted(name));
             return Optional.empty();
-        }
-        if (fruitMaterial != null) {
-            IntegrationItemResolver.validate(fruitMaterial, "plant_type.%s".formatted(name));
         }
 
         Map<String, List<Schematic>> tracks = this.tracks();
-        int stages = this.stagesOrFallback(tracks, resolvedTrack);
+        if (tracks.isEmpty()) {
+            Logger.logWarn("Could not read plant type, no usable track folder found: " + name);
+            return Optional.empty();
+        }
+        int maxStages = tracks.values().stream()
+                .map(Collection::size)
+                .max(Integer::compareTo)
+                .orElse(0);
         return Optional.of(new PlantType(
                 Garden.key(name),
-                resolvedTrack,
                 this.growthTime(),
                 tracks,
-                stages,
-                displayName,
-                textureBase64,
+                maxStages,
                 fruitPlacement,
-                seedMaterial,
-                fruitMaterial,
+                seeds,
+                fruit,
                 bearFruits != null ? bearFruits : true
         ));
-    }
-
-
-    public int stagesOrFallback(Map<String, List<Schematic>> tracks, String resolvedTrack) {
-        if (growthStages != null) return growthStages;
-        return tracks.get(resolvedTrack).size();
     }
 
     public int growthTime() {
@@ -195,6 +190,10 @@ public final class PlantTypeTemplate {
         YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
                 .file(plantFile)
                 .nodeStyle(NodeStyle.BLOCK)
+                .defaultOptions(opts -> opts.serializers(serializers -> {
+                    serializers.register(Component.class, new ComponentSerializer());
+                    serializers.register(PlantItem.class, new PlantItemSerializer());
+                }))
                 .indent(2)
                 .build();
         try {
