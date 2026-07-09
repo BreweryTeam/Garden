@@ -46,6 +46,7 @@ public class GardenPlantDataType {
                 preparedStatement.setBytes(7, Encoder.asBytes(structure.worldUuid()));
                 preparedStatement.setString(8, Encoder.serializeTransformation(structure.transformation()));
                 preparedStatement.setString(9, plant.getTrack());
+                preparedStatement.setInt(10, plant.getExpectedFruits());
                 preparedStatement.execute();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -61,7 +62,8 @@ public class GardenPlantDataType {
                 preparedStatement.setInt(1, plant.getAge());
                 PlantStructure structure = plant.getStructure();
                 preparedStatement.setString(2, Encoder.serializeTransformation(structure.transformation()));
-                preparedStatement.setBytes(3, Encoder.asBytes(plant.getId()));
+                preparedStatement.setInt(3, plant.getExpectedFruits());
+                preparedStatement.setBytes(4, Encoder.asBytes(plant.getId()));
                 preparedStatement.execute();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -91,7 +93,7 @@ public class GardenPlantDataType {
                 preparedStatement.setBytes(1, Encoder.asBytes(world.getUID()));
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    PlantType plantType = MutableGardenRegistry.plantType.get(NamespacedKey.fromString(resultSet.getString("plant_type")));
+                    PlantType plantType = MutableGardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(resultSet.getString("plant_type")));
                     Location origin = new Location(world, resultSet.getInt("origin_x"), resultSet.getInt("origin_y"), resultSet.getInt("origin_z"));
                     if (plantType == null) {
                         Garden.getInstance().getLogger().warning("Could not read plant at: " + origin);
@@ -108,7 +110,7 @@ public class GardenPlantDataType {
                                     plantType.getStructure(origin, age, track, transformation),
                                     track,
                                     age,
-                                    false
+                                    resultSet.getInt("fruits")
                             )
                     );
                 }

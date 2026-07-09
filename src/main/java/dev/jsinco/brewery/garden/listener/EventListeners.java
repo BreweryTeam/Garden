@@ -1,27 +1,45 @@
 package dev.jsinco.brewery.garden.listener;
 
 import dev.jsinco.brewery.garden.Garden;
+import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.Fruit;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
+import dev.jsinco.brewery.garden.plant.PlacedFruit;
+import dev.jsinco.brewery.garden.plant.PlantItem;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.Seeds;
+import dev.jsinco.brewery.garden.utility.Encoder;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Effect;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.block.Block;
-import java.util.Random;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 public class EventListeners implements Listener {
 
@@ -50,6 +68,52 @@ public class EventListeners implements Listener {
         if (event.getBlockFace() == BlockFace.UP && event.getAction().isRightClick() && config.plantableBlocks().contains(block.getType())) {
             event.setCancelled(handleSeedPlacement(event.getItem(), block));
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        PersistentDataContainer pdc = event.getRightClicked().getPersistentDataContainer();
+        List<byte[]> boundEntities = pdc
+                .get(PlacedFruit.INTERACTION_ENTITY_DATA, PersistentDataType.LIST.listTypeFrom(PersistentDataType.BYTE_ARRAY));
+        if (boundEntities == null) {
+            return;
+        }
+        ItemStack hand = event.getPlayer().getInventory().getItem(event.getHand());
+        if (hand.getType() != Material.SHEARS) {
+            return;
+        }
+        World world = event.getPlayer().getWorld();
+        for (byte[] boundEntity : boundEntities) {
+            Entity entity = world.getEntity(Encoder.asUuid(boundEntity));
+            if (entity != null) {
+                entity.remove();
+            }
+        }
+        byte[] owningPlant = pdc.get(PlacedFruit.OWNING_PLANT, PersistentDataType.BYTE_ARRAY);
+        if (owningPlant != null) {
+            UUID uuid = Encoder.asUuid(owningPlant);
+            GardenPlant gardenPlant = gardenRegistry.getByID(uuid);
+            if (gardenPlant != null) {
+                gardenPlant.registerFruitPicked();
+            }
+        }
+        event.getRightClicked().remove();
+        String plantTypeString = pdc.get(PlantItem.PLANT_TYPE_KEY, PersistentDataType.STRING);
+        if (plantTypeString == null) {
+            return;
+        }
+        NamespacedKey key = NamespacedKey.fromString(plantTypeString);
+        if (key == null) {
+            return;
+        }
+        PlantType plantType = MutableGardenRegistry.PLANT_TYPE.get(key);
+        if (plantType == null) {
+            return;
+        }
+        world.dropItem(
+                event.getRightClicked().getLocation(),
+                plantType.newFruit().newItem(1)
+        );
     }
 
     @EventHandler(ignoreCancelled = true)

@@ -5,7 +5,7 @@ import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import org.bukkit.Bukkit;
 
-import java.util.*;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class GrowthManager {

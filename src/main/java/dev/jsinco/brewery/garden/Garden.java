@@ -62,6 +62,7 @@ public class Garden extends JavaPlugin {
     private GardenTranslator translator;
     private boolean loadSuccess = false;
     private ScheduledTask growthTask;
+    @Getter
     private IntegrationRegistryImpl integrationRegistry;
 
     @Override
@@ -118,6 +119,12 @@ public class Garden extends JavaPlugin {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
         GrowthManager growthManager = new GrowthManager(gardenRegistry, gardenPlantDataType);
         growthTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> growthManager.tick(), 1, 200);
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> {
+            gardenRegistry.getPlants()
+                    .stream()
+                    .filter(gardenPlant -> gardenPlant.getStructure().origin().isChunkLoaded())
+                    .forEach(GardenPlant::tick);
+        }, 1, 100);
     }
 
     @Override
@@ -193,7 +200,7 @@ public class Garden extends JavaPlugin {
         GardenConfig.MEMORIZED.reload();
         translator.reload();
         gardenRegistry.clear();
-        MutableGardenRegistry.plantType.newBacking(PlantType.readPlantTypes());
+        MutableGardenRegistry.PLANT_TYPE.newBacking(PlantType.readPlantTypes());
         for (World world : Bukkit.getWorlds()) {
             List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
             gardenPlants.forEach(gardenRegistry::registerPlant);
@@ -201,7 +208,7 @@ public class Garden extends JavaPlugin {
     }
 
     private void registerPlantRecipes() {
-        for (PlantType plantType : MutableGardenRegistry.plantType.values()) {
+        for (PlantType plantType : MutableGardenRegistry.PLANT_TYPE.values()) {
             NamespacedKey namespacedKey = plantType.key();
             if (Bukkit.getRecipe(namespacedKey) != null) {
                 Bukkit.removeRecipe(namespacedKey);

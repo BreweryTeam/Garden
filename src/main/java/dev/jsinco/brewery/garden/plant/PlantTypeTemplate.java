@@ -3,13 +3,14 @@ package dev.jsinco.brewery.garden.plant;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import dev.jsinco.brewery.garden.Garden;
+import dev.jsinco.brewery.garden.integration.imported.IntegrationItemResolver;
+import dev.jsinco.brewery.garden.utility.Logger;
 import dev.jsinco.brewery.garden.utility.TimeUtil;
 import dev.thorinwasher.schem.Schematic;
 import dev.thorinwasher.schem.SchematicReader;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
-import org.bukkit.Material;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -29,8 +30,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,7 +44,6 @@ public final class PlantTypeTemplate {
     private static final String RANDOM_TRACK = "*";
     private static final String PLANT_FILE = "plant.yml";
     private static final Path PLANTS_DIRECTORY = Garden.getInstance().getDataPath().resolve("plants");
-    private static final Logger LOGGER = Logger.getLogger("Garden");
     private static final Pattern STAGE_NUMBER = Pattern.compile("(\\d+)(?=\\D*\\.schem$)");
 
     private transient String name;
@@ -57,37 +55,43 @@ public final class PlantTypeTemplate {
     private @Nullable Integer growthStages; // TODO: remove me? if someone doesnt want a stage just remove the schem?
     private String approximateGrowthTime;
     private FruitPlacement fruitPlacement;
-    private Material seedMaterial;
+    private @Nullable String seedMaterial;
+    private @Nullable String fruitMaterial;
     private @Nullable Boolean bearFruits;
 
 
     public Optional<PlantType> asPlantType() {
         if (!Key.parseableValue(name)) {
-            LOGGER.warning("Could not read plant type, file name has to be a valid namespaced key: " + name);
+            Logger.logWarn("Could not read plant type, file name has to be a valid namespaced key: " + name);
             return Optional.empty();
         }
-
         String resolvedTrack = resolveTrack();
         if (resolvedTrack == null) {
-            LOGGER.warning("Could not read plant type, no usable track folder found: " + name);
+            Logger.logWarn("Could not read plant type, no usable track folder found: " + name);
             return Optional.empty();
         }
-
-        // TODO: Could be optimized to only provide the track that is actually used
+        if (seedMaterial == null) {
+            Logger.logWarn("Undefined seed material in plant type %s".formatted(name));
+            return Optional.empty();
+        }
+        if (fruitMaterial != null) {
+            IntegrationItemResolver.validate(fruitMaterial, "plant_type.%s".formatted(name));
+        }
 
         Map<String, List<Schematic>> tracks = this.tracks();
         int stages = this.stagesOrFallback(tracks, resolvedTrack);
         return Optional.of(new PlantType(
-            Garden.key(name),
-            resolvedTrack,
-            this.growthTime(),
-            tracks,
-            stages,
-            displayName,
-            textureBase64,
-            fruitPlacement,
-            seedMaterial,
-            bearFruits != null ? bearFruits : true
+                Garden.key(name),
+                resolvedTrack,
+                this.growthTime(),
+                tracks,
+                stages,
+                displayName,
+                textureBase64,
+                fruitPlacement,
+                seedMaterial,
+                fruitMaterial,
+                bearFruits != null ? bearFruits : true
         ));
     }
 
@@ -163,7 +167,7 @@ public final class PlantTypeTemplate {
                     throw new RuntimeException(e);
                 }
             }
-            if(ordered.isEmpty()) {
+            if (ordered.isEmpty()) {
                 continue;
             }
             builder.put(track, ImmutableList.copyOf(ordered.values()));
@@ -184,27 +188,28 @@ public final class PlantTypeTemplate {
     private static Optional<PlantTypeTemplate> fromDirectory(File plantDirectory) {
         File plantFile = new File(plantDirectory, PLANT_FILE);
         if (!plantFile.isFile()) {
-            LOGGER.warning("Could not read plant type, missing '" + PLANT_FILE + "' in " + plantDirectory.getName());
+            Logger.logWarn("Could not read plant type, missing '" + PLANT_FILE + "' in " + plantDirectory.getName());
             return Optional.empty();
         }
 
         YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
-            .file(plantFile)
-            .nodeStyle(NodeStyle.BLOCK)
-            .indent(2)
-            .build();
+                .file(plantFile)
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(2)
+                .build();
         try {
             CommentedConfigurationNode root = loader.load();
             PlantTypeTemplate template = root.get(PlantTypeTemplate.class);
             if (template == null) {
-                LOGGER.warning("Could not read plant type, " + PLANT_FILE + " deserialized to null: " + plantDirectory.getName());
+                Logger.logWarn("Could not read plant type, " + PLANT_FILE + " deserialized to null: " + plantDirectory.getName());
                 return Optional.empty();
             }
             template.name = plantDirectory.getName();
             template.directory = plantDirectory;
             return Optional.of(template);
         } catch (ConfigurateException e) {
-            LOGGER.log(Level.WARNING, "Could not read plant type, failed to load " + PLANT_FILE + ": " + plantDirectory.getName(), e);
+            Logger.logWarn("Could not read plant type, failed to load " + PLANT_FILE + ": " + plantDirectory.getName());
+            Logger.logErr(e);
             return Optional.empty();
         }
     }

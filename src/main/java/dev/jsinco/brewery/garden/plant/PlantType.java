@@ -3,35 +3,38 @@ package dev.jsinco.brewery.garden.plant;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import com.google.common.collect.ImmutableList;
+import dev.jsinco.brewery.garden.integration.imported.IntegrationItemResolver;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.thorinwasher.schem.Schematic;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
 @NullMarked
 public record PlantType(
-    NamespacedKey key,
-    String track,
-    int growthTime,
-    Map<String, List<Schematic>> structures,
-    int stages,
-    String displayName,
-    String textureBase64,
-    FruitPlacement fruitPlacement,
-    Material seedMaterial,
-    boolean bearFruits
+        NamespacedKey key,
+        String track,
+        int growthTime,
+        Map<String, List<Schematic>> structures,
+        int stages,
+        String displayName,
+        String textureBase64,
+        FruitPlacement fruitPlacement,
+        String seedMaterial,
+        @Nullable String fruitMaterial,
+        boolean bearFruits
 ) implements Keyed {
 
     // Forever constant UUID so that all plant ItemStacks are stackable. AKA. Don't change me!
@@ -74,7 +77,7 @@ public record PlantType(
         Vector3i offset = new Vector3i(size.x() / 2, 0, size.z() / 2);
 
         return new PlantStructure(schematic, bottomLocation.getBlockX(), bottomLocation.getBlockY(), bottomLocation.getBlockZ(),
-            transformation, bottomLocation.getWorld().getUID(), offset);
+                transformation, bottomLocation.getWorld().getUID(), offset);
     }
 
     @Override
@@ -85,14 +88,18 @@ public record PlantType(
     public Seeds newSeeds() {
         return new Seeds(
                 this.key().getKey() + "_seeds",
-                this
+                this,
+                IntegrationItemResolver.resolve(seedMaterial).orElse(null)
         );
     }
 
     public Fruit newFruit() {
         return new Fruit(
                 this.key().getKey() + "_fruit",
-                this
+                this,
+                Optional.ofNullable(fruitMaterial)
+                        .flatMap(IntegrationItemResolver::resolve)
+                        .orElse(null)
         );
     }
 
@@ -105,9 +112,9 @@ public record PlantType(
 
     public static List<PlantType> readPlantTypes() {
         return PlantTypeTemplate.resolvePlantTypes()
-            .stream()
-            .map(it -> it.asPlantType().orElse(null))
-            .filter(Objects::nonNull)
-            .toList();
+                .stream()
+                .map(it -> it.asPlantType().orElse(null))
+                .filter(Objects::nonNull)
+                .toList();
     }
 }
