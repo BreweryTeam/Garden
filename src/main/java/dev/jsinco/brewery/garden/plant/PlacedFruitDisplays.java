@@ -1,6 +1,7 @@
 package dev.jsinco.brewery.garden.plant;
 
 import dev.jsinco.brewery.garden.Garden;
+import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.utility.Encoder;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Location;
@@ -20,20 +21,20 @@ import org.joml.Vector3f;
 import java.util.List;
 import java.util.UUID;
 
-public record PlacedFruit(List<ItemDisplay> itemDisplays, Entity interactionBox, Key plantType) {
+public record PlacedFruitDisplays(List<ItemDisplay> itemDisplays, Entity interactionBox, Key plantType) {
 
     public static final NamespacedKey INTERACTION_ENTITY_DATA = Garden.key("linked_entities");
     public static final NamespacedKey OWNING_PLANT = Garden.key("owner");
 
 
-    public static PlacedFruit generate(ItemStack itemSource, BlockFace relative, Block block, Key plantType, UUID owner) {
+    public static PlacedFruitDisplays generate(ItemStack itemSource, BlockFace relative, Block block, Key plantType, UUID owner, float placedScale) {
         Location center = block.getLocation().toCenterLocation()
                 .subtract(relative.getDirection().multiply(0.25));
         ItemDisplay itemDisplay1 = center.getWorld().spawn(center, ItemDisplay.class, entity -> {
             entity.setTransformation(new Transformation(
                     new Vector3f(),
                     new AxisAngle4f((float) (Math.PI / 4), 0, 1, 0),
-                    new Vector3f(1, 1, 1),
+                    new Vector3f(placedScale, placedScale, placedScale),
                     new AxisAngle4f()
             ));
             entity.setPersistent(false);
@@ -43,7 +44,7 @@ public record PlacedFruit(List<ItemDisplay> itemDisplays, Entity interactionBox,
             entity.setTransformation(new Transformation(
                     new Vector3f(),
                     new AxisAngle4f((float) -(Math.PI / 4), 0, 1, 0),
-                    new Vector3f(1, 1, 1),
+                    new Vector3f(placedScale, placedScale, placedScale),
                     new AxisAngle4f()
             ));
             entity.setPersistent(false);
@@ -67,7 +68,7 @@ public record PlacedFruit(List<ItemDisplay> itemDisplays, Entity interactionBox,
             );
             pdc.set(OWNING_PLANT, PersistentDataType.BYTE_ARRAY, Encoder.asBytes(owner));
         });
-        return new PlacedFruit(List.of(itemDisplay1, itemDisplay2), interaction, plantType);
+        return new PlacedFruitDisplays(List.of(itemDisplay1, itemDisplay2), interaction, plantType);
     }
 
 

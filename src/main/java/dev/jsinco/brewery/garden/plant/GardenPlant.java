@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableSet;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
+import dev.jsinco.brewery.garden.plant.item.PlantItem;
+import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,7 +34,7 @@ public class GardenPlant {
     private int age;
     private static final Random RANDOM = new Random();
     private boolean bloomed = false;
-    private final List<PlacedFruit> placedFruits = new ArrayList<>();
+    private final List<PlacedFruitDisplays> placedFruits = new ArrayList<>();
     private int expectedFruits;
 
     private static final Set<Material> DECORATIVE_PLANT_BLOCKS = compileDecorativePlantBlocks();
@@ -50,7 +52,8 @@ public class GardenPlant {
         this.id = UUID.randomUUID();
         this.type = type;
         this.age = 0;
-        this.track = type.track();
+        List<String> tracks = type.structures().keySet().stream().toList();
+        this.track = tracks.get(RANDOM.nextInt(tracks.size()));
         this.structure = type.newStructure(location, age, track);
     }
 
@@ -68,7 +71,7 @@ public class GardenPlant {
     }
 
     public boolean isFullyGrown() {
-        return this.age >= type.stages() - 1;
+        return this.age >= type.maxStages() - 1;
     }
 
     public void incrementGrowthStage(int amount, PlantRegistry registry, GardenPlantDataType dataType) {
@@ -83,7 +86,7 @@ public class GardenPlant {
                 .filter(placedFruit -> !placedFruit.hasDepopulated())
                 .count();
         int toPopulate = expectedFruits - validCount;
-        placedFruits.removeIf(PlacedFruit::hasDepopulated);
+        placedFruits.removeIf(PlacedFruitDisplays::hasDepopulated);
         if (toPopulate > 0) {
             Bukkit.getRegionScheduler().run(Garden.getInstance(), structure.origin(), t -> {
                 placedFruits.addAll(placeFruits(toPopulate));
@@ -121,7 +124,7 @@ public class GardenPlant {
         if (structure.locations(blockData -> Tag.LEAVES.isTagged(blockData.getMaterial()))
                 .stream().map(Location::getBlock)
                 .flatMap(block -> type.fruitPlacement().vectors().stream().map(block::getRelative))
-                .anyMatch(block -> Fruit.getPlantType(block) != null)
+                .anyMatch(block -> PlayerHeadBased.getPlantType(block) != null)
         ) {
             return;
         }
@@ -145,12 +148,12 @@ public class GardenPlant {
         Garden.getInstance().getGardenPlantDataType().update(this);
     }
 
-    private List<PlacedFruit> placeFruits(int amount) {
+    private List<PlacedFruitDisplays> placeFruits(int amount) {
         if (!structure.origin().isChunkLoaded() || !type.bearFruits() || !placedFruits.isEmpty()) {
             return List.of();
         }
-        Fruit fruit = type.newFruit();
-        List<PlacedFruit> output = new ArrayList<>();
+        PlantItem fruit = type.fruitItem();
+        List<PlacedFruitDisplays> output = new ArrayList<>();
         int count = 0;
         for (Location location : this.structure.locations()) {
             if (amount != -1 && count >= amount) {
@@ -168,7 +171,7 @@ public class GardenPlant {
                 continue;
             }
             BlockFace chosenRelative = relatives.get(RANDOM.nextInt(relatives.size()));
-            fruit.placeFruit(block.getRelative(chosenRelative), chosenRelative, id)
+            fruit.place(block.getRelative(chosenRelative), chosenRelative, id, type)
                     .ifPresent(output::add);
             count++;
         }
@@ -211,6 +214,6 @@ public class GardenPlant {
     }
 
     public void clearBoundEntities() {
-        placedFruits.forEach(PlacedFruit::remove);
+        placedFruits.forEach(PlacedFruitDisplays::remove);
     }
 }

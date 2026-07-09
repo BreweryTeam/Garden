@@ -6,13 +6,10 @@ import dev.jsinco.brewery.bukkit.api.integration.IntegrationTypes;
 import dev.jsinco.brewery.bukkit.api.integration.ItemIntegration;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
-import dev.jsinco.brewery.garden.plant.Fruit;
-import dev.jsinco.brewery.garden.plant.PlantItem;
 import dev.jsinco.brewery.garden.plant.PlantType;
-import dev.jsinco.brewery.garden.plant.Seeds;
+import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -24,8 +21,19 @@ import java.util.concurrent.CompletableFuture;
 public final class TBPGardenIntegration implements ItemIntegration {
     @Override
     public Optional<ItemStack> createItem(String key) {
-        return get(key)
-                .map(PlantItem::newItem);
+        if (!key.contains("_seeds") && !key.contains("_fruit") || !Key.parseableValue(key)) {
+            return Optional.empty();
+        }
+        String plantTypeKey = key.replaceAll("_seeds|_fruit", "");
+        PlantType plantType = MutableGardenRegistry.PLANT_TYPE.get(Garden.key(plantTypeKey));
+        if (plantType == null) {
+            return Optional.empty();
+        }
+        if (key.contains("_seeds")) {
+            return plantType.seedItem().item(PlantItem.PlantItemType.SEEDS, plantType);
+        } else {
+            return plantType.fruitItem().item(PlantItem.PlantItemType.FRUIT, plantType);
+        }
     }
 
     @Override
@@ -36,10 +44,7 @@ public final class TBPGardenIntegration implements ItemIntegration {
     @Override
     public @Nullable Component displayName(String key) {
         return get(key)
-                .map(PlantItem::plantType)
-                .map(PlantType::displayName)
-                .map(MiniMessage.miniMessage()::deserialize)
-                .map(component -> component.color(null))
+                .map(PlantItem::displayName)
                 .orElse(null);
     }
 
@@ -48,18 +53,15 @@ public final class TBPGardenIntegration implements ItemIntegration {
             return Optional.empty();
         }
         String plantTypeKey = key.replaceAll("_seeds|_fruit", "");
-        return Optional.ofNullable(Garden.key(plantTypeKey))
-                .flatMap(plant -> Optional.ofNullable(MutableGardenRegistry.PLANT_TYPE.get(plant)))
-                .map(type -> key.contains("_seeds") ? type.newSeeds() : type.newFruit());
+        return Optional.ofNullable(MutableGardenRegistry.PLANT_TYPE.get(Garden.key(plantTypeKey)))
+                .map(type -> key.contains("_seeds") ? type.seedItem() : type.fruitItem());
     }
 
     @Override
     public @Nullable String getItemId(ItemStack itemStack) {
-        if (Fruit.isFruit(itemStack)) {
-            return Fruit.getFruit(itemStack).simpleName();
-        }
-        if (Seeds.isSeeds(itemStack)) {
-            return Seeds.getSeeds(itemStack).simpleName();
+        Key plantItemKey = PlantItem.plantItemKey(itemStack);
+        if (plantItemKey != null) {
+            return Garden.minimized(plantItemKey.key());
         }
         return null;
     }

@@ -28,7 +28,7 @@ public class Logger {
     public static void logWarn(String message) {
         StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
         String className = caller.getClassName().substring(caller.getClassName().lastIndexOf('.') + 1);
-        String prefixedMessage = "[TBP Warning - " + className + ":" + caller.getLineNumber() + "] " + message;
+        String prefixedMessage = "[Garden Warning - " + className + ":" + caller.getLineNumber() + "] " + message;
         logger().log(Level.WARNING, prefixedMessage);
     }
 

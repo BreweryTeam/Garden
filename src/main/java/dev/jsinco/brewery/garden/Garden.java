@@ -16,6 +16,7 @@ import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.GrowthManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
+import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.thorinwasher.blockutil.api.BlockUtilAPI;
 import dev.thorinwasher.blockutil.api.event.BlockDisableDropEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -46,6 +47,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class Garden extends JavaPlugin {
@@ -208,23 +210,45 @@ public class Garden extends JavaPlugin {
     }
 
     private void registerPlantRecipes() {
+        // TODO - Delayed initialization (integration support)
         for (PlantType plantType : MutableGardenRegistry.PLANT_TYPE.values()) {
             NamespacedKey namespacedKey = plantType.key();
             if (Bukkit.getRecipe(namespacedKey) != null) {
                 Bukkit.removeRecipe(namespacedKey);
             }
-
-            ShapelessRecipe recipe = new ShapelessRecipe(namespacedKey, plantType.newSeeds().newItem(4));
-            recipe.addIngredient(plantType.newFruit().newItem(1));
+            Optional<ItemStack> optionalSeeds = plantType.seedItem().item(4, PlantItem.PlantItemType.SEEDS, plantType);
+            Optional<ItemStack> optionalFruits = plantType.fruitItem().item(PlantItem.PlantItemType.FRUIT, plantType);
+            if (optionalFruits.isEmpty() || optionalSeeds.isEmpty()) {
+                continue;
+            }
+            ShapelessRecipe recipe = new ShapelessRecipe(namespacedKey, optionalSeeds.get());
+            recipe.addIngredient(optionalFruits.get());
             Bukkit.addRecipe(recipe);
         }
     }
 
-    public static NamespacedKey key(String key) {
-        if (!Key.parseableValue(key)) {
-            throw new IllegalArgumentException("Invalid key: " + key);
+    public static NamespacedKey key(String string) {
+        String[] split = string.split(":", 2);
+        String value;
+        String namespace;
+        if (split.length == 1) {
+            namespace = "garden";
+            value = string;
+        } else {
+            namespace = split[0];
+            value = split[1];
         }
-        return new NamespacedKey("garden", key);
+        if (!Key.parseableValue(value) || !Key.parseableNamespace(namespace)) {
+            throw new IllegalArgumentException("Invalid key: " + string);
+        }
+        return new NamespacedKey(namespace, value);
+    }
+
+    public static String minimized(Key key) {
+        if (key.namespace().equalsIgnoreCase("garden")) {
+            return key.value();
+        }
+        return key.asString();
     }
 
 }

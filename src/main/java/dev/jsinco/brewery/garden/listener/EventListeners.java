@@ -5,12 +5,11 @@ import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
-import dev.jsinco.brewery.garden.plant.Fruit;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
-import dev.jsinco.brewery.garden.plant.PlacedFruit;
-import dev.jsinco.brewery.garden.plant.PlantItem;
+import dev.jsinco.brewery.garden.plant.PlacedFruitDisplays;
 import dev.jsinco.brewery.garden.plant.PlantType;
-import dev.jsinco.brewery.garden.plant.Seeds;
+import dev.jsinco.brewery.garden.plant.item.PlantItem;
+import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
 import dev.jsinco.brewery.garden.utility.Encoder;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
 import org.bukkit.Bukkit;
@@ -74,7 +73,7 @@ public class EventListeners implements Listener {
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         PersistentDataContainer pdc = event.getRightClicked().getPersistentDataContainer();
         List<byte[]> boundEntities = pdc
-                .get(PlacedFruit.INTERACTION_ENTITY_DATA, PersistentDataType.LIST.listTypeFrom(PersistentDataType.BYTE_ARRAY));
+                .get(PlacedFruitDisplays.INTERACTION_ENTITY_DATA, PersistentDataType.LIST.listTypeFrom(PersistentDataType.BYTE_ARRAY));
         if (boundEntities == null) {
             return;
         }
@@ -89,7 +88,7 @@ public class EventListeners implements Listener {
                 entity.remove();
             }
         }
-        byte[] owningPlant = pdc.get(PlacedFruit.OWNING_PLANT, PersistentDataType.BYTE_ARRAY);
+        byte[] owningPlant = pdc.get(PlacedFruitDisplays.OWNING_PLANT, PersistentDataType.BYTE_ARRAY);
         if (owningPlant != null) {
             UUID uuid = Encoder.asUuid(owningPlant);
             GardenPlant gardenPlant = gardenRegistry.getByID(uuid);
@@ -110,15 +109,16 @@ public class EventListeners implements Listener {
         if (plantType == null) {
             return;
         }
-        world.dropItem(
-                event.getRightClicked().getLocation(),
-                plantType.newFruit().newItem(1)
-        );
+        plantType.fruitItem().item(PlantItem.PlantItemType.FRUIT, plantType)
+                .ifPresent(item -> world.dropItem(
+                        event.getRightClicked().getLocation(),
+                        item
+                ));
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerPlace(BlockPlaceEvent event) {
-        if (Seeds.isSeeds(event.getItemInHand())) {
+        if (PlantItem.plantItemKey(event.getItemInHand()) != null) {
             event.setCancelled(true);
         }
     }
@@ -171,7 +171,7 @@ public class EventListeners implements Listener {
         if (itemInHand == null || itemInHand.getType() != Material.SHEARS) {
             return;
         }
-        PlantType plantType = Fruit.getPlantType(clickedBlock);
+        PlantType plantType = PlayerHeadBased.getPlantType(clickedBlock);
         if (plantType == null) {
             return;
         }
@@ -179,22 +179,23 @@ public class EventListeners implements Listener {
             itemInHand.damage(1, player);
         }
         clickedBlock.setType(Material.AIR);
-        clickedBlock.getWorld().dropItem(clickedBlock.getLocation().toCenterLocation(), plantType.newFruit().newItem(1));
+        plantType.fruitItem().item(PlantItem.PlantItemType.FRUIT, plantType)
+                .ifPresent(item -> clickedBlock.getWorld().dropItem(clickedBlock.getLocation().toCenterLocation(), item));
     }
 
     private boolean handleSeedPlacement(ItemStack itemInHand, Block clickedBlock) {
-        if (itemInHand == null || !Seeds.isSeeds(itemInHand)) {
+        if (itemInHand == null || !PlantItem.isSeeds(itemInHand)) {
             return false;
         }
 
         Location location = clickedBlock.getLocation().add(0, 1, 0); // Need the block above
 
-        Seeds seeds = Seeds.getSeeds(itemInHand);
-        if (seeds == null) {
+        PlantType plantType = PlantItem.plantType(itemInHand);
+        if (plantType == null) {
             return false;
         }
         // Create a new GardenPlant at the location
-        GardenPlant gardenPlant = new GardenPlant(seeds.plantType(), location);
+        GardenPlant gardenPlant = new GardenPlant(plantType, location);
         gardenRegistry.registerPlant(gardenPlant);
         gardenPlantDataType.insert(gardenPlant);
         gardenPlant.getStructure().paste();
