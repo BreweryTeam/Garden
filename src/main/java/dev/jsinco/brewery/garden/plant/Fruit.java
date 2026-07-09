@@ -22,15 +22,17 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-public record Fruit(String simpleName, PlantType plantType) implements PlantItem {
+public record Fruit(String simpleName, PlantType plantType, @Nullable ItemStack itemOverride) implements PlantItem {
     private static final NamespacedKey TBP_TAG = new NamespacedKey("brewery", "tag");
     private static final NamespacedKey TBP_SCORE = new NamespacedKey("brewery", "score");
     private static final NamespacedKey TBP_DISPLAY_NAME = new NamespacedKey("brewery", "display_name");
 
     @Override
     public ItemStack newItem(int amount) {
-        ItemStack item = new ItemStack(Material.PLAYER_HEAD, amount);
+        ItemStack item = itemOverride != null ? itemOverride : new ItemStack(Material.PLAYER_HEAD, amount);
         item.setData(DataComponentTypes.CUSTOM_NAME, MiniMessage.miniMessage().deserialize(plantType.displayName()));
         item.setData(DataComponentTypes.PROFILE, ResolvableProfile.resolvableProfile(plantType.getPlayerProfile()));
         item.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable().hasConsumeParticles(false).build());
@@ -47,6 +49,12 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
         persistentDataContainer.set(TBP_DISPLAY_NAME, PersistentDataType.STRING, plantType.displayName());
         item.setItemMeta(meta);
         return item;
+    }
+
+    @Nullable
+    public ItemStack itemOverride() {
+        // Just me being paranoid + have immutability as a goal
+        return itemOverride == null ? null : itemOverride.clone();
     }
 
     @Override
@@ -68,23 +76,27 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
         if (!view.has(PLANT_TYPE_KEY)) {
             return null;
         }
-        PlantType type = MutableGardenRegistry.plantType.get(NamespacedKey.fromString(view.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
+        PlantType type = MutableGardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(view.get(PLANT_TYPE_KEY, PersistentDataType.STRING)));
         if (type == null) {
             return null;
         }
         return type.newFruit();
     }
 
-    public void placeFruit(Block relative, BlockFace facing) {
-        Skull skull;
-        if (facing == BlockFace.UP) {
-            skull = (Skull) BlockType.PLAYER_HEAD.createBlockData().createBlockState();
-        } else {
-            skull = (Skull) BlockType.PLAYER_WALL_HEAD.createBlockData(wallHead -> wallHead.setFacing(facing)).createBlockState();
+    public Optional<PlacedFruit> placeFruit(Block relative, BlockFace facing, UUID owningPlant) {
+        if (itemOverride == null) {
+            Skull skull;
+            if (facing == BlockFace.UP || facing == BlockFace.DOWN) {
+                skull = (Skull) BlockType.PLAYER_HEAD.createBlockData().createBlockState();
+            } else {
+                skull = (Skull) BlockType.PLAYER_WALL_HEAD.createBlockData(wallHead -> wallHead.setFacing(facing)).createBlockState();
+            }
+            skull.setPlayerProfile(plantType.getPlayerProfile());
+            skull.getPersistentDataContainer().set(PLANT_TYPE_KEY, PersistentDataType.STRING, plantType.key().toString());
+            skull.copy(relative.getLocation()).update(true);
+            return Optional.empty();
         }
-        skull.setPlayerProfile(plantType.getPlayerProfile());
-        skull.getPersistentDataContainer().set(PLANT_TYPE_KEY, PersistentDataType.STRING, plantType.key().toString());
-        skull.copy(relative.getLocation()).update(true);
+        return Optional.of(PlacedFruit.generate(itemOverride, facing, relative, plantType.getKey(), owningPlant));
     }
 
     @Nullable
@@ -93,6 +105,6 @@ public record Fruit(String simpleName, PlantType plantType) implements PlantItem
         Skull skull = (Skull) block.getState();
         String key = skull.getPersistentDataContainer().get(PLANT_TYPE_KEY, PersistentDataType.STRING);
         if (key == null) return null;
-        return MutableGardenRegistry.plantType.get(NamespacedKey.fromString(key));
+        return MutableGardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(key));
     }
 }

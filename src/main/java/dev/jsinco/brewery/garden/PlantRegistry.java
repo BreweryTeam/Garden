@@ -66,6 +66,7 @@ public class PlantRegistry {
     }
 
     public void clear() {
+        gardenPlantIds.values().forEach(GardenPlant::clearBoundEntities);
         gardenPlants.clear();
         gardenPlantIds.clear();
     }

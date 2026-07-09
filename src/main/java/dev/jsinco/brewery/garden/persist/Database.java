@@ -16,7 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public class Database {
 
-    private static final int DATABASE_VERSION = 0;
+    private static final int DATABASE_VERSION = 1;
     private HikariDataSource hikariDataSource;
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -30,19 +30,28 @@ public class Database {
         this.hikariDataSource = new HikariDataSource(config);
         executeMultiple("/sql/create_all_tables.sql");
         try (Connection connection = getConnection()) {
-            ResultSet statement = connection.prepareStatement(FileUtil.readInternalResource("/sql/get_version.sql"))
-                    .executeQuery();
-            if (statement.next()) {
-                int version = statement.getInt("version");
-                if (version < DATABASE_VERSION) {
-                    // migrate
-                    updateVersion(connection);
-                } else if (version > DATABASE_VERSION) {
-                    throw new IllegalStateException("Can not downgrade the plugin!");
+            int version;
+            try (PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/get_version.sql"))) {
+                ResultSet statement = preparedStatement
+                        .executeQuery();
+                if (statement.next()) {
+                    version = statement.getInt("version");
+                } else {
+                    version = DATABASE_VERSION;
                 }
-            } else {
-                updateVersion(connection);
             }
+            if (version < DATABASE_VERSION) {
+                runMigrations(version, connection);
+                updateVersion(connection);
+            } else if (version > DATABASE_VERSION) {
+                throw new IllegalStateException("Can not downgrade the plugin!");
+            }
+        }
+    }
+
+    private void runMigrations(int version, Connection connection) throws SQLException {
+        if (version < 1) {
+            connection.prepareStatement("ALTER TABLE plants ADD COLUMN fruits INTEGER;").execute();
         }
     }
 

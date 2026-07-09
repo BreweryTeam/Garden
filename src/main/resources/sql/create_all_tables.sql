@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS plants (
     world_uuid BINARY(16),
     transformation TEXT,
     track TEXT,
+    fruits INTEGER,
     PRIMARY KEY (id)
 );
 

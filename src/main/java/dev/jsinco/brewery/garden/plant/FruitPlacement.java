@@ -6,7 +6,8 @@ import java.util.List;
 
 public enum FruitPlacement {
     ABOVE(BlockFace.UP),
-    ADJACENT(BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH, BlockFace.NORTH);
+    ADJACENT(BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH, BlockFace.NORTH),
+    UNDER(BlockFace.DOWN);
 
     private final List<BlockFace> vectors;
 

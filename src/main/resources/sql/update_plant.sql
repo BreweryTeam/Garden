@@ -1,4 +1,5 @@
 UPDATE plants
 SET age            = ?,
-    transformation = ?
+    transformation = ?,
+    fruits         = ?
 WHERE id = ?;
