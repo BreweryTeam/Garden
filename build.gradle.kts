@@ -13,9 +13,6 @@ plugins {
     id("com.modrinth.minotaur") version "2.8.7"
 }
 
-group = "dev.jsinco.brewery.garden"
-version = "1.5.0"
-
 val targetMinecraftVersions = listOf(
     "1.21.5", "1.21.8", "1.21.10", "1.21.11", "26.1.2", "26.2"
 )

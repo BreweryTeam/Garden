@@ -2,8 +2,8 @@ name: "Publish to Modrinth, Hangar, and Discord Webhook"
 
 on:
   release:
-    branches: [master]
-    types: [published]
+    branches: [ master ]
+    types: [ published ]
 
 jobs:
   build:
@@ -22,6 +22,12 @@ jobs:
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
+
+      - name: Publish API
+        run: |
+          ./gradlew publishAllPublicationsToBreweryteamRepository \
+          -PbreweryteamUsername=${{ secrets.BREWERY_REPO_USERNAME }} \
+          -PbreweryteamPassword=${{ secrets.BREWERY_REPO_PASSWORD }}
 
       - name: Publish Release
         run: "./gradlew publishRelease"
