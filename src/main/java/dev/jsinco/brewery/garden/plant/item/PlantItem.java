@@ -14,6 +14,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.awt.Color;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +35,8 @@ public interface PlantItem {
     Optional<PlacedFruitDisplays> place(Block relative, BlockFace facing, UUID owningPlant, PlantType plantType);
 
     Component displayName();
+
+    Optional<Color> color();
 
     static NamespacedKey key(PlantType plantType, PlantItemType itemType) {
         return Garden.key("%s_%s".formatted(Garden.minimized(plantType.key()), itemType.name().toLowerCase(Locale.ROOT)));

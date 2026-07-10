@@ -13,14 +13,16 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
+import java.awt.Color;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @NullMarked
 public record IntegrationBased(String materialKey, Component displayName, float placedScale,
-                               List<Component> lore) implements PlantItem {
+                               List<Component> lore, @Nullable Color color0) implements PlantItem {
 
     @Override
     public void validate(String context) {
@@ -55,5 +57,10 @@ public record IntegrationBased(String materialKey, Component displayName, float 
     public Optional<PlacedFruitDisplays> place(Block relative, BlockFace facing, UUID owningPlant, PlantType plantType) {
         return IntegrationItemResolver.resolve(materialKey)
                 .map(item -> PlacedFruitDisplays.generate(item, facing, relative, plantType.getKey(), owningPlant, placedScale));
+    }
+
+    @Override
+    public Optional<Color> color() {
+        return Optional.ofNullable(color0);
     }
 }

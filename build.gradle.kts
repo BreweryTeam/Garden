@@ -39,7 +39,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("com.dre.brewery:BreweryX:3.4.10-SNAPSHOT")
-    compileOnly("dev.jsinco.brewery:thebrewingproject-bukkit:3.0.0")
+    compileOnly("dev.jsinco.brewery:thebrewingproject-bukkit:3.3.1")
     compileOnly("org.spongepowered:configurate-yaml:4.2.0")
 
     compileOnly("net.momirealms:craft-engine-bukkit:26.5")
@@ -132,7 +132,7 @@ tasks {
         minecraftVersion("1.21.8")
         downloadPlugins {
             modrinth("worldedit", "DlD8WKr9")
-            hangar("thebrewingproject", "3.0.0")
+            modrinth("thebrewingproject", "3.3.1")
         }
     }
 
