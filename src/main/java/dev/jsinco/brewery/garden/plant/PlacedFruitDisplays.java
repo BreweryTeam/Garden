@@ -29,7 +29,7 @@ public record PlacedFruitDisplays(List<ItemDisplay> itemDisplays, Entity interac
 
     public static PlacedFruitDisplays generate(ItemStack itemSource, BlockFace relative, Block block, Key plantType, UUID owner, float placedScale) {
         Location center = block.getLocation().toCenterLocation()
-                .subtract(relative.getDirection().multiply(0.3 * placedScale));
+                .subtract(relative.getDirection().multiply(0.5 - placedScale * 0.25));
         ItemDisplay itemDisplay1 = center.getWorld().spawn(center, ItemDisplay.class, entity -> {
             entity.setTransformation(new Transformation(
                     new Vector3f(),
