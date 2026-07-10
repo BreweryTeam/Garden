@@ -8,7 +8,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -23,7 +22,7 @@ public class ItemsAdderIntegration implements ItemIntegration, Listener {
     }
 
     @Override
-    public @NonNull CompletableFuture<Void> validationReady() {
+    public CompletableFuture<Void> validationReady() {
         return initializedFuture;
     }
 
@@ -51,6 +50,6 @@ public class ItemsAdderIntegration implements ItemIntegration, Listener {
 
     @EventHandler
     public void onItemsAdderItemsLoad(ItemsAdderLoadDataEvent loadDataEvent) {
-        initializedFuture.completeAsync(() -> null);
+        initializedFuture.complete(null);
     }
 }

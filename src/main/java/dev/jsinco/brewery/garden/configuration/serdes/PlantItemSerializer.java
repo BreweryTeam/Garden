@@ -58,6 +58,6 @@ public class PlantItemSerializer implements TypeSerializer<PlantItem> {
 
     @Override
     public void serialize(Type type, @Nullable PlantItem obj, ConfigurationNode node) throws SerializationException {
-
+        throw new UnsupportedOperationException("Plant items can only be deserialized");
     }
 }
