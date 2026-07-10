@@ -4,17 +4,15 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlantItemContainer;
-import io.papermc.paper.command.brigadier.MessageComponentSerializer;
+import dev.jsinco.brewery.garden.utility.MessageUtil;
 import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
@@ -23,15 +21,15 @@ import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("UnstableApiUsage")
 public class PlantItemArgument implements CustomArgumentType.Converted<PlantItemContainer, String> {
-    private static final DynamicCommandExceptionType ERROR_ILLEGAL_ARGUMENT = new DynamicCommandExceptionType(invalidArgument ->
-            MessageComponentSerializer.message().serialize(MiniMessage.miniMessage().deserialize("Illegal argument <argument>", Placeholder.unparsed("argument", invalidArgument.toString())))
+    public static final SimpleCommandExceptionType ERROR_INVALID_ITEM = new SimpleCommandExceptionType(
+            MessageUtil.brigadierTranslatable("garden.command.invalid-item")
     );
 
     @Override
     public PlantItemContainer convert(String string) throws CommandSyntaxException {
         PlantItemContainer plantType = compileItems().get(string);
         if (plantType == null) {
-            throw ERROR_ILLEGAL_ARGUMENT.create(string);
+            throw ERROR_INVALID_ITEM.create();
         }
         return plantType;
     }
