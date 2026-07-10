@@ -3,6 +3,7 @@ package dev.jsinco.brewery.garden.plant;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import dev.jsinco.brewery.garden.Garden;
+import dev.jsinco.brewery.garden.configuration.serdes.ColorSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.ComponentSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.PlantItemSerializer;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
@@ -22,6 +23,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -193,6 +195,7 @@ public final class PlantTypeTemplate {
                 .defaultOptions(opts -> opts.serializers(serializers -> {
                     serializers.register(Component.class, new ComponentSerializer());
                     serializers.register(PlantItem.class, new PlantItemSerializer());
+                    serializers.register(Color.class, new ColorSerializer());
                 }))
                 .indent(2)
                 .build();

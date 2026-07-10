@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jspecify.annotations.Nullable;
 
+import java.awt.Color;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -87,6 +88,12 @@ public final class TBPGardenIntegration implements ItemIntegration {
             id = id + "_fruit";
         }
         return ItemIntegration.super.createIngredient(id);
+    }
+
+    @Override
+    public @Nullable Color color(String id) {
+        return get(id).flatMap(PlantItem::color)
+                .orElse(null);
     }
 
     public static void loadIfPossible() {

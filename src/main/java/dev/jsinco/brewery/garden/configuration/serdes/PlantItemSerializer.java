@@ -14,6 +14,7 @@ import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 
+import java.awt.Color;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.UUID;
@@ -32,13 +33,14 @@ public class PlantItemSerializer implements TypeSerializer<PlantItem> {
             throw new SerializationException("Expected a display name");
         }
         List<Component> lore = node.node("lore").getList(Component.class, List.of());
+        Color color = node.node("color").get(Color.class);
         if (node.hasChild("material")) {
             float placedScale = node.node("placed-scale").get(Float.class, 1F);
             String material = node.node("material").getString();
             if (material == null) {
                 throw new SerializationException("Unknown material, expected a string");
             }
-            return new IntegrationBased(material, displayName, placedScale, lore);
+            return new IntegrationBased(material, displayName, placedScale, lore, color);
         } else if (node.hasChild("head-texture-base64")) {
             String textureBase64 = node.node("head-texture-base64").getString();
             if (textureBase64 == null) {
@@ -48,7 +50,7 @@ public class PlantItemSerializer implements TypeSerializer<PlantItem> {
                 PlayerProfile profile = Bukkit.createProfile(CONSTANT_UUID);
                 profile.getProperties().add(new ProfileProperty("textures", textureBase64));
                 return profile;
-            }), displayName, lore);
+            }), displayName, lore, color);
         } else {
             throw new SerializationException("Expected either 'material' or 'head-texture-base64' key");
         }

@@ -24,13 +24,14 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.awt.Color;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @NullMarked
 public record PlayerHeadBased(CachedValue<PlayerProfile> profile, Component displayName,
-                              List<Component> lore) implements PlantItem {
+                              List<Component> lore, @Nullable Color color0) implements PlantItem {
     private static final UUID CONSTANT_UUID = UUID.fromString("f714a407-f7c9-425c-958d-c9914aeac05c");
 
     @Override
@@ -71,6 +72,11 @@ public record PlayerHeadBased(CachedValue<PlayerProfile> profile, Component disp
         skull.getPersistentDataContainer().set(PLANT_TYPE_KEY, PersistentDataType.STRING, plantType.key().toString());
         skull.copy(relative.getLocation()).update(true);
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<Color> color() {
+        return Optional.ofNullable(color0);
     }
 
     @Nullable
