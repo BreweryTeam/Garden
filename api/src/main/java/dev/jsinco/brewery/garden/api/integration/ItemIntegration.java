@@ -16,9 +16,9 @@ public interface ItemIntegration {
     Optional<ItemStack> toBukkit(String identifier);
 
     /**
-     * @return The identifier of this item integration
+     * @return The namespace of this item integration
      */
-    String id();
+    String namespace();
 
     /**
      * Method that is run in the Garden enable phase.

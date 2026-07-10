@@ -26,7 +26,7 @@ public class CraftEngineIntegration implements ItemIntegration, Listener {
     }
 
     @Override
-    public String id() {
+    public String namespace() {
         return "craftengine";
     }
 

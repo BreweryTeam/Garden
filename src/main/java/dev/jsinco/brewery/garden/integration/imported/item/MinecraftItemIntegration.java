@@ -22,7 +22,7 @@ public class MinecraftItemIntegration implements ItemIntegration {
     }
 
     @Override
-    public String id() {
+    public String namespace() {
         return "minecraft";
     }
 

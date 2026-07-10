@@ -36,13 +36,13 @@ public class IntegrationRegistryImpl implements IntegrationRegistry {
 
     @Override
     public void registerItemIntegration(ItemIntegration itemIntegration) {
-        itemIntegrations.put(itemIntegration.id(), itemIntegration);
+        itemIntegrations.put(itemIntegration.namespace(), itemIntegration);
     }
 
     public void registerItemIntegration(String classPredicate, Supplier<ItemIntegration> itemIntegrationSupplier) {
         if (ClassUtil.exists(classPredicate)) {
             ItemIntegration itemIntegration = itemIntegrationSupplier.get();
-            itemIntegrations.put(itemIntegration.id(), itemIntegration);
+            itemIntegrations.put(itemIntegration.namespace(), itemIntegration);
         }
     }
 
