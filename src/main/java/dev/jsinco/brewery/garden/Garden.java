@@ -48,6 +48,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 public class Garden extends JavaPlugin {
@@ -210,21 +211,25 @@ public class Garden extends JavaPlugin {
     }
 
     private void registerPlantRecipes() {
-        // TODO - Delayed initialization (integration support)
-        for (PlantType plantType : MutableGardenRegistry.PLANT_TYPE.values()) {
-            NamespacedKey namespacedKey = plantType.key();
-            if (Bukkit.getRecipe(namespacedKey) != null) {
-                Bukkit.removeRecipe(namespacedKey);
+        CompletableFuture.allOf(integrationRegistry.itemIntegrations()
+                .map(ItemIntegration::validationReady)
+                .toArray(CompletableFuture<?>[]::new)
+        ).thenRunAsync(() -> {
+            for (PlantType plantType : MutableGardenRegistry.PLANT_TYPE.values()) {
+                NamespacedKey namespacedKey = plantType.key();
+                if (Bukkit.getRecipe(namespacedKey) != null) {
+                    Bukkit.removeRecipe(namespacedKey);
+                }
+                Optional<ItemStack> optionalSeeds = plantType.seedItem().item(4, PlantItem.PlantItemType.SEEDS, plantType);
+                Optional<ItemStack> optionalFruits = plantType.fruitItem().item(PlantItem.PlantItemType.FRUIT, plantType);
+                if (optionalFruits.isEmpty() || optionalSeeds.isEmpty()) {
+                    continue;
+                }
+                ShapelessRecipe recipe = new ShapelessRecipe(namespacedKey, optionalSeeds.get());
+                recipe.addIngredient(optionalFruits.get());
+                Bukkit.addRecipe(recipe);
             }
-            Optional<ItemStack> optionalSeeds = plantType.seedItem().item(4, PlantItem.PlantItemType.SEEDS, plantType);
-            Optional<ItemStack> optionalFruits = plantType.fruitItem().item(PlantItem.PlantItemType.FRUIT, plantType);
-            if (optionalFruits.isEmpty() || optionalSeeds.isEmpty()) {
-                continue;
-            }
-            ShapelessRecipe recipe = new ShapelessRecipe(namespacedKey, optionalSeeds.get());
-            recipe.addIngredient(optionalFruits.get());
-            Bukkit.addRecipe(recipe);
-        }
+        }, runnable -> Bukkit.getGlobalRegionScheduler().run(this, task -> runnable.run()));
     }
 
     public static NamespacedKey key(String string) {
