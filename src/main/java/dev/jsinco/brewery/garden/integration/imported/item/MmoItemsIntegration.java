@@ -57,7 +57,7 @@ public class MmoItemsIntegration implements ItemIntegration, Listener {
     }
 
     @Override
-    public String id() {
+    public String namespace() {
         return "mmoitems";
     }
 

@@ -43,7 +43,7 @@ public class NexoIntegration implements ItemIntegration, Listener {
     }
 
     @Override
-    public String id() {
+    public String namespace() {
         return "nexo";
     }
 
