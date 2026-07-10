@@ -51,7 +51,7 @@ public class OraxenIntegration implements ItemIntegration, Listener {
 
     @EventHandler
     public void onOraxenItemsLoaded(OraxenItemsLoadedEvent event) {
-        initializedFuture.completeAsync(() -> null);
+        initializedFuture.complete(null);
     }
 
 }

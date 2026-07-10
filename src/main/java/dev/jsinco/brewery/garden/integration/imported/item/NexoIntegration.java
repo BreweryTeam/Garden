@@ -54,6 +54,6 @@ public class NexoIntegration implements ItemIntegration, Listener {
 
     @EventHandler
     public void onNexoItemsLoaded(NexoItemsLoadedEvent event) {
-        initializedFuture.completeAsync(() -> null);
+        initializedFuture.complete(null);
     }
 }

@@ -208,6 +208,8 @@ public final class PlantTypeTemplate {
             }
             template.name = plantDirectory.getName();
             template.directory = plantDirectory;
+            template.fruit().validate("%s.fruit".formatted(template.name()));
+            template.seeds().validate("%s.seeds".formatted(template.name()));
             return Optional.of(template);
         } catch (ConfigurateException e) {
             Logger.logWarn("Could not read plant type, failed to load " + PLANT_FILE + ": " + plantDirectory.getName());

@@ -61,6 +61,6 @@ public class CraftEngineIntegration implements ItemIntegration, Listener {
 
     @EventHandler
     public void onCraftEngineReload(CraftEngineReloadEvent ignored) {
-        initializedFuture.completeAsync(() -> null);
+        initializedFuture.complete(null);
     }
 }

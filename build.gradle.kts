@@ -13,6 +13,9 @@ plugins {
     id("com.modrinth.minotaur") version "2.8.7"
 }
 
+version = findProperty("project.version")!!
+group = findProperty("project.group")!!
+
 val targetMinecraftVersions = listOf(
     "1.21.5", "1.21.8", "1.21.10", "1.21.11", "26.1.2", "26.2"
 )
@@ -99,6 +102,7 @@ tasks {
     shadowJar {
         archiveBaseName.set(rootProject.name)
         archiveClassifier.unset()
+        addMultiReleaseAttribute = false
 
         dependencies {
             exclude {

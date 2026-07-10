@@ -18,6 +18,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -55,6 +56,7 @@ public class GardenPlant {
         List<String> tracks = type.structures().keySet().stream().toList();
         this.track = tracks.get(RANDOM.nextInt(tracks.size()));
         this.structure = type.newStructure(location, age, track);
+        this.expectedFruits = 0;
     }
 
     public GardenPlant(UUID id, PlantType type, PlantStructure structure, String track, int age, int fruits) {
@@ -63,6 +65,7 @@ public class GardenPlant {
         this.age = age;
         this.track = track;
         this.structure = structure;
+        this.expectedFruits = fruits;
         if (fruits > 0) {
             Bukkit.getGlobalRegionScheduler().run(Garden.getInstance(), t -> {
                 placeFruits(fruits);
@@ -71,7 +74,7 @@ public class GardenPlant {
     }
 
     public boolean isFullyGrown() {
-        return this.age >= type.maxStages() - 1;
+        return this.age >= type.structures().getOrDefault(track, List.of()).size() - 1;
     }
 
     public void incrementGrowthStage(int amount, PlantRegistry registry, GardenPlantDataType dataType) {
@@ -118,7 +121,7 @@ public class GardenPlant {
     }
 
     public void bloom() {
-        if (!structure.origin().isChunkLoaded()) {
+        if (!structure.origin().isChunkLoaded() || !placedFruits.isEmpty()) {
             return;
         }
         if (structure.locations(blockData -> Tag.LEAVES.isTagged(blockData.getMaterial()))
@@ -128,17 +131,26 @@ public class GardenPlant {
         ) {
             return;
         }
-        for (Location location : this.structure.locations(blockData -> Tag.LEAVES.isTagged(blockData.getMaterial()))) {
+        List<Location> locationsRandomized = new ArrayList<>(
+                this.structure.locations(blockData -> Tag.LEAVES.isTagged(blockData.getMaterial()))
+        );
+        Collections.shuffle(locationsRandomized);
+        if (locationsRandomized.isEmpty()) {
+            return;
+        }
+        int amount = RANDOM.nextInt(1, locationsRandomized.size() + 1);
+        for (Location location : locationsRandomized) {
             Block block = location.getBlock();
             if (!Tag.LEAVES.isTagged(block.getType())) {
                 continue;
             }
-            if (RANDOM.nextBoolean()) {
-                block.setBlockData(
-                        BlockType.FLOWERING_AZALEA_LEAVES.createBlockData()
-                );
-                this.bloomed = true;
+            if (amount-- <= 0) {
+                break;
             }
+            block.setBlockData(
+                    BlockType.FLOWERING_AZALEA_LEAVES.createBlockData()
+            );
+            this.bloomed = true;
         }
     }
 
@@ -160,7 +172,10 @@ public class GardenPlant {
                 return output;
             }
             Block block = location.getBlock();
-            if (Material.FLOWERING_AZALEA_LEAVES != block.getType()) {
+            if (!Tag.LEAVES.isTagged(block.getType())) {
+                continue;
+            }
+            if (amount == -1 && Material.FLOWERING_AZALEA_LEAVES != block.getType()) {
                 continue;
             }
             List<BlockFace> relatives = type.fruitPlacement().vectors()

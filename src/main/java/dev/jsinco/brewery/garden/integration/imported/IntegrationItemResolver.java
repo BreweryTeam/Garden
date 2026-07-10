@@ -44,10 +44,10 @@ public class IntegrationItemResolver {
                 .ifPresentOrElse(itemIntegration -> itemIntegration.validationReady()
                                 .thenAccept(ignored -> {
                                     if (!itemIntegration.isValid(value)) {
-                                        Logger.logWarn("Unknown item '%s', in %s".formatted(key, context));
+                                        Logger.logWarn("Unknown item '%s' in %s".formatted(key, context));
                                     }
                                 }),
-                        () -> Logger.logWarn("Unknown item '%s' in %s - Unknown namespace")
+                        () -> Logger.logWarn("Unknown item '%s' in %s - Unknown namespace".formatted(key, context))
                 );
     }
 }
