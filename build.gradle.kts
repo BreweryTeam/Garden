@@ -134,6 +134,7 @@ tasks {
         downloadPlugins {
             modrinth("worldedit", "DlD8WKr9")
             modrinth("thebrewingproject", "3.3.1")
+            modrinth("worldguard", "7.0.17")
         }
     }
 

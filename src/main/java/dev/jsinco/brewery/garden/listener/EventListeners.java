@@ -10,6 +10,7 @@ import dev.jsinco.brewery.garden.plant.PlacedFruitDisplays;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
+import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.jsinco.brewery.garden.utility.Encoder;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
 import org.bukkit.Bukkit;
@@ -28,6 +29,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockMultiPlaceEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -38,14 +40,18 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EventListeners implements Listener {
 
     private final GardenConfig config = GardenConfig.instance();
     private static final Random RANDOM = new Random();
+    public static final Set<BlockPlaceEvent> IGNORED_EVENTS = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
 
     private final PlantRegistry gardenRegistry;
@@ -121,14 +127,6 @@ public class EventListeners implements Listener {
                 ));
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerPlace(BlockPlaceEvent event) {
-        if (PlantItem.plantItemKey(event.getItemInHand()) != null) {
-            event.setCancelled(true);
-        }
-    }
-
-
     @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
         gardenPlantDataType.fetch(event.getWorld())
@@ -195,13 +193,6 @@ public class EventListeners implements Listener {
 
         Location location = clickedBlock.getLocation().add(0, 1, 0); // Need the block above
 
-        Block placedBlock = location.getBlock();
-        BlockState replacedBlockState = placedBlock.getState();
-        boolean canBuild = true; // No way to grab this value without internals :(
-        BlockPlaceEvent event = new BlockPlaceEvent(placedBlock, replacedBlockState, clickedBlock, itemInHand, player, canBuild, hand);
-        if (!event.callEvent()) {
-            return false;
-        }
 
         PlantType plantType = PlantItem.plantType(itemInHand);
         if (plantType == null) {
@@ -209,12 +200,27 @@ public class EventListeners implements Listener {
         }
         // Create a new GardenPlant at the location
         GardenPlant gardenPlant = new GardenPlant(plantType, location);
+        if (!checkBlocks(gardenPlant.getStructure(), itemInHand, clickedBlock, player, hand)) {
+            return false;
+        }
         gardenRegistry.registerPlant(gardenPlant);
         gardenPlantDataType.insert(gardenPlant);
-        gardenPlant.getStructure().paste();
 
         itemInHand.setAmount(itemInHand.getAmount() - 1);
         location.getWorld().playSound(location, Sound.BLOCK_GRASS_PLACE, 1.0f, 1.0f);
+        return true;
+    }
+
+    public boolean checkBlocks(PlantStructure structure, ItemStack itemInHand, Block clickedBlock, Player player, EquipmentSlot hand) {
+        List<BlockState> previousStates = structure.pasteNow();
+        BlockMultiPlaceEvent event = new BlockMultiPlaceEvent(previousStates, clickedBlock, itemInHand, player, true, hand);
+        IGNORED_EVENTS.add(event);
+        if (!event.callEvent()) {
+            previousStates.forEach(state -> state.update(true));
+            IGNORED_EVENTS.remove(event);
+            return false;
+        }
+        IGNORED_EVENTS.remove(event);
         return true;
     }
 }
