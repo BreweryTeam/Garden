@@ -124,8 +124,6 @@ public class Garden extends JavaPlugin {
         growthTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> growthManager.tick(), 1, 200);
         Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> {
             gardenRegistry.getPlants()
-                    .stream()
-                    .filter(gardenPlant -> gardenPlant.getStructure().origin().isChunkLoaded())
                     .forEach(GardenPlant::tick);
         }, 1, 100);
     }
@@ -205,8 +203,8 @@ public class Garden extends JavaPlugin {
         gardenRegistry.clear();
         MutableGardenRegistry.PLANT_TYPE.newBacking(PlantType.readPlantTypes());
         for (World world : Bukkit.getWorlds()) {
-            List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
-            gardenPlants.forEach(gardenRegistry::registerPlant);
+            gardenPlantDataType.fetch(world)
+                    .thenAccept(gardenPlants -> gardenPlants.forEach(gardenRegistry::registerPlant));
         }
     }
 

@@ -29,13 +29,13 @@ public class PlantRegistry {
     public GardenPlant getByLocation(Block block) {
         World world = block.getWorld();
         BlockVector position = block.getLocation().toVector().toBlockVector();
-        return gardenPlants.computeIfAbsent(world.getUID(), ignored -> new HashMap<>()).get(position);
+        return gardenPlants.computeIfAbsent(world.getUID(), ignored -> new ConcurrentHashMap<>()).get(position);
     }
 
     public void registerPlant(GardenPlant plant) {
         UUID worldUuid = plant.getStructure().worldUuid();
         for (Location location : plant.getStructure().locations()) {
-            gardenPlants.computeIfAbsent(worldUuid, ignored -> new HashMap<>()).put(
+            gardenPlants.computeIfAbsent(worldUuid, ignored -> new ConcurrentHashMap<>()).put(
                     location.toVector().toBlockVector(), plant
             );
         }
@@ -46,7 +46,7 @@ public class PlantRegistry {
         gardenPlantIds.remove(plant.getId());
         UUID worldUuid = plant.getStructure().worldUuid();
         for (Location location : plant.getStructure().locations()) {
-            gardenPlants.computeIfAbsent(worldUuid, ignored -> new HashMap<>()).remove(
+            gardenPlants.computeIfAbsent(worldUuid, ignored -> new ConcurrentHashMap<>()).remove(
                     location.toVector().toBlockVector()
             );
         }

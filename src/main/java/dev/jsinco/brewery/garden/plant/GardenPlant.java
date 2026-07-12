@@ -68,7 +68,7 @@ public class GardenPlant {
         this.expectedFruits = fruits;
         if (fruits > 0) {
             Bukkit.getGlobalRegionScheduler().run(Garden.getInstance(), t -> {
-                placeFruits(fruits);
+                placedFruits.addAll(placeFruits(fruits));
             });
         }
     }
@@ -88,11 +88,16 @@ public class GardenPlant {
         int validCount = (int) placedFruits.stream()
                 .filter(placedFruit -> !placedFruit.hasDepopulated())
                 .count();
+        List<PlacedFruitDisplays> toRemove = placedFruits
+                .stream()
+                .filter(PlacedFruitDisplays::hasDepopulated)
+                .toList();
         int toPopulate = expectedFruits - validCount;
         placedFruits.removeIf(PlacedFruitDisplays::hasDepopulated);
         if (toPopulate > 0) {
             Bukkit.getRegionScheduler().run(Garden.getInstance(), structure.origin(), t -> {
                 placedFruits.addAll(placeFruits(toPopulate));
+                toRemove.forEach(PlacedFruitDisplays::remove);
             });
         }
     }
@@ -169,7 +174,7 @@ public class GardenPlant {
         int count = 0;
         for (Location location : this.structure.locations()) {
             if (amount != -1 && count >= amount) {
-                return output;
+                break;
             }
             Block block = location.getBlock();
             if (!Tag.LEAVES.isTagged(block.getType())) {
@@ -217,6 +222,7 @@ public class GardenPlant {
     public void registerFruitPicked() {
         for (int i = 0; i < placedFruits.size(); i++) {
             if (placedFruits.get(i).hasDepopulated()) {
+                placedFruits.get(i).remove();
                 placedFruits.remove(i);
                 break;
             }
@@ -230,5 +236,6 @@ public class GardenPlant {
 
     public void clearBoundEntities() {
         placedFruits.forEach(PlacedFruitDisplays::remove);
+        expectedFruits = 0;
     }
 }
