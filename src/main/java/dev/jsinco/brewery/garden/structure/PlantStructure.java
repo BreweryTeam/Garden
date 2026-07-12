@@ -2,14 +2,21 @@ package dev.jsinco.brewery.garden.structure;
 
 import dev.jsinco.brewery.garden.Garden;
 import dev.thorinwasher.schem.Schematic;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Tag;
+import org.bukkit.World;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Leaves;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
@@ -44,30 +51,37 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
     }
 
     public CompletableFuture<Void> paste() {
-        World world = Bukkit.getWorld(worldUuid);
-        if (world == null) {
-            return CompletableFuture.completedFuture(null);
-        }
         CompletableFuture<Void> output = new CompletableFuture<>();
         Bukkit.getRegionScheduler().run(Garden.getInstance(), origin(), t -> {
-            schematic.apply(transformation, (vector3i, blockData) -> {
-                if (blockData.getMaterial().isAir()) {
-                    return;
-                }
-                if (blockData instanceof Leaves leaves) {
-                    leaves.setPersistent(false);
-                }
-                vector3i.sub(offset);
-                Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
-
-                Material blockToReplaceType = posToReplace.getBlock().getType();
-                if (!Tag.REPLACEABLE_BY_TREES.isTagged(blockToReplaceType) && !blockToReplaceType.isAir()) {
-                    return;
-                }
-                world.setBlockData(posToReplace, blockData);
-                Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
-            });
+            pasteNow();
             output.complete(null);
+        });
+        return output;
+    }
+
+    public List<BlockState> pasteNow() {
+        World world = Bukkit.getWorld(worldUuid);
+        if (world == null) {
+            return List.of();
+        }
+        List<BlockState> output = new ArrayList<>();
+        schematic.apply(transformation, (vector3i, blockData) -> {
+            if (blockData.getMaterial().isAir()) {
+                return;
+            }
+            if (blockData instanceof Leaves leaves) {
+                leaves.setPersistent(false);
+            }
+            vector3i.sub(offset);
+            Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
+
+            Material blockToReplaceType = posToReplace.getBlock().getType();
+            if (!Tag.REPLACEABLE_BY_TREES.isTagged(blockToReplaceType) && !blockToReplaceType.isAir()) {
+                return;
+            }
+            output.add(posToReplace.getBlock().getState());
+            world.setBlockData(posToReplace, blockData);
+            Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
         });
         return output;
     }

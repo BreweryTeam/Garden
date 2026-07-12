@@ -121,27 +121,10 @@ public class BlockEventListener implements Listener {
         });
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (PlantItem.isFruit(event.getItemInHand())) {
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerPlace(BlockPlaceEvent event) {
+        if (!EventListeners.IGNORED_EVENTS.contains(event) && PlantItem.plantItemKey(event.getItemInHand()) != null) {
             event.setCancelled(true);
-            return;
-        }
-        if (WorldUtil.isBlacklistedWorld(event.getBlock().getLocation())) {
-            return;
-        }
-        if (PlantItem.isSeeds(event.getItemInHand())) {
-            PlantType plantType = PlantItem.plantType(event.getItemInHand());
-            if (plantType == null) {
-                return;
-            }
-            GardenPlant gardenPlant = new GardenPlant(
-                    plantType,
-                    event.getBlock().getLocation()
-            );
-            gardenPlant.getStructure().paste();
-            gardenRegistry.registerPlant(gardenPlant);
-            gardenPlantDataType.insert(gardenPlant);
         }
     }
 
