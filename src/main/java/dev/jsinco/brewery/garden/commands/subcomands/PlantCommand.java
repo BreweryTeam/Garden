@@ -111,7 +111,7 @@ public class PlantCommand {
                             } catch (ArrayIndexOutOfBoundsException e) {
                                 throw new SimpleCommandExceptionType(
                                         MessageUtil.brigadierTranslatable("garden.command.unknown-age",
-                                                Argument.numeric("age", stage),
+                                                Argument.numeric("age", stage + 1),
                                                 Argument.tagResolver(Placeholder.unparsed("plant", Garden.minimized(gardenPlant.getType().key())))
                                         )
                                 ).create();
