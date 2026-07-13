@@ -14,6 +14,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 
 @NullMarked
@@ -67,11 +68,17 @@ public record PlantType(
         return key();
     }
 
-    public PlantStructure getStructure(Location origin, int age, String track, Matrix3d transformation) {
-        Schematic schematic = structures.get(track).get(age);
+    public Optional<PlantStructure> getStructure(Location origin, int age, String trackName, Matrix3d transformation) {
+        List<Schematic> track = structures.get(trackName);
+        if (track == null) {
+            return Optional.empty();
+        }
+        Schematic schematic = track.get(age);
         Vector3i size = schematic.size(transformation);
         Vector3i offset = new Vector3i(size.x() / 2, 0, size.z() / 2);
-        return new PlantStructure(schematic, origin.getBlockX(), origin.getBlockY(), origin.getBlockZ(), transformation, origin.getWorld().getUID(), offset);
+        return Optional.of(
+                new PlantStructure(schematic, origin.getBlockX(), origin.getBlockY(), origin.getBlockZ(), transformation, origin.getWorld().getUID(), offset)
+        );
     }
 
     public static List<PlantType> readPlantTypes() {
