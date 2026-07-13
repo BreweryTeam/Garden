@@ -206,6 +206,7 @@ public class Garden extends JavaPlugin {
             gardenPlantDataType.fetch(world)
                     .thenAccept(gardenPlants -> gardenPlants.forEach(gardenRegistry::registerPlant));
         }
+        registerPlantRecipes();
     }
 
     private void registerPlantRecipes() {
@@ -227,6 +228,7 @@ public class Garden extends JavaPlugin {
                 recipe.addIngredient(optionalFruits.get());
                 Bukkit.addRecipe(recipe);
             }
+            Bukkit.updateRecipes();
         }, runnable -> Bukkit.getGlobalRegionScheduler().run(this, task -> runnable.run()));
     }
 
