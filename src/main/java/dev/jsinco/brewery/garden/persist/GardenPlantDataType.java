@@ -7,6 +7,7 @@ import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.jsinco.brewery.garden.utility.Encoder;
 import dev.jsinco.brewery.garden.utility.FileUtil;
+import dev.jsinco.brewery.garden.utility.Logger;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -17,7 +18,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -52,7 +56,7 @@ public class GardenPlantDataType {
                 e.printStackTrace();
             }
             return null;
-        });
+        }, executor);
     }
 
     public CompletableFuture<Void> update(GardenPlant plant) {
@@ -69,7 +73,7 @@ public class GardenPlantDataType {
                 e.printStackTrace();
             }
             return null;
-        });
+        }, executor);
     }
 
     public CompletableFuture<Void> remove(GardenPlant plant) {
@@ -82,12 +86,13 @@ public class GardenPlantDataType {
                 e.printStackTrace();
             }
             return null;
-        });
+        }, executor);
     }
 
     public CompletableFuture<List<GardenPlant>> fetch(World world) {
         return CompletableFuture.supplyAsync(() -> {
             List<GardenPlant> output = new ArrayList<>();
+            Set<String> reportedInvalidTracks = new HashSet<>();
             try (Connection connection = database.getConnection()) {
                 PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/find_plant.sql"));
                 preparedStatement.setBytes(1, Encoder.asBytes(world.getUID()));
@@ -103,11 +108,20 @@ public class GardenPlantDataType {
                     int age = resultSet.getInt("age");
                     String track = resultSet.getString("track");
                     Matrix3d transformation = Encoder.deserializeTransformation(resultSet.getString("transformation"));
+                    Optional<PlantStructure> structure = plantType.getStructure(origin, age, track, transformation);
+                    if (structure.isEmpty()) {
+                        String trackIdentifier = "%s.%s".formatted(Garden.minimized(plantType.key()), track);
+                        if (!reportedInvalidTracks.contains(trackIdentifier)) {
+                            Logger.logWarn("Invalid plant at %s - Undefined track '%s'. Ignoring remaining issues of same type...".formatted(origin, trackIdentifier));
+                            reportedInvalidTracks.add(trackIdentifier);
+                        }
+                        continue;
+                    }
                     output.add(
                             new GardenPlant(
                                     Encoder.asUuid(resultSet.getBytes("id")),
                                     plantType,
-                                    plantType.getStructure(origin, age, track, transformation),
+                                    structure.get(),
                                     track,
                                     age,
                                     resultSet.getInt("fruits")
@@ -118,6 +132,6 @@ public class GardenPlantDataType {
                 e.printStackTrace();
             }
             return output;
-        });
+        }, executor);
     }
 }
