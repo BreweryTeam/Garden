@@ -5,16 +5,31 @@ import com.google.common.collect.ImmutableMap;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.configuration.serdes.ColorSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.ComponentSerializer;
+import dev.jsinco.brewery.garden.configuration.serdes.ConsumeEffectSerializer;
+import dev.jsinco.brewery.garden.configuration.serdes.ExtraItemDataSerializer;
+import dev.jsinco.brewery.garden.configuration.serdes.KeyedSerializer;
+import dev.jsinco.brewery.garden.configuration.serdes.NamespacedKeySerializer;
+import dev.jsinco.brewery.garden.configuration.serdes.PdcEntriesSerializer;
+import dev.jsinco.brewery.garden.configuration.serdes.PdcPrimitiveSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.PlantItemSerializer;
+import dev.jsinco.brewery.garden.configuration.serdes.PotionEffectSerializer;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
+import dev.jsinco.brewery.garden.plant.item.extra.ExtraItemData;
+import dev.jsinco.brewery.garden.plant.item.extra.PdcEntries;
+import dev.jsinco.brewery.garden.plant.item.extra.PdcPrimitive;
 import dev.jsinco.brewery.garden.utility.Logger;
 import dev.jsinco.brewery.garden.utility.TimeUtil;
 import dev.thorinwasher.schem.Schematic;
 import dev.thorinwasher.schem.SchematicReader;
+import io.papermc.paper.datacomponent.item.consumable.ConsumeEffect;
+import io.papermc.paper.registry.RegistryKey;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import org.bukkit.NamespacedKey;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -58,8 +73,8 @@ public final class PlantTypeTemplate {
     private @Nullable List<String> tracks;
     private String approximateGrowthTime;
     private FruitPlacement fruitPlacement;
-    private PlantItem seeds;
-    private PlantItem fruit;
+    private @Nullable PlantItem seeds;
+    private @Nullable PlantItem fruit;
     private @Nullable Boolean bearFruits;
 
 
@@ -196,7 +211,14 @@ public final class PlantTypeTemplate {
                     serializers.register(Component.class, new ComponentSerializer());
                     serializers.register(PlantItem.class, new PlantItemSerializer());
                     serializers.register(Color.class, new ColorSerializer());
-                }))
+                    serializers.register(ExtraItemData.class, new ExtraItemDataSerializer());
+                    serializers.register(PdcEntries.class, new PdcEntriesSerializer());
+                    serializers.register(PdcPrimitive.class, new PdcPrimitiveSerializer());
+                    serializers.register(NamespacedKey.class, new NamespacedKeySerializer());
+                    serializers.register(PotionEffectType.class, new KeyedSerializer<>(RegistryKey.MOB_EFFECT));
+                    serializers.register(PotionEffect.class, new PotionEffectSerializer());
+                    serializers.register(ConsumeEffect.class, new ConsumeEffectSerializer());
+                }).shouldCopyDefaults(false))
                 .indent(2)
                 .build();
         try {
