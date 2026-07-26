@@ -28,11 +28,12 @@ import java.awt.Color;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @NullMarked
 public record PlayerHeadBased(CachedValue<PlayerProfile> profile, Component displayName,
-                              List<Component> lore, @Nullable Color color0) implements PlantItem {
-    private static final UUID CONSTANT_UUID = UUID.fromString("f714a407-f7c9-425c-958d-c9914aeac05c");
+                              List<Component> lore, @Nullable Color color0,
+                              Consumer<ItemStack> extraModifications) implements PlantItem {
 
     @Override
     public void validate(String context) {
@@ -57,6 +58,7 @@ public record PlayerHeadBased(CachedValue<PlayerProfile> profile, Component disp
             pdc.set(ITEM_TYPE_KEY, PersistentDataType.STRING, type.name());
             pdc.set(PLANT_TYPE_KEY, PersistentDataType.STRING, plantType.key().toString());
         });
+        extraModifications.accept(item);
         return Optional.of(item);
     }
 

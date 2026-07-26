@@ -2,6 +2,7 @@ package dev.jsinco.brewery.garden.configuration.serdes;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
+import dev.jsinco.brewery.garden.plant.item.extra.ExtraItemData;
 import dev.jsinco.brewery.garden.plant.item.IntegrationBased;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
@@ -18,6 +19,7 @@ import java.awt.Color;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 @NullMarked
 public class PlantItemSerializer implements TypeSerializer<PlantItem> {
@@ -34,13 +36,14 @@ public class PlantItemSerializer implements TypeSerializer<PlantItem> {
         }
         List<Component> lore = node.node("lore").getList(Component.class, List.of());
         Color color = node.node("color").get(Color.class);
+        ExtraItemData extraItemData = node.node("data").get(ExtraItemData.class, (Supplier<ExtraItemData>) () -> new ExtraItemData(List.of()));
         if (node.hasChild("material")) {
             float placedScale = node.node("placed-scale").get(Float.class, 1F);
             String material = node.node("material").getString();
             if (material == null) {
                 throw new SerializationException("Unknown material, expected a string");
             }
-            return new IntegrationBased(material, displayName, placedScale, lore, color);
+            return new IntegrationBased(material, displayName, placedScale, lore, color, extraItemData::apply);
         } else if (node.hasChild("head-texture-base64")) {
             String textureBase64 = node.node("head-texture-base64").getString();
             if (textureBase64 == null) {
@@ -50,7 +53,7 @@ public class PlantItemSerializer implements TypeSerializer<PlantItem> {
                 PlayerProfile profile = Bukkit.createProfile(CONSTANT_UUID);
                 profile.getProperties().add(new ProfileProperty("textures", textureBase64));
                 return profile;
-            }), displayName, lore, color);
+            }), displayName, lore, color, extraItemData::apply);
         } else {
             throw new SerializationException("Expected either 'material' or 'head-texture-base64' key");
         }

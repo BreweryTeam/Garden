@@ -19,10 +19,12 @@ import java.awt.Color;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @NullMarked
 public record IntegrationBased(String materialKey, Component displayName, float placedScale,
-                               List<Component> lore, @Nullable Color color0) implements PlantItem {
+                               List<Component> lore, @Nullable Color color0,
+                               Consumer<ItemStack> extraModifications) implements PlantItem {
 
     @Override
     public void validate(String context) {
@@ -40,23 +42,29 @@ public record IntegrationBased(String materialKey, Component displayName, float 
         item.setData(DataComponentTypes.CUSTOM_NAME, displayName
                 .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE)
                 .colorIfAbsent(NamedTextColor.WHITE));
-        item.setData(DataComponentTypes.LORE, ItemLore.lore(
-                lore.stream()
-                        .map(component -> component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE))
-                        .map(component -> component.colorIfAbsent(NamedTextColor.GRAY))
-                        .toList()
-        ));
+        if (!lore.isEmpty()) {
+            item.setData(DataComponentTypes.LORE, ItemLore.lore(
+                    lore.stream()
+                            .map(component -> component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE))
+                            .map(component -> component.colorIfAbsent(NamedTextColor.GRAY))
+                            .toList()
+            ));
+        }
         item.editPersistentDataContainer(pdc -> {
             pdc.set(ITEM_TYPE_KEY, PersistentDataType.STRING, type.name());
             pdc.set(PLANT_TYPE_KEY, PersistentDataType.STRING, plantType.key().toString());
         });
+        extraModifications.accept(item);
         return Optional.of(item);
     }
 
     @Override
     public Optional<PlacedFruitDisplays> place(Block relative, BlockFace facing, UUID owningPlant, PlantType plantType) {
         return IntegrationItemResolver.resolve(materialKey)
-                .map(item -> PlacedFruitDisplays.generate(item, facing, relative, plantType.getKey(), owningPlant, placedScale));
+                .map(item -> {
+                    extraModifications.accept(item);
+                    return PlacedFruitDisplays.generate(item, facing, relative, plantType.getKey(), owningPlant, placedScale);
+                });
     }
 
     @Override
