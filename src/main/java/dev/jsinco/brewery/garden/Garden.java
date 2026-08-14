@@ -17,6 +17,7 @@ import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.GrowthManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
+import dev.jsinco.brewery.garden.utility.Logger;
 import dev.thorinwasher.blockutil.api.BlockUtilAPI;
 import dev.thorinwasher.blockutil.api.event.BlockDisableDropEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -126,6 +127,10 @@ public class Garden extends JavaPlugin {
             gardenRegistry.getPlants()
                     .forEach(GardenPlant::tick);
         }, 1, 100);
+        if (MutableGardenRegistry.PLANT_TYPE.values().isEmpty()) {
+            Logger.logErr("There's no available plant types for garden!");
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
     }
 
     @Override
@@ -207,6 +212,10 @@ public class Garden extends JavaPlugin {
                     .thenAccept(gardenPlants -> gardenPlants.forEach(gardenRegistry::registerPlant));
         }
         registerPlantRecipes();
+        if (MutableGardenRegistry.PLANT_TYPE.values().isEmpty()) {
+            Logger.logErr("There's no available plant types for garden!");
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
     }
 
     private void registerPlantRecipes() {
