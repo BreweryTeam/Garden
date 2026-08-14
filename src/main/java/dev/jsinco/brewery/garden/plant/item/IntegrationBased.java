@@ -1,15 +1,12 @@
 package dev.jsinco.brewery.garden.plant.item;
 
 import dev.jsinco.brewery.garden.integration.imported.IntegrationItemResolver;
-import dev.jsinco.brewery.garden.plant.PlacedFruitDisplays;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemLore;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NullMarked;
@@ -18,13 +15,13 @@ import org.jspecify.annotations.Nullable;
 import java.awt.Color;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 @NullMarked
-public record IntegrationBased(String materialKey, Component displayName, float placedScale,
+public record IntegrationBased(String materialKey, Component displayName,
                                List<Component> lore, @Nullable Color color0,
-                               Consumer<ItemStack> extraModifications) implements PlantItem {
+                               Consumer<ItemStack> extraModifications,
+                               FruitPlacementData fruitPlacement) implements PlantItem {
 
     @Override
     public void validate(String context) {
@@ -58,14 +55,6 @@ public record IntegrationBased(String materialKey, Component displayName, float 
         return Optional.of(item);
     }
 
-    @Override
-    public Optional<PlacedFruitDisplays> place(Block relative, BlockFace facing, UUID owningPlant, PlantType plantType) {
-        return IntegrationItemResolver.resolve(materialKey)
-                .map(item -> {
-                    extraModifications.accept(item);
-                    return PlacedFruitDisplays.generate(item, facing, relative, plantType.getKey(), owningPlant, placedScale);
-                });
-    }
 
     @Override
     public Optional<Color> color() {

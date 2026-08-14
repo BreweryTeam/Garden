@@ -1,5 +1,6 @@
 package dev.jsinco.brewery.garden.plant;
 
+import com.google.common.collect.ImmutableList;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.utility.Encoder;
@@ -28,35 +29,31 @@ public record PlacedFruitDisplays(List<ItemDisplay> itemDisplays, Entity interac
     public static final NamespacedKey OWNING_PLANT = Garden.key("owner");
     public static final float ONE_OVER_SQRT_2 = (float) (1 / Math.sqrt(2));
 
-    public static PlacedFruitDisplays generate(ItemStack itemSource, BlockFace relative, Block block, Key plantType, UUID owner, float placedScale) {
+    public static PlacedFruitDisplays generate(ItemStack itemSource, BlockFace relative, Block block, Key plantType, UUID owner, float placedScale, int displayCount) {
         Location center = block.getLocation().toCenterLocation()
                 .subtract(relative.getDirection().multiply(0.5 - placedScale * 0.25));
-        ItemDisplay itemDisplay1 = center.getWorld().spawn(center, ItemDisplay.class, entity -> {
-            entity.setTransformation(new Transformation(
-                    new Vector3f(),
-                    new AxisAngle4f((float) (Math.PI / 4), 0, 1, 0),
-                    new Vector3f(placedScale, placedScale, placedScale),
-                    new AxisAngle4f()
-            ));
-            entity.setPersistent(false);
-            entity.setItemStack(itemSource);
-        });
-        ItemDisplay itemDisplay2 = center.getWorld().spawn(center, ItemDisplay.class, entity -> {
-            entity.setTransformation(new Transformation(
-                    new Vector3f(),
-                    new AxisAngle4f((float) -(Math.PI / 4), 0, 1, 0),
-                    new Vector3f(placedScale, placedScale, placedScale),
-                    new AxisAngle4f()
-            ));
-            entity.setPersistent(false);
-            entity.setItemStack(itemSource);
-        });
+        float degreeDiff = (float) (Math.PI / (displayCount));
+        ImmutableList.Builder<ItemDisplay> itemDisplaysBuilder = ImmutableList.builder();
+        for (int i = 0; i < displayCount; i++) {
+            final int iFinal = i;
+            itemDisplaysBuilder.add(center.getWorld().spawn(center, ItemDisplay.class, entity -> {
+                entity.setTransformation(new Transformation(
+                        new Vector3f(),
+                        new AxisAngle4f((float) (Math.PI / 4) + degreeDiff * iFinal, 0, 1, 0),
+                        new Vector3f(placedScale, placedScale, placedScale),
+                        new AxisAngle4f()
+                ));
+                entity.setPersistent(false);
+                entity.setItemStack(itemSource);
+            }));
+        }
         // Display entities will have
         Vector diff = new Vector(
                 0,
                 -placedScale / 2,
                 0
         );
+        List<ItemDisplay> itemDisplays = itemDisplaysBuilder.build();
         Entity interaction = center.getWorld().spawn(center.add(diff), Interaction.class, entity -> {
             entity.setNoPhysics(true);
             entity.setPersistent(false);
@@ -67,7 +64,10 @@ public record PlacedFruitDisplays(List<ItemDisplay> itemDisplays, Entity interac
             pdc.set(
                     INTERACTION_ENTITY_DATA,
                     PersistentDataType.LIST.listTypeFrom(PersistentDataType.BYTE_ARRAY),
-                    List.of(Encoder.asBytes(itemDisplay1.getUniqueId()), Encoder.asBytes(itemDisplay2.getUniqueId()))
+                    itemDisplays.stream()
+                            .map(ItemDisplay::getUniqueId)
+                            .map(Encoder::asBytes)
+                            .toList()
             );
             pdc.set(
                     PlantItem.PLANT_TYPE_KEY,
@@ -76,7 +76,7 @@ public record PlacedFruitDisplays(List<ItemDisplay> itemDisplays, Entity interac
             );
             pdc.set(OWNING_PLANT, PersistentDataType.BYTE_ARRAY, Encoder.asBytes(owner));
         });
-        return new PlacedFruitDisplays(List.of(itemDisplay1, itemDisplay2), interaction, plantType);
+        return new PlacedFruitDisplays(itemDisplays, interaction, plantType);
     }
 
 

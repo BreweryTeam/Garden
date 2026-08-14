@@ -8,5 +8,8 @@ seeds:
 fruit:
   display-name: "<dark_red>Apple"
   material: apple
-  placed-scale: 0.7
   color: dark_red
+  fruit-placement:
+    placed-scale: 0.7
+    item-displays: 2
+    material: apple
