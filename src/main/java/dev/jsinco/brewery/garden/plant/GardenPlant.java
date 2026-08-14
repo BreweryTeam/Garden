@@ -205,7 +205,7 @@ public class GardenPlant {
                 continue;
             }
             BlockFace chosenRelative = relatives.get(ThreadLocalRandom.current().nextInt(relatives.size()));
-            fruit.place(block.getRelative(chosenRelative), chosenRelative, id, type)
+            fruit.fruitPlacement().place(block.getRelative(chosenRelative), chosenRelative, id, type)
                     .ifPresent(output::add);
             count++;
         }

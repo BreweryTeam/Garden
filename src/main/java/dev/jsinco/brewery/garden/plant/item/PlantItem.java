@@ -2,13 +2,10 @@ package dev.jsinco.brewery.garden.plant.item;
 
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
-import dev.jsinco.brewery.garden.plant.PlacedFruitDisplays;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import io.papermc.paper.persistence.PersistentDataContainerView;
 import net.kyori.adventure.text.Component;
 import org.bukkit.NamespacedKey;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NullMarked;
@@ -17,7 +14,6 @@ import org.jspecify.annotations.Nullable;
 import java.awt.Color;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.UUID;
 
 @NullMarked
 public interface PlantItem {
@@ -32,11 +28,11 @@ public interface PlantItem {
 
     Optional<ItemStack> item(int amount, PlantItemType type, PlantType plantType);
 
-    Optional<PlacedFruitDisplays> place(Block relative, BlockFace facing, UUID owningPlant, PlantType plantType);
-
     Component displayName();
 
     Optional<Color> color();
+
+    FruitPlacementData fruitPlacement();
 
     static NamespacedKey key(PlantType plantType, PlantItemType itemType) {
         return Garden.key("%s_%s".formatted(Garden.minimized(plantType.key()), itemType.name().toLowerCase(Locale.ROOT)));

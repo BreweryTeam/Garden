@@ -2,10 +2,11 @@ package dev.jsinco.brewery.garden.configuration.serdes;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
-import dev.jsinco.brewery.garden.plant.item.extra.ExtraItemData;
+import dev.jsinco.brewery.garden.plant.item.FruitPlacementData;
 import dev.jsinco.brewery.garden.plant.item.IntegrationBased;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
+import dev.jsinco.brewery.garden.plant.item.extra.ExtraItemData;
 import dev.jsinco.brewery.garden.utility.CachedValue;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -23,7 +24,7 @@ import java.util.function.Supplier;
 
 @NullMarked
 public class PlantItemSerializer implements TypeSerializer<PlantItem> {
-    private static final UUID CONSTANT_UUID = UUID.fromString("f714a407-f7c9-425c-958d-c9914aeac05c");
+    public static final UUID CONSTANT_UUID = UUID.fromString("f714a407-f7c9-425c-958d-c9914aeac05c");
 
     @Override
     public PlantItem deserialize(Type type, ConfigurationNode node) throws SerializationException {
@@ -37,23 +38,31 @@ public class PlantItemSerializer implements TypeSerializer<PlantItem> {
         List<Component> lore = node.node("lore").getList(Component.class, List.of());
         Color color = node.node("color").get(Color.class);
         ExtraItemData extraItemData = node.node("data").get(ExtraItemData.class, (Supplier<ExtraItemData>) () -> new ExtraItemData(List.of()));
+        FruitPlacementData fruitPlacementData = node.node("fruit-placement").get(FruitPlacementData.class);
         if (node.hasChild("material")) {
             float placedScale = node.node("placed-scale").get(Float.class, 1F);
             String material = node.node("material").getString();
             if (material == null) {
                 throw new SerializationException("Unknown material, expected a string");
             }
-            return new IntegrationBased(material, displayName, placedScale, lore, color, extraItemData::apply);
+            if (fruitPlacementData == null) {
+                fruitPlacementData = new FruitPlacementData.MaterialPlacement(material, 2, extraItemData::apply, placedScale);
+            }
+            return new IntegrationBased(material, displayName, lore, color, extraItemData::apply, fruitPlacementData);
         } else if (node.hasChild("head-texture-base64")) {
             String textureBase64 = node.node("head-texture-base64").getString();
             if (textureBase64 == null) {
                 throw new SerializationException("Unknown texture, expected a string");
             }
-            return new PlayerHeadBased(new CachedValue<>(() -> {
+            CachedValue<PlayerProfile> cachedProfile = new CachedValue<>(() -> {
                 PlayerProfile profile = Bukkit.createProfile(CONSTANT_UUID);
                 profile.getProperties().add(new ProfileProperty("textures", textureBase64));
                 return profile;
-            }), displayName, lore, color, extraItemData::apply);
+            });
+            if (fruitPlacementData == null) {
+                fruitPlacementData = new FruitPlacementData.HeadPlacement(cachedProfile);
+            }
+            return new PlayerHeadBased(cachedProfile, displayName, lore, color, extraItemData::apply, fruitPlacementData);
         } else {
             throw new SerializationException("Expected either 'material' or 'head-texture-base64' key");
         }

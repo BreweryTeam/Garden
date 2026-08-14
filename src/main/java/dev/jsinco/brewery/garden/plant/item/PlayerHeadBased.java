@@ -2,7 +2,6 @@ package dev.jsinco.brewery.garden.plant.item;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
-import dev.jsinco.brewery.garden.plant.PlacedFruitDisplays;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.utility.CachedValue;
 import io.papermc.paper.datacomponent.DataComponentTypes;
@@ -16,8 +15,6 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockType;
 import org.bukkit.block.Skull;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -27,13 +24,13 @@ import org.jspecify.annotations.Nullable;
 import java.awt.Color;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 @NullMarked
 public record PlayerHeadBased(CachedValue<PlayerProfile> profile, Component displayName,
                               List<Component> lore, @Nullable Color color0,
-                              Consumer<ItemStack> extraModifications) implements PlantItem {
+                              Consumer<ItemStack> extraModifications,
+                              FruitPlacementData fruitPlacement) implements PlantItem {
 
     @Override
     public void validate(String context) {
@@ -60,20 +57,6 @@ public record PlayerHeadBased(CachedValue<PlayerProfile> profile, Component disp
         });
         extraModifications.accept(item);
         return Optional.of(item);
-    }
-
-    @Override
-    public Optional<PlacedFruitDisplays> place(Block relative, BlockFace facing, UUID owningPlant, PlantType plantType) {
-        Skull skull;
-        if (facing == BlockFace.UP || facing == BlockFace.DOWN) {
-            skull = (Skull) BlockType.PLAYER_HEAD.createBlockData().createBlockState();
-        } else {
-            skull = (Skull) BlockType.PLAYER_WALL_HEAD.createBlockData(wallHead -> wallHead.setFacing(facing)).createBlockState();
-        }
-        skull.setPlayerProfile(profile.get());
-        skull.getPersistentDataContainer().set(PLANT_TYPE_KEY, PersistentDataType.STRING, plantType.key().toString());
-        skull.copy(relative.getLocation()).update(true);
-        return Optional.empty();
     }
 
     @Override
