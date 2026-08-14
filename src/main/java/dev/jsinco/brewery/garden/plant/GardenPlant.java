@@ -3,6 +3,7 @@ package dev.jsinco.brewery.garden.plant;
 import com.google.common.collect.ImmutableSet;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
+import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
@@ -20,9 +21,9 @@ import org.bukkit.block.BlockType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Getter
 @ToString
@@ -33,7 +34,6 @@ public class GardenPlant {
     private PlantStructure structure;
     private final String track;
     private int age;
-    private static final Random RANDOM = new Random();
     private boolean bloomed = false;
     private final List<PlacedFruitDisplays> placedFruits = new ArrayList<>();
     private int expectedFruits;
@@ -54,7 +54,7 @@ public class GardenPlant {
         this.type = type;
         this.age = 0;
         List<String> tracks = type.structures().keySet().stream().toList();
-        this.track = tracks.get(RANDOM.nextInt(tracks.size()));
+        this.track = tracks.get(ThreadLocalRandom.current().nextInt(tracks.size()));
         this.structure = type.newStructure(location, age, track);
         this.expectedFruits = 0;
     }
@@ -94,9 +94,23 @@ public class GardenPlant {
                 .toList();
         int toPopulate = expectedFruits - validCount;
         placedFruits.removeIf(PlacedFruitDisplays::hasDepopulated);
-        if (toPopulate > 0) {
+        boolean fallFruit = GardenConfig.instance().fallFruit() && ThreadLocalRandom.current().nextInt(20) == 0;
+        if (toPopulate > 0 || fallFruit) {
             Bukkit.getRegionScheduler().run(Garden.getInstance(), structure.origin(), t -> {
-                placedFruits.addAll(placeFruits(toPopulate));
+                if (!structure.origin().isChunkLoaded()) {
+                    return;
+                }
+                if (toPopulate > 0) {
+                    placedFruits.addAll(placeFruits(toPopulate));
+                }
+                if (!placedFruits.isEmpty() && fallFruit) {
+                    PlacedFruitDisplays toDrop = placedFruits.remove(ThreadLocalRandom.current().nextInt(placedFruits.size()));
+                    toDrop.remove();
+                    expectedFruits--;
+                    type.fruitItem().item(PlantItem.PlantItemType.FRUIT, type)
+                            .ifPresent(item -> toDrop.interactionBox().getWorld().dropItem(toDrop.interactionBox().getLocation().toCenterLocation(), item));
+                    Garden.getInstance().getGardenPlantDataType().update(this);
+                }
                 toRemove.forEach(PlacedFruitDisplays::remove);
             });
         }
@@ -143,7 +157,7 @@ public class GardenPlant {
         if (locationsRandomized.isEmpty()) {
             return;
         }
-        int amount = RANDOM.nextInt(1, locationsRandomized.size() + 1);
+        int amount = ThreadLocalRandom.current().nextInt(1, locationsRandomized.size() + 1);
         for (Location location : locationsRandomized) {
             Block block = location.getBlock();
             if (!Tag.LEAVES.isTagged(block.getType())) {
@@ -190,7 +204,7 @@ public class GardenPlant {
             if (relatives.isEmpty()) {
                 continue;
             }
-            BlockFace chosenRelative = relatives.get(RANDOM.nextInt(relatives.size()));
+            BlockFace chosenRelative = relatives.get(ThreadLocalRandom.current().nextInt(relatives.size()));
             fruit.place(block.getRelative(chosenRelative), chosenRelative, id, type)
                     .ifPresent(output::add);
             count++;
