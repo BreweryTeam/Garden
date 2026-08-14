@@ -35,8 +35,8 @@ public final class GardenConfig {
     private boolean clientSidedTranslations = false;
 
     @Comment(
-        "How likely it is for a seed to spawn from a broken 'valid-seed-drop-blocks' block.\n" +
-        "Use an integer from 1 to 100."
+            "How likely it is for a seed to spawn from a broken 'valid-seed-drop-blocks' block.\n" +
+                    "Use an integer from 1 to 100."
     )
     private int seedSpawnChance = 15;
 
@@ -54,12 +54,12 @@ public final class GardenConfig {
 
     @Comment("A map of tags of materials generated through Garden with custom drops")
     private Map<Tag<Material>, Material> dropOverride = new ImmutableMap.Builder<Tag<Material>, Material>()
-        .put(Tag.WOODEN_STAIRS, Material.STICK)
-        .put(Tag.WOODEN_TRAPDOORS, Material.STICK)
-        .build();
+            .put(Tag.WOODEN_STAIRS, Material.STICK)
+            .put(Tag.WOODEN_TRAPDOORS, Material.STICK)
+            .build();
 
     @Comment("Let fruits fall to the ground as items after a while")
-    private boolean fallFruit = true;
+    private boolean fallFruit = false;
 
     @Comment("Whether players can use bone meal to advance a garden plants growth")
     private boolean bonemealGrowth = true;
@@ -69,22 +69,22 @@ public final class GardenConfig {
 
 
     private static final String HEADER = "This is the global configuration file for Garden.\n" +
-        "For documentation, visit: https://docs.breweryteam.dev/docs/garden";
+            "For documentation, visit: https://docs.breweryteam.dev/docs/garden";
 
     private static final Lazy<YamlConfigurationLoader> LOADER = Lazy.of(() -> {
         Path file = Garden.getInstance().getDataPath().resolve("config.yml");
         return YamlConfigurationLoader.builder()
-            .path(file)
-            .nodeStyle(NodeStyle.BLOCK)
-            .indent(2)
-            .defaultOptions(opts ->
-                opts.header(HEADER)
-                    .serializers(serdes -> serdes
-                        .register(typeToken -> Tag.class.isAssignableFrom(GenericTypeReflector.erase(typeToken)), TagSerializer.INSTANCE)
-                        .register(Locale.class, LocaleSerializer.INSTANCE)
-                    )
-            )
-            .build();
+                .path(file)
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(2)
+                .defaultOptions(opts ->
+                        opts.header(HEADER)
+                                .serializers(serdes -> serdes
+                                        .register(typeToken -> Tag.class.isAssignableFrom(GenericTypeReflector.erase(typeToken)), TagSerializer.INSTANCE)
+                                        .register(Locale.class, LocaleSerializer.INSTANCE)
+                                )
+                )
+                .build();
     });
 
     public static final Lazy.Memorized<GardenConfig> MEMORIZED = Lazy.memorized(() -> {
