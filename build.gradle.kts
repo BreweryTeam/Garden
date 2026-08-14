@@ -133,7 +133,8 @@ tasks {
         minecraftVersion("1.21.11")
         downloadPlugins {
             modrinth("worldedit", "DlD8WKr9")
-            modrinth("thebrewingproject", "3.3.1")
+            // modrinth("thebrewingproject", "3.3.1")
+            modrinth("breweryx", "3.7.0")
             modrinth("worldguard", "7.0.17")
         }
     }

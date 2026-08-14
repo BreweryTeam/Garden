@@ -7,12 +7,14 @@ import dev.jsinco.brewery.garden.configuration.serdes.ColorSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.ComponentSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.ConsumeEffectSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.ExtraItemDataSerializer;
+import dev.jsinco.brewery.garden.configuration.serdes.FruitPlacementDataSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.KeyedSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.NamespacedKeySerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.PdcEntriesSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.PdcPrimitiveSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.PlantItemSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.PotionEffectSerializer;
+import dev.jsinco.brewery.garden.plant.item.FruitPlacementData;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.extra.ExtraItemData;
 import dev.jsinco.brewery.garden.plant.item.extra.PdcEntries;
@@ -218,6 +220,7 @@ public final class PlantTypeTemplate {
                     serializers.register(PotionEffectType.class, new KeyedSerializer<>(RegistryKey.MOB_EFFECT));
                     serializers.register(PotionEffect.class, new PotionEffectSerializer());
                     serializers.register(ConsumeEffect.class, new ConsumeEffectSerializer());
+                    serializers.register(FruitPlacementData.class, new FruitPlacementDataSerializer());
                 }).shouldCopyDefaults(false))
                 .indent(2)
                 .build();
