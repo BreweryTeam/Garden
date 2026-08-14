@@ -9,3 +9,9 @@ It takes time for plants to grow, you can see the progress of the plant growth a
 ![Plants.png](images/Plants.png)
 
 The plugin has integrations with BreweryX and TheBrewingProject, and is currently mainly meant as an addition to those plugins, but it can still function on its own.
+
+## Download
+
+You can find Garden here:
+- Modrinth: https://modrinth.com/plugin/tbpgarden
+- Hangar: https://hangar.papermc.io/BreweryTeam/Garden
