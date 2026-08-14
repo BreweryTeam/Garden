@@ -58,6 +58,7 @@ public class BlockEventListener implements Listener {
         GardenPlant gardenPlant = gardenRegistry.getByLocation(event.getBlock());
         if (gardenPlant != null) {
             event.setCancelled(true);
+            return;
         }
         checkSurroundingFruits(event.getBlock());
     }
