@@ -49,7 +49,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class EventListeners implements Listener {
 
-    private final GardenConfig config = GardenConfig.instance();
+    private final GardenConfig config;
     private static final Random RANDOM = new Random();
     public static final Set<BlockPlaceEvent> IGNORED_EVENTS = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
@@ -58,8 +58,13 @@ public class EventListeners implements Listener {
     private final GardenPlantDataType gardenPlantDataType;
 
     public EventListeners(PlantRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType) {
+        this(gardenRegistry, gardenPlantDataType, GardenConfig.instance());
+    }
+
+    EventListeners(PlantRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType, GardenConfig config) {
         this.gardenRegistry = gardenRegistry;
         this.gardenPlantDataType = gardenPlantDataType;
+        this.config = config;
     }
 
 
@@ -213,6 +218,9 @@ public class EventListeners implements Listener {
 
     public boolean checkBlocks(PlantStructure structure, ItemStack itemInHand, Block clickedBlock, Player player, EquipmentSlot hand) {
         List<BlockState> previousStates = structure.pasteNow();
+        if (previousStates.isEmpty()) {
+            return false;
+        }
         BlockMultiPlaceEvent event = new BlockMultiPlaceEvent(previousStates, clickedBlock, itemInHand, player, true, hand);
         IGNORED_EVENTS.add(event);
         if (!event.callEvent()) {
