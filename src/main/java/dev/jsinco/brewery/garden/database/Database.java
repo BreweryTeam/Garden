@@ -1,4 +1,4 @@
-package dev.jsinco.brewery.garden.persist;
+package dev.jsinco.brewery.garden.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -47,6 +47,14 @@ public class Database {
                 throw new IllegalStateException("Can not downgrade the plugin!");
             }
         }
+    }
+
+    public GardenPlantSession plantSession() {
+        return new GardenPlantSession(executor, this::getConnection);
+    }
+
+    public RegionSession regionSession() {
+        return new RegionSession(executor, this::getConnection);
     }
 
     private void runMigrations(int version, Connection connection) throws SQLException {

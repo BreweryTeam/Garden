@@ -2,14 +2,14 @@ package dev.jsinco.brewery.garden.listener;
 
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
-import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
-import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlacedFruitDisplays;
+import dev.jsinco.brewery.garden.plant.PlantManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
+import dev.jsinco.brewery.garden.registry.PlantRegistry;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.jsinco.brewery.garden.utility.Encoder;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
@@ -33,8 +33,6 @@ import org.bukkit.event.block.BlockMultiPlaceEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.world.WorldLoadEvent;
-import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -47,7 +45,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class EventListeners implements Listener {
+public class PlayerEventListener implements Listener {
 
     private final GardenConfig config;
     private static final Random RANDOM = new Random();
@@ -55,16 +53,16 @@ public class EventListeners implements Listener {
 
 
     private final PlantRegistry gardenRegistry;
-    private final GardenPlantDataType gardenPlantDataType;
+    private final PlantManager plantManager;
 
-    public EventListeners(PlantRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType) {
-        this(gardenRegistry, gardenPlantDataType, GardenConfig.instance());
+    public PlayerEventListener(PlantRegistry gardenRegistry, PlantManager plantManager) {
+        this(gardenRegistry, GardenConfig.instance(), plantManager);
     }
 
-    EventListeners(PlantRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType, GardenConfig config) {
+    PlayerEventListener(PlantRegistry gardenRegistry, GardenConfig config, PlantManager plantManager) {
         this.gardenRegistry = gardenRegistry;
-        this.gardenPlantDataType = gardenPlantDataType;
         this.config = config;
+        this.plantManager = plantManager;
     }
 
 
@@ -107,10 +105,8 @@ public class EventListeners implements Listener {
         byte[] owningPlant = pdc.get(PlacedFruitDisplays.OWNING_PLANT, PersistentDataType.BYTE_ARRAY);
         if (owningPlant != null) {
             UUID uuid = Encoder.asUuid(owningPlant);
-            GardenPlant gardenPlant = gardenRegistry.getByID(uuid);
-            if (gardenPlant != null) {
-                gardenPlant.registerFruitPicked();
-            }
+            gardenRegistry.getByID(uuid)
+                    .ifPresent(GardenPlant::registerFruitPicked);
         }
         event.getRightClicked().remove();
         String plantTypeString = pdc.get(PlantItem.PLANT_TYPE_KEY, PersistentDataType.STRING);
@@ -132,23 +128,6 @@ public class EventListeners implements Listener {
                 ));
     }
 
-    @EventHandler
-    public void onWorldLoad(WorldLoadEvent event) {
-        gardenPlantDataType.fetch(event.getWorld())
-                .thenAcceptAsync(gardenPlants -> {
-                    for (GardenPlant gardenPlant : gardenPlants) {
-                        Bukkit.getRegionScheduler().run(Garden.getInstance(), gardenPlant.origin(), t -> {
-                            gardenRegistry.registerPlant(gardenPlant);
-                        });
-                    }
-                });
-    }
-
-    @EventHandler
-    public void onWorldUnload(WorldUnloadEvent event) {
-        gardenRegistry.unregisterWorld(event.getWorld());
-    }
-
     private void handleBonemeal(PlayerInteractEvent event, ItemStack itemInHand, Block block) {
         if (itemInHand == null || itemInHand.getType() != Material.BONE_MEAL) {
             return;
@@ -156,7 +135,7 @@ public class EventListeners implements Listener {
         if (!event.getAction().isRightClick()) {
             return;
         }
-        GardenPlant plant = gardenRegistry.getByLocation(block);
+        GardenPlant plant = gardenRegistry.getByLocation(block).orElse(null);
         if (plant == null) {
             return;
         }
@@ -172,7 +151,7 @@ public class EventListeners implements Listener {
             return;
         }
         Bukkit.getRegionScheduler().run(Garden.getInstance(), plant.origin(), t ->
-                plant.incrementGrowthStage(1, gardenRegistry, gardenPlantDataType));
+                plant.incrementGrowthStage(1, gardenRegistry, plantManager));
     }
 
     private void handlePlantShearing(ItemStack itemInHand, Block clickedBlock, Player player) {
@@ -208,8 +187,7 @@ public class EventListeners implements Listener {
         if (!checkBlocks(gardenPlant.getStructure(), itemInHand, clickedBlock, player, hand)) {
             return false;
         }
-        gardenRegistry.registerPlant(gardenPlant);
-        gardenPlantDataType.insert(gardenPlant);
+        plantManager.storeNewPlant(gardenPlant);
 
         itemInHand.setAmount(itemInHand.getAmount() - 1);
         location.getWorld().playSound(location, Sound.BLOCK_GRASS_PLACE, 1.0f, 1.0f);

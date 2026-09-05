@@ -6,17 +6,17 @@ import dev.jsinco.brewery.garden.api.integration.ItemIntegration;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.configuration.GardenTranslator;
+import dev.jsinco.brewery.garden.database.Database;
 import dev.jsinco.brewery.garden.integration.exported.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.integration.exported.TBPGardenIntegration;
 import dev.jsinco.brewery.garden.integration.imported.IntegrationRegistryImpl;
 import dev.jsinco.brewery.garden.listener.BlockEventListener;
-import dev.jsinco.brewery.garden.listener.EventListeners;
-import dev.jsinco.brewery.garden.persist.Database;
-import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
+import dev.jsinco.brewery.garden.listener.PlayerEventListener;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
-import dev.jsinco.brewery.garden.plant.GrowthManager;
+import dev.jsinco.brewery.garden.plant.PlantManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
+import dev.jsinco.brewery.garden.registry.PlantRegistry;
 import dev.jsinco.brewery.garden.utility.Logger;
 import dev.thorinwasher.blockutil.api.BlockUtilAPI;
 import dev.thorinwasher.blockutil.api.event.BlockDisableDropEvent;
@@ -58,9 +58,8 @@ public class Garden extends JavaPlugin {
     private static Garden instance;
     @Getter
     private static PlantRegistry gardenRegistry;
-    private Database database;
     @Getter
-    private GardenPlantDataType gardenPlantDataType;
+    private Database database;
     @Getter
     private BlockUtilAPI blockUtil;
     private GardenTranslator translator;
@@ -68,6 +67,8 @@ public class Garden extends JavaPlugin {
     private ScheduledTask growthTask;
     @Getter
     private IntegrationRegistryImpl integrationRegistry;
+    @Getter
+    private PlantManager plantManager;
 
     @Override
     public void onLoad() {
@@ -97,7 +98,6 @@ public class Garden extends JavaPlugin {
             throw new RuntimeException(e);
         }
         gardenRegistry = new PlantRegistry();
-        gardenPlantDataType = new GardenPlantDataType(database);
         this.blockUtil = new BlockUtilAPI.Builder()
                 .withConnectionSupplier(() -> {
                     try {
@@ -109,20 +109,19 @@ public class Garden extends JavaPlugin {
                 .withDropEventHandler(this::handleBlockDrops)
                 .withPluginOwner(this)
                 .build();
-
+        this.plantManager = new PlantManager(gardenRegistry, database);
         translator = new GardenTranslator(new File(this.getDataFolder(), "locale"));
         translator.reload();
         GlobalTranslator.translator().addSource(translator);
-        for (World world : Bukkit.getWorlds()) {
-            List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
-            gardenPlants.forEach(gardenRegistry::registerPlant);
-        }
-        Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry, gardenPlantDataType), this);
-        Bukkit.getPluginManager().registerEvents(new BlockEventListener(gardenRegistry, gardenPlantDataType), this);
+        Bukkit.getWorlds().stream()
+                .map(World::getUID)
+                .forEach(plantManager::loadWorld);
+        Bukkit.getPluginManager().registerEvents(new PlayerEventListener(gardenRegistry, plantManager), this);
+        Bukkit.getPluginManager().registerEvents(new BlockEventListener(gardenRegistry, plantManager), this);
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
-        GrowthManager growthManager = new GrowthManager(gardenRegistry, gardenPlantDataType);
-        growthTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> growthManager.tick(), 1, 200);
+
+        growthTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> plantManager.tick(), 1, 200);
         Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> {
             gardenRegistry.getPlants()
                     .forEach(GardenPlant::tick);
@@ -207,10 +206,9 @@ public class Garden extends JavaPlugin {
         translator.reload();
         gardenRegistry.clear();
         MutableGardenRegistry.PLANT_TYPE.newBacking(PlantType.readPlantTypes());
-        for (World world : Bukkit.getWorlds()) {
-            gardenPlantDataType.fetch(world)
-                    .thenAccept(gardenPlants -> gardenPlants.forEach(gardenRegistry::registerPlant));
-        }
+        Bukkit.getWorlds().stream()
+                .map(World::getUID)
+                .forEach(plantManager::loadWorld);
         registerPlantRecipes();
         if (MutableGardenRegistry.PLANT_TYPE.values().isEmpty()) {
             Logger.logErr("There's no available plant types for garden!");

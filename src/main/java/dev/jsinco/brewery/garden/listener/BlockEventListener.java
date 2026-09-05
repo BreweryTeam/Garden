@@ -2,13 +2,13 @@ package dev.jsinco.brewery.garden.listener;
 
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
-import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
-import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
+import dev.jsinco.brewery.garden.plant.PlantManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
+import dev.jsinco.brewery.garden.registry.PlantRegistry;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -34,6 +34,7 @@ import org.bukkit.event.world.StructureGrowEvent;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,13 +42,13 @@ import java.util.stream.Collectors;
 public class BlockEventListener implements Listener {
     private final PlantRegistry gardenRegistry;
     private static final Random RANDOM = new Random();
-    private final GardenPlantDataType gardenPlantDataType;
+    private final PlantManager plantManager;
     private final GardenConfig config = GardenConfig.instance();
     private static final List<BlockFace> FRUIT_FACES = List.of(BlockFace.UP, BlockFace.SOUTH, BlockFace.NORTH, BlockFace.WEST, BlockFace.EAST);
 
-    public BlockEventListener(PlantRegistry gardenRegistry, GardenPlantDataType gardenPlantDataType) {
+    public BlockEventListener(PlantRegistry gardenRegistry, PlantManager plantManager) {
         this.gardenRegistry = gardenRegistry;
-        this.gardenPlantDataType = gardenPlantDataType;
+        this.plantManager = plantManager;
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
@@ -55,7 +56,8 @@ public class BlockEventListener implements Listener {
         if (WorldUtil.isBlacklistedWorld(event.getBlock().getLocation())) {
             return;
         }
-        GardenPlant gardenPlant = gardenRegistry.getByLocation(event.getBlock());
+        GardenPlant gardenPlant = gardenRegistry.getByLocation(event.getBlock())
+                .orElse(null);
         if (gardenPlant != null) {
             event.setCancelled(true);
             return;
@@ -79,11 +81,8 @@ public class BlockEventListener implements Listener {
                     .ifPresent(item -> block.getWorld().dropItem(block.getLocation().toCenterLocation(), item));
         }
         checkFruit(block);
-        GardenPlant gardenPlant = gardenRegistry.getByLocation(block);
-        if (gardenPlant == null) {
-            return;
-        }
-        checkAlive(gardenPlant);
+        gardenRegistry.getByLocation(block)
+                .ifPresent(this::checkAlive);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -109,6 +108,7 @@ public class BlockEventListener implements Listener {
     private void onMultiBlockDestroy(Collection<Block> blocks) {
         Set<GardenPlant> plants = blocks.stream()
                 .map(gardenRegistry::getByLocation)
+                .flatMap(Optional::stream)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         plants.forEach(this::checkAlive);
@@ -121,13 +121,13 @@ public class BlockEventListener implements Listener {
                 return;
             }
             gardenRegistry.unregisterPlant(gardenPlant);
-            gardenPlantDataType.remove(gardenPlant);
+            plantManager.removePlant(gardenPlant);
         });
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerPlace(BlockPlaceEvent event) {
-        if (!EventListeners.IGNORED_EVENTS.contains(event) && PlantItem.plantItemKey(event.getItemInHand()) != null) {
+        if (!PlayerEventListener.IGNORED_EVENTS.contains(event) && PlantItem.plantItemKey(event.getItemInHand()) != null) {
             event.setCancelled(true);
         }
     }

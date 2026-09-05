@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockBukkitExtension.class)
-class EventListenersTest {
+class PlayerEventListenerTest {
 
     @MockBukkitInject
     ServerMock serverMock;
@@ -41,7 +41,7 @@ class EventListenersTest {
                 UUID.randomUUID(),
                 new Vector3i()
         );
-        EventListeners listeners = new EventListeners(null, null, new GardenConfig());
+        PlayerEventListener listeners = new PlayerEventListener(null, new GardenConfig(), null);
 
         boolean placed = listeners.checkBlocks(
                 structureWithMissingWorld,
@@ -52,6 +52,6 @@ class EventListenersTest {
         );
 
         assertFalse(placed);
-        assertTrue(EventListeners.IGNORED_EVENTS.isEmpty());
+        assertTrue(PlayerEventListener.IGNORED_EVENTS.isEmpty());
     }
 }

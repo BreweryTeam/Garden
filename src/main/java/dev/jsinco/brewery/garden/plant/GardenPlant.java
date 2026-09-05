@@ -2,11 +2,10 @@ package dev.jsinco.brewery.garden.plant;
 
 import com.google.common.collect.ImmutableSet;
 import dev.jsinco.brewery.garden.Garden;
-import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
-import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
+import dev.jsinco.brewery.garden.registry.PlantRegistry;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import lombok.Getter;
 import lombok.ToString;
@@ -77,8 +76,8 @@ public class GardenPlant {
         return this.age >= type.structures().getOrDefault(track, List.of()).size() - 1;
     }
 
-    public void incrementGrowthStage(int amount, PlantRegistry registry, GardenPlantDataType dataType) {
-        this.setGrowthStage(age + amount, registry, dataType);
+    public void incrementGrowthStage(int amount, PlantRegistry registry, PlantManager plantManager) {
+        this.setGrowthStage(age + amount, registry, plantManager);
     }
 
     public void tick() {
@@ -109,14 +108,14 @@ public class GardenPlant {
                     expectedFruits--;
                     type.fruitItem().item(PlantItem.PlantItemType.FRUIT, type)
                             .ifPresent(item -> toDrop.interactionBox().getWorld().dropItem(toDrop.interactionBox().getLocation().toCenterLocation(), item));
-                    Garden.getInstance().getGardenPlantDataType().update(this);
+                    Garden.getInstance().getPlantManager().updatePlant(this);
                 }
                 toRemove.forEach(PlacedFruitDisplays::remove);
             });
         }
     }
 
-    public void setGrowthStage(int growthStage, PlantRegistry registry, GardenPlantDataType dataType) {
+    public void setGrowthStage(int growthStage, PlantRegistry registry, PlantManager plantManager) {
         if (!structure.origin().isChunkLoaded()) {
             return;
         }
@@ -134,8 +133,7 @@ public class GardenPlant {
             registry.unregisterPlant(this);
             newStructure.paste();
             this.structure = newStructure;
-            registry.registerPlant(this);
-            dataType.update(this);
+            plantManager.updatePlant(this);
         });
     }
 
@@ -176,7 +174,7 @@ public class GardenPlant {
     public void placeFruits() {
         placedFruits.addAll(placeFruits(-1));
         expectedFruits = placedFruits.size();
-        Garden.getInstance().getGardenPlantDataType().update(this);
+        Garden.getInstance().getPlantManager().updatePlant(this);
     }
 
     private List<PlacedFruitDisplays> placeFruits(int amount) {
@@ -245,7 +243,7 @@ public class GardenPlant {
         if (expectedFruits < 0) {
             expectedFruits = 0;
         }
-        Garden.getInstance().getGardenPlantDataType().update(this);
+        Garden.getInstance().getPlantManager().updatePlant(this);
     }
 
     public void clearBoundEntities() {

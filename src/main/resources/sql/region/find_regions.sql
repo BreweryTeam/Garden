@@ -1,3 +1,3 @@
 SELECT *
-FROM plants
+FROM regions
 WHERE world_uuid = ?;

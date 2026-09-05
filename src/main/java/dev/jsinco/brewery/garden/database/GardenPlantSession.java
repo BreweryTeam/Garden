@@ -1,4 +1,4 @@
-package dev.jsinco.brewery.garden.persist;
+package dev.jsinco.brewery.garden.database;
 
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
@@ -6,7 +6,6 @@ import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.jsinco.brewery.garden.utility.Encoder;
-import dev.jsinco.brewery.garden.utility.FileUtil;
 import dev.jsinco.brewery.garden.utility.Logger;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -17,29 +16,21 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executor;
 
-public class GardenPlantDataType {
+public record GardenPlantSession(Executor executor, SqlSupplier<Connection> connectionSupplier) {
 
-    private final Database database;
-    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-
-
-    public GardenPlantDataType(Database database) {
-        this.database = database;
-    }
+    private static final PreparedStatementStore PREPARED_STATEMENT_STORE = new PreparedStatementStore("/sql/plant");
 
     public CompletableFuture<Void> insert(GardenPlant plant) {
         return CompletableFuture.supplyAsync(() -> {
-            try (Connection connection = database.getConnection()) {
-                PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/insert_plant.sql"));
+            try (Connection connection = connectionSupplier.get()) {
+                PreparedStatement preparedStatement = connection.prepareStatement(PREPARED_STATEMENT_STORE.get("insert_plant.sql"));
                 preparedStatement.setBytes(1, Encoder.asBytes(plant.getId()));
                 preparedStatement.setString(2, plant.getType().key().toString());
                 preparedStatement.setInt(3, plant.getAge());
@@ -61,8 +52,8 @@ public class GardenPlantDataType {
 
     public CompletableFuture<Void> update(GardenPlant plant) {
         return CompletableFuture.supplyAsync(() -> {
-            try (Connection connection = database.getConnection()) {
-                PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/update_plant.sql"));
+            try (Connection connection = connectionSupplier.get()) {
+                PreparedStatement preparedStatement = connection.prepareStatement(PREPARED_STATEMENT_STORE.get("update_plant.sql"));
                 preparedStatement.setInt(1, plant.getAge());
                 PlantStructure structure = plant.getStructure();
                 preparedStatement.setString(2, Encoder.serializeTransformation(structure.transformation()));
@@ -78,8 +69,8 @@ public class GardenPlantDataType {
 
     public CompletableFuture<Void> remove(GardenPlant plant) {
         return CompletableFuture.supplyAsync(() -> {
-            try (Connection connection = database.getConnection()) {
-                PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/remove_plant.sql"));
+            try (Connection connection = connectionSupplier.get()) {
+                PreparedStatement preparedStatement = connection.prepareStatement(PREPARED_STATEMENT_STORE.get("remove_plant.sql"));
                 preparedStatement.setBytes(1, Encoder.asBytes(plant.getId()));
                 preparedStatement.execute();
             } catch (SQLException e) {
@@ -89,13 +80,12 @@ public class GardenPlantDataType {
         }, executor);
     }
 
-    public CompletableFuture<List<GardenPlant>> fetch(World world) {
+    public CompletableFuture<GardenPlant> findFromPlantId(World world, UUID plantId) {
         return CompletableFuture.supplyAsync(() -> {
-            List<GardenPlant> output = new ArrayList<>();
             Set<String> reportedInvalidTracks = new HashSet<>();
-            try (Connection connection = database.getConnection()) {
-                PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/find_plant.sql"));
-                preparedStatement.setBytes(1, Encoder.asBytes(world.getUID()));
+            try (Connection connection = connectionSupplier.get()) {
+                PreparedStatement preparedStatement = connection.prepareStatement(PREPARED_STATEMENT_STORE.get("find_plant.sql"));
+                preparedStatement.setBytes(1, Encoder.asBytes(plantId));
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
                     PlantType plantType = MutableGardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(resultSet.getString("plant_type")));
@@ -117,21 +107,19 @@ public class GardenPlantDataType {
                         }
                         continue;
                     }
-                    output.add(
-                            new GardenPlant(
-                                    Encoder.asUuid(resultSet.getBytes("id")),
-                                    plantType,
-                                    structure.get(),
-                                    track,
-                                    age,
-                                    resultSet.getInt("fruits")
-                            )
+                    return new GardenPlant(
+                            Encoder.asUuid(resultSet.getBytes("id")),
+                            plantType,
+                            structure.get(),
+                            track,
+                            age,
+                            resultSet.getInt("fruits")
                     );
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            return output;
+            return null;
         }, executor);
     }
 }

@@ -1,0 +1,10 @@
+SELECT id,
+       plant_type,
+       age,
+       origin_x,
+       origin_y,
+       origin_z,
+       world_uuid,
+       transformation,
+       track,
+       fruits WHERE plant_id = ?;

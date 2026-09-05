@@ -5,8 +5,8 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.jsinco.brewery.garden.Garden;
-import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
+import dev.jsinco.brewery.garden.registry.PlantRegistry;
 import dev.jsinco.brewery.garden.utility.MessageUtil;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -61,11 +61,7 @@ public class PlantCommand {
             throw ERROR_NO_PLANT_FOUND.create();
         }
         PlantRegistry gardenRegistry = Garden.getGardenRegistry();
-        GardenPlant gardenPlant = gardenRegistry.getByLocation(block);
-        if (gardenPlant == null) {
-            throw ERROR_NO_PLANT_FOUND.create();
-        }
-        return gardenPlant;
+        return gardenRegistry.getByLocation(block).orElseThrow(ERROR_NO_PLANT_FOUND::create);
     }
 
     private static ArgumentBuilder<CommandSourceStack, ?> infoCommand() {
@@ -107,7 +103,7 @@ public class PlantCommand {
 
                             int stage = context.getArgument("stage", Integer.class) - 1;
                             try {
-                                gardenPlant.setGrowthStage(stage, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                                gardenPlant.setGrowthStage(stage, Garden.getGardenRegistry(), Garden.getInstance().getPlantManager());
                             } catch (ArrayIndexOutOfBoundsException e) {
                                 throw new SimpleCommandExceptionType(
                                         MessageUtil.brigadierTranslatable("garden.command.unknown-age",
@@ -131,7 +127,7 @@ public class PlantCommand {
                         throw FULLY_GROWN.create();
                     }
                     try {
-                        gardenPlant.incrementGrowthStage(1, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());
+                        gardenPlant.incrementGrowthStage(1, Garden.getGardenRegistry(), null);
                     } catch (ArrayIndexOutOfBoundsException e) {
                         throw FULLY_GROWN.create();
                     }
