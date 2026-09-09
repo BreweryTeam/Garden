@@ -9,7 +9,7 @@ plugins {
     id("com.gradleup.shadow") version "9.5.1"
     id("io.papermc.hangar-publish-plugin") version "0.1.2"
     id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
-    id("xyz.jpenilla.run-paper") version "3.0.2"
+    id("xyz.jpenilla.run-paper") version "3.1.0"
     id("com.modrinth.minotaur") version "2.8.7"
 }
 
@@ -22,6 +22,7 @@ val targetMinecraftVersions = listOf(
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven("https://repo.breweryteam.dev/mirror")
     maven("https://repo.jsinco.dev/releases")
     maven("https://storehouse.okaeri.eu/repository/maven-public/")
@@ -52,13 +53,14 @@ dependencies {
     compileOnly("io.th0rgal:oraxen:1.190.0")
 
 
-    compileOnly("org.projectlombok:lombok:1.18.30")
-    annotationProcessor("org.projectlombok:lombok:1.18.30")
+    compileOnly("org.projectlombok:lombok:1.18.46")
+    annotationProcessor("org.projectlombok:lombok:1.18.46")
     implementation(project(":api"))
     implementation("com.zaxxer:HikariCP:6.2.1")
 
     implementation("dev.thorinwasher.schem:schem-reader:1.0.0")
     implementation("com.github.Thorinwasher.BlockUtil:blockutil:v2.1.5")
+    implementation("dev.wyck:Wyck:3.4.0")
 
     compileOnly("org.xerial:sqlite-jdbc:3.47.2.0")
 
@@ -121,7 +123,8 @@ tasks {
             "dev.thorinwasher.schem",
             "dev.thorinwasher.blockutil",
             "net.kyori.adventure.nbt",
-            "net.kyori.examination"
+            "net.kyori.examination",
+            "dev.wyck"
         ).forEach { relocate(it, "${project.group}.lib.$it") }
     }
 
@@ -130,12 +133,10 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.21.11")
+        minecraftVersion("26.2")
         downloadPlugins {
-            modrinth("worldedit", "DlD8WKr9")
             // modrinth("thebrewingproject", "3.3.1")
-            modrinth("breweryx", "3.7.0")
-            modrinth("worldguard", "7.0.17")
+            modrinth("chunky", "MdY6JATr")
         }
     }
 
@@ -161,7 +162,7 @@ bukkit {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
 
 runPaper.folia.registerTask {

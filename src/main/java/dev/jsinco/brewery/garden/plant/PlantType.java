@@ -28,7 +28,7 @@ public record PlantType(
         PlantItem fruitItem,
         boolean bearFruits
 ) implements Keyed {
-    private static final List<Matrix3d> ALLOWED_TRANSFORMATIONS = compileAllowedTransformations();
+    public static final List<Matrix3d> ALLOWED_TRANSFORMATIONS = compileAllowedTransformations();
     private static final Random RANDOM = new Random();
 
 

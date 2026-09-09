@@ -19,6 +19,7 @@ import dev.jsinco.brewery.garden.plant.GrowthManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.utility.Logger;
+import dev.jsinco.brewery.garden.worldgen.NaturalFoliagePlacer;
 import dev.thorinwasher.blockutil.api.BlockUtilAPI;
 import dev.thorinwasher.blockutil.api.event.BlockDisableDropEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -131,6 +132,7 @@ public class Garden extends JavaPlugin {
             Logger.logErr("There's no available plant types for garden!");
             Bukkit.getPluginManager().disablePlugin(this);
         }
+        NaturalFoliagePlacer.registerFoliage();
     }
 
     @Override
