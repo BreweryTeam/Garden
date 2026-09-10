@@ -29,6 +29,6 @@ public class NamespacedKeySerializer implements TypeSerializer<NamespacedKey> {
         if (obj == null) {
             return;
         }
-        node.set(obj);
+        node.set(obj.asString());
     }
 }
