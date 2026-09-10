@@ -143,6 +143,10 @@ public class BlockEventListener implements Listener {
     public void onBlockGrow(BlockGrowEvent event) {
         if (Garden.getGardenRegistry().getByLocation(event.getBlock()) != null) {
             event.setCancelled(true);
+            return;
+        }
+        if (Garden.getGardenRegistry().getByLocation(event.getBlock().getRelative(BlockFace.DOWN)) != null) {
+            event.setCancelled(true);
         }
     }
 
