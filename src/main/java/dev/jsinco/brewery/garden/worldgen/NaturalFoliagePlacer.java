@@ -1,10 +1,10 @@
 package dev.jsinco.brewery.garden.worldgen;
 
-import dev.jsinco.brewery.garden.MutableGardenRegistry;
+import dev.jsinco.brewery.garden.configuration.worldgen.PlantFeaturePlacementConfig;
+import dev.jsinco.brewery.garden.configuration.worldgen.WorldGenConfig;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.wyck.biome.Biome;
 import dev.wyck.biome.BiomeGenerationSettings;
-import dev.wyck.biome.Biomes;
 import dev.wyck.keys.ResourceKey;
 import dev.wyck.worldgen.Decoration;
 import dev.wyck.worldgen.HeightmapType;
@@ -15,59 +15,55 @@ import dev.wyck.worldgen.placement.PlacedFeature;
 import dev.wyck.worldgen.placement.PlacementModifier;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Tag;
 import org.bukkit.util.BlockVector;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class NaturalFoliagePlacer {
 
 
-    public static void registerFoliage() {
-        insertPlantFeature(Biomes.TAIGA, newPlantFeature(ResourceKey.of("garden", "blueberry")));
-        insertPlantFeature(Biomes.FOREST, newPlantFeature(ResourceKey.of("garden", "apple")));
-        insertPlantFeature(Biomes.FLOWER_FOREST, newPlantFeature(ResourceKey.of("garden", "cherry")));
-        insertPlantFeature(Biomes.SAVANNA, newPlantFeature(ResourceKey.of("garden", "grape")));
-        insertPlantFeature(Biomes.TAIGA, newPlantFeature(ResourceKey.of("garden", "cranberry")));
-        insertPlantFeature(Biomes.SPARSE_JUNGLE, newPlantFeature(ResourceKey.of("garden", "lemon")));
-        insertPlantFeature(Biomes.SPARSE_JUNGLE, newPlantFeature(ResourceKey.of("garden", "lime")));
-        insertPlantFeature(Biomes.SPARSE_JUNGLE, newPlantFeature(ResourceKey.of("garden", "orange")));
-        insertPlantFeature(Biomes.SAVANNA, newPlantFeature(ResourceKey.of("garden", "peach")));
-        insertPlantFeature(Biomes.BIRCH_FOREST, newPlantFeature(ResourceKey.of("garden", "raspberry")));
-        insertPlantFeature(Biomes.OLD_GROWTH_BIRCH_FOREST, newPlantFeature(ResourceKey.of("garden", "strawberry")));
+    public static void registerFoliage(WorldGenConfig worldGenConfig) {
+        if (!worldGenConfig.enabled) {
+            return;
+        }
+        for (Map.Entry<NamespacedKey, List<PlantFeaturePlacementConfig>> entry : worldGenConfig.biomes.entrySet()) {
+            Biome biome = Biome.reference(ResourceKey.of(entry.getKey().asString()));
+            insertPlantFeature(biome, entry.getValue()
+                    .stream()
+                    .map(NaturalFoliagePlacer::newPlantFeature)
+                    .toArray(PlacedFeature[]::new)
+            );
+        }
     }
 
-    private static void insertPlantFeature(Biome biome, PlacedFeature feature) {
+    private static void insertPlantFeature(Biome biome, PlacedFeature... feature) {
         Biome wrapped = biome.wrap();
-        BiomeGenerationSettings generationSettings = wrapped.generationSettings().toBuilder()
-                .feature(Decoration.VEGETAL_DECORATION, feature)
-                .build();
-        Biomes.TAIGA.wrap()
-                .toBuilder()
-                .generationSettings(generationSettings)
+        BiomeGenerationSettings.Builder generationSettings = wrapped.generationSettings().toBuilder();
+        Arrays.stream(feature).forEach(feature1 -> generationSettings
+                .feature(Decoration.VEGETAL_DECORATION, feature1));
+        wrapped.toBuilder()
+                .generationSettings(generationSettings.build())
                 .modify();
     }
 
-    private static PlacedFeature newPlantFeature(ResourceKey plantKey) {
+    private static PlacedFeature newPlantFeature(PlantFeaturePlacementConfig config) {
+        ResourceKey plantKey = ResourceKey.fromString(config.plant().key().asString());
         CustomFeature<PlantType> plantFeature = new PlantFeature(plantKey).register();
         return PlacedFeature.of(
-                ConfiguredFeature.of(plantFeature, MutableGardenRegistry.PLANT_TYPE.get(NamespacedKey.fromString(plantKey.asString())))
+                ConfiguredFeature.of(plantFeature, config.plant())
                         .toBuilder()
                         .resourceKey(plantKey)
                         .build(),
-                PlacementModifier.rarityFilter(3),
+                PlacementModifier.rarityFilter(config.rarityModifier()),
                 PlacementModifier.inSquare(),
                 PlacementModifier.heightmap(HeightmapType.MOTION_BLOCKING),
                 PlacementModifier.biomeFilter(),
-                PlacementModifier.blockPredicateFilter(BlockPredicate.anyOf()
-                        .predicate(BlockPredicate.matchingBlockTag()
-                                .tag(Tag.DIRT)
-                                .offset(new BlockVector(0, -1, 0))
-                                .build()
-                        ).predicate(BlockPredicate.matchingBlocks()
-                                .blocks(Material.GRASS_BLOCK, Material.MYCELIUM, Material.PODZOL)
-                                .offset(new BlockVector(0, -1, 0))
-                                .build()
-                        ).build()
-
+                PlacementModifier.blockPredicateFilter(BlockPredicate.matchingBlocks()
+                        .blocks(Material.GRASS_BLOCK, Material.MYCELIUM, Material.PODZOL)
+                        .offset(new BlockVector(0, -1, 0))
+                        .build()
                 )
         );
     }

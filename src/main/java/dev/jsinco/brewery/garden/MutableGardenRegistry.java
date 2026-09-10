@@ -3,7 +3,6 @@ package dev.jsinco.brewery.garden;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
-import org.bukkit.NamespacedKey;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -21,7 +20,7 @@ public class MutableGardenRegistry<T extends Keyed> {
         backing = values.stream().collect(Collectors.toUnmodifiableMap(Keyed::key, value -> value));
     }
 
-    public @Nullable T get(@NonNull NamespacedKey key) {
+    public @Nullable T get(@NonNull Key key) {
         return backing.get(key);
     }
 

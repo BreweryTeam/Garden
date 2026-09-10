@@ -1,52 +1,61 @@
 package dev.jsinco.brewery.garden.utility;
 
 import com.google.common.base.Preconditions;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public sealed class Lazy<T> implements Supplier<T> permits Lazy.Memorized {
-    private @Nullable Supplier<T> supplier;
-    private @Nullable T value;
+@NullMarked
+public sealed interface Lazy<T> extends Supplier<T> {
 
-    public static <T> Lazy<T> of(Supplier<T> supplier) {
-        return new Lazy<>(supplier);
+    static <T> Constant<T> constant(Supplier<T> supplier) {
+        return new Lazy.Constant<>(supplier);
     }
 
-    public static <T> Memorized<T> memorized(Supplier<T> supplier) {
-        return new Memorized<>(supplier);
+    static <T> Variable<T> memorized(Supplier<T> supplier) {
+        return new Variable<>(supplier);
     }
 
-    private Lazy(@Nullable Supplier<T> supplier) {
-        this.supplier = supplier;
-    }
 
-    @Override
-    public T get() {
-        if (supplier != null) {
-            value = supplier.get();
-            supplier = null;
-        }
-        return value;
-    }
+    final class Constant<T> implements Lazy<T> {
+        private @Nullable Supplier<T> supplier;
+        private @Nullable T value;
 
-    public static final class Memorized<T> extends Lazy<T> {
 
-        private Memorized(@Nullable Supplier<T> supplier) {
-            super(supplier);
+        private Constant(@Nullable Supplier<T> supplier) {
+            this.supplier = supplier;
         }
 
         @Override
         public T get() {
-            if (super.value == null) {
-                Preconditions.checkState(super.supplier != null, "Supplier cannot be null when value is null");
-                super.value = super.supplier.get();
+            if (supplier != null) {
+                value = supplier.get();
+                supplier = null;
             }
-            return super.value;
+            return value;
+        }
+    }
+
+    final class Variable<T> implements Lazy<T> {
+        private @Nullable Supplier<T> supplier;
+        private @Nullable T value;
+
+        private Variable(@Nullable Supplier<T> supplier) {
+            this.supplier = supplier;
+        }
+
+        @Override
+        public T get() {
+            if (value == null) {
+                Preconditions.checkState(supplier != null, "Supplier cannot be null when value is null");
+                value = supplier.get();
+            }
+            return value;
         }
 
         public T reload() {
-            super.value = null;
+            value = null;
             return get();
         }
     }
