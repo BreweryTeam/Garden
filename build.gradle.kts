@@ -22,7 +22,7 @@ val targetMinecraftVersions = listOf(
 
 repositories {
     mavenCentral()
-    mavenLocal()
+    maven("https://repo.wyck.dev/snapshots")
     maven("https://repo.breweryteam.dev/mirror")
     maven("https://repo.jsinco.dev/releases")
     maven("https://storehouse.okaeri.eu/repository/maven-public/")
@@ -60,7 +60,7 @@ dependencies {
 
     implementation("dev.thorinwasher.schem:schem-reader:1.0.0")
     implementation("com.github.Thorinwasher.BlockUtil:blockutil:v2.1.5")
-    implementation("dev.wyck:Wyck:3.4.0")
+    implementation("dev.wyck:Wyck:3.4.0-ebbd9a7")
 
     compileOnly("org.xerial:sqlite-jdbc:3.47.2.0")
 
