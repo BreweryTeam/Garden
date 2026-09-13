@@ -86,13 +86,6 @@ public class Garden extends JavaPlugin {
             TBPGardenIntegration.loadIfPossible();
         } catch (NoClassDefFoundError ignored) {
         }
-        this.loadSuccess = true;
-    }
-
-    @Override
-    public void onEnable() {
-        integrationRegistry.itemIntegrations().forEach(ItemIntegration::initialize);
-        Preconditions.checkState(loadSuccess, "Failed on load, see logs.");
         this.database = new Database();
         try {
             database.init(this.getDataFolder());
@@ -101,6 +94,15 @@ public class Garden extends JavaPlugin {
         }
         gardenRegistry = new PlantRegistry();
         gardenPlantDataType = database.plantDataType();
+        NaturalFoliagePlacer.registerFoliage(WorldGenConfig.instance());
+        this.loadSuccess = true;
+    }
+
+    @Override
+    public void onEnable() {
+        integrationRegistry.itemIntegrations().forEach(ItemIntegration::initialize);
+        Preconditions.checkState(loadSuccess, "Failed on load, see logs.");
+
         this.blockUtil = new BlockUtilAPI.Builder()
                 .withConnectionSupplier(() -> {
                     try {
@@ -133,7 +135,6 @@ public class Garden extends JavaPlugin {
             Logger.logErr("There's no available plant types for garden!");
             Bukkit.getPluginManager().disablePlugin(this);
         }
-        NaturalFoliagePlacer.registerFoliage(WorldGenConfig.instance());
     }
 
     @Override

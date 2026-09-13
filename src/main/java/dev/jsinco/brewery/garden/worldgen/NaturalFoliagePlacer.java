@@ -8,14 +8,11 @@ import dev.wyck.biome.BiomeGenerationSettings;
 import dev.wyck.keys.ResourceKey;
 import dev.wyck.worldgen.Decoration;
 import dev.wyck.worldgen.HeightmapType;
-import dev.wyck.worldgen.blockpredicates.BlockPredicate;
 import dev.wyck.worldgen.feature.ConfiguredFeature;
 import dev.wyck.worldgen.feature.custom.CustomFeature;
 import dev.wyck.worldgen.placement.PlacedFeature;
 import dev.wyck.worldgen.placement.PlacementModifier;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.util.BlockVector;
 
 import java.util.Arrays;
 import java.util.List;
@@ -59,12 +56,7 @@ public class NaturalFoliagePlacer {
                 PlacementModifier.rarityFilter(config.rarityModifier()),
                 PlacementModifier.inSquare(),
                 PlacementModifier.heightmap(HeightmapType.MOTION_BLOCKING),
-                PlacementModifier.biomeFilter(),
-                PlacementModifier.blockPredicateFilter(BlockPredicate.matchingBlocks()
-                        .blocks(Material.GRASS_BLOCK, Material.MYCELIUM, Material.PODZOL)
-                        .offset(new BlockVector(0, -1, 0))
-                        .build()
-                )
+                PlacementModifier.biomeFilter()
         );
     }
 }
