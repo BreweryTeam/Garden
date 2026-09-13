@@ -70,7 +70,7 @@ public record PlantType(
 
     public Optional<PlantStructure> getStructure(Location origin, int age, String trackName, Matrix3d transformation) {
         List<Schematic> track = structures.get(trackName);
-        if (track == null) {
+        if (track == null || track.size() <= age) {
             return Optional.empty();
         }
         Schematic schematic = track.get(age);

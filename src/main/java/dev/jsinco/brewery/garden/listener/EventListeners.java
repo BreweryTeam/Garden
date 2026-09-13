@@ -5,6 +5,8 @@ import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
+import dev.jsinco.brewery.garden.persist.PlantPdcType;
+import dev.jsinco.brewery.garden.persist.StorageSolution;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlacedFruitDisplays;
 import dev.jsinco.brewery.garden.plant.PlantType;
@@ -33,13 +35,12 @@ import org.bukkit.event.block.BlockMultiPlaceEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.world.WorldLoadEvent;
-import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -132,23 +133,6 @@ public class EventListeners implements Listener {
                 ));
     }
 
-    @EventHandler
-    public void onWorldLoad(WorldLoadEvent event) {
-        gardenPlantDataType.fetch(event.getWorld())
-                .thenAcceptAsync(gardenPlants -> {
-                    for (GardenPlant gardenPlant : gardenPlants) {
-                        Bukkit.getRegionScheduler().run(Garden.getInstance(), gardenPlant.origin(), t -> {
-                            gardenRegistry.registerPlant(gardenPlant);
-                        });
-                    }
-                });
-    }
-
-    @EventHandler
-    public void onWorldUnload(WorldUnloadEvent event) {
-        gardenRegistry.unregisterWorld(event.getWorld());
-    }
-
     private void handleBonemeal(PlayerInteractEvent event, ItemStack itemInHand, Block block) {
         if (itemInHand == null || itemInHand.getType() != Material.BONE_MEAL) {
             return;
@@ -209,7 +193,27 @@ public class EventListeners implements Listener {
             return false;
         }
         gardenRegistry.registerPlant(gardenPlant);
-        gardenPlantDataType.insert(gardenPlant);
+        if (GardenConfig.instance().storageSolution() == StorageSolution.SQLITE) {
+            gardenPlantDataType.insert(gardenPlant);
+        } else {
+            PersistentDataContainer pdc = location.getChunk()
+                    .getPersistentDataContainer();
+            List<GardenPlant> plants;
+            try {
+                plants = pdc
+                        .get(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE);
+            } catch (IllegalArgumentException e) {
+                plants = null;
+            }
+            List<GardenPlant> gardenPlants;
+            if (plants == null) {
+                gardenPlants = new ArrayList<>();
+            } else {
+                gardenPlants = new ArrayList<>(plants);
+            }
+            gardenPlants.add(gardenPlant);
+            pdc.set(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE, gardenPlants);
+        }
 
         itemInHand.setAmount(itemInHand.getAmount() - 1);
         location.getWorld().playSound(location, Sound.BLOCK_GRASS_PLACE, 1.0f, 1.0f);

@@ -43,4 +43,28 @@ public class Encoder {
         }
         return new Matrix3d(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]);
     }
+
+    public static Matrix3d asTransformation(int transformation) {
+        double[] out = new double[9];
+        for (int i = out.length - 1; i >= 0; i--) {
+            out[i] = (transformation & 0x3) - 1D;
+            transformation = transformation >> 2;
+        }
+        return new Matrix3d().set(out);
+    }
+
+    public static int asInteger(Matrix3d transformation) {
+        double[] values = transformation.get(new double[9]);
+        int out = 0;
+        for (int i = 0; i < values.length; i++) {
+            int rounded = (int) values[i];
+            if (rounded > 1 || rounded < -1) {
+                throw new IllegalArgumentException("Unsupported transformation value at index: " + i);
+            }
+            int value = rounded + 1;
+            out = out << 2;
+            out |= value;
+        }
+        return out;
+    }
 }

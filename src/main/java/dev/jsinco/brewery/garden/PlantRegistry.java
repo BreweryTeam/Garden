@@ -9,7 +9,6 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -23,6 +22,19 @@ public class PlantRegistry {
     @Nullable
     public GardenPlant getByID(UUID id) {
         return gardenPlantIds.get(id);
+    }
+
+    public void unregister(UUID id) {
+        GardenPlant gardenPlant = gardenPlantIds.remove(id);
+        if (gardenPlant == null) {
+            return;
+        }
+        UUID worldUuid = gardenPlant.getStructure().worldUuid();
+        for (Location location : gardenPlant.getStructure().locations()) {
+            gardenPlants.computeIfAbsent(worldUuid, ignored -> new ConcurrentHashMap<>()).remove(
+                    location.toVector().toBlockVector()
+            );
+        }
     }
 
     @Nullable
