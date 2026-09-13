@@ -11,13 +11,23 @@ import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Leaves;
+import org.bukkit.util.BlockVector;
+import org.bukkit.util.Vector;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public record PlantStructure(Schematic schematic, int originX, int originY, int originZ,
@@ -64,6 +74,20 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
             return List.of();
         }
         List<BlockState> output = new ArrayList<>();
+        paste((vector, blockData) -> {
+            Location location = new Location(world, vector.getBlockX(), vector.getBlockY(), vector.getBlockZ());
+            output.add(location.getBlock().getState());
+            world.setBlockData(location, blockData);
+            if (GardenConfig.instance().overrideDrops()) {
+                Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(location));
+            }
+        }, vector -> world.getBlockData(vector.getBlockX(), vector.getBlockY(), vector.getBlockZ()));
+        return output;
+    }
+
+    public void paste(BiConsumer<BlockVector, BlockData> pasteOperation, Function<BlockVector, BlockData> lookup) {
+        Map<BlockVector, BlockData> mapped = new HashMap<>();
+        Set<BlockVector> ignored = new HashSet<>();
         schematic.apply(transformation, (vector3i, blockData) -> {
             if (blockData.getMaterial().isAir()) {
                 return;
@@ -72,19 +96,59 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
                 leaves.setPersistent(false);
             }
             vector3i.sub(offset);
-            Location posToReplace = new Location(world, originX, originY, originZ).add(vector3i.x, vector3i.y, vector3i.z);
+            BlockVector posToReplace = new BlockVector(originX + vector3i.x, originY + vector3i.y, originZ + vector3i.z);
 
-            Material blockToReplaceType = posToReplace.getBlock().getType();
+            BlockData toReplace = lookup.apply(posToReplace);
+            Material blockToReplaceType = toReplace.getMaterial();
             if (!Tag.REPLACEABLE_BY_TREES.isTagged(blockToReplaceType) && !blockToReplaceType.isAir()) {
                 return;
             }
-            output.add(posToReplace.getBlock().getState());
-            world.setBlockData(posToReplace, blockData);
-            if (GardenConfig.instance().overrideDrops()) {
-                Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
+            if (vector3i.y() == 0) {
+                if (!lookup.apply(posToReplace.clone().add(new Vector(0, -1, 0)).toBlockVector()).getMaterial().isSolid()) {
+                    ignored.add(posToReplace);
+                }
             }
+            mapped.put(posToReplace, blockData);
         });
-        return output;
+        Queue<BlockVector> toIgnore = new LinkedList<>(ignored);
+        while (!toIgnore.isEmpty()) {
+            BlockVector toCheck = toIgnore.poll();
+            mapped.remove(toCheck);
+            List<BlockVector> possiblyIgnore = new ArrayList<>();
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    BlockVector cloned = toCheck.clone();
+                    cloned.add(new Vector(x, 1, z));
+                    if (mapped.containsKey(cloned)) {
+                        possiblyIgnore.add(cloned);
+                    }
+                }
+            }
+            for (BlockVector maybeIgnore : possiblyIgnore) {
+                boolean found = false;
+                for (int x = -2; x <= 2; x++) {
+                    if (found) {
+                        break;
+                    }
+                    for (int z = -2; z <= 2; z++) {
+                        BlockVector cloned = maybeIgnore.clone();
+                        cloned.add(new Vector(x, -1, z));
+                        if (!ignored.contains(cloned) &&
+                                mapped.get(cloned) instanceof BlockData blockData &&
+                                blockData.getMaterial().isSolid()
+                        ) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found) {
+                    toIgnore.add(maybeIgnore);
+                    ignored.add(maybeIgnore);
+                }
+            }
+        }
+        mapped.forEach(pasteOperation);
     }
 
     public CompletableFuture<Void> remove() {
