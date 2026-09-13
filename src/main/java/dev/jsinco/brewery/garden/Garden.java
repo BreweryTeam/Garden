@@ -6,6 +6,7 @@ import dev.jsinco.brewery.garden.api.integration.ItemIntegration;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.configuration.GardenTranslator;
+import dev.jsinco.brewery.garden.configuration.worldgen.WorldGenConfig;
 import dev.jsinco.brewery.garden.integration.exported.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.integration.exported.TBPGardenIntegration;
 import dev.jsinco.brewery.garden.integration.imported.IntegrationRegistryImpl;
@@ -19,6 +20,7 @@ import dev.jsinco.brewery.garden.plant.GrowthManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.utility.Logger;
+import dev.jsinco.brewery.garden.worldgen.NaturalFoliagePlacer;
 import dev.thorinwasher.blockutil.api.BlockUtilAPI;
 import dev.thorinwasher.blockutil.api.event.BlockDisableDropEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -131,6 +133,7 @@ public class Garden extends JavaPlugin {
             Logger.logErr("There's no available plant types for garden!");
             Bukkit.getPluginManager().disablePlugin(this);
         }
+        NaturalFoliagePlacer.registerFoliage(WorldGenConfig.instance());
     }
 
     @Override
@@ -203,7 +206,7 @@ public class Garden extends JavaPlugin {
     }
 
     public void reload() {
-        GardenConfig.MEMORIZED.reload();
+        GardenConfig.CONFIG.reload();
         translator.reload();
         gardenRegistry.clear();
         MutableGardenRegistry.PLANT_TYPE.newBacking(PlantType.readPlantTypes());

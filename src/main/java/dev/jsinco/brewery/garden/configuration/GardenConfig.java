@@ -74,24 +74,9 @@ public final class GardenConfig {
     private static final String HEADER = "This is the global configuration file for Garden.\n" +
             "For documentation, visit: https://docs.breweryteam.dev/docs/garden";
 
-    private static final Lazy<YamlConfigurationLoader> LOADER = Lazy.of(() -> {
-        Path file = Garden.getInstance().getDataPath().resolve("config.yml");
-        return YamlConfigurationLoader.builder()
-                .path(file)
-                .nodeStyle(NodeStyle.BLOCK)
-                .indent(2)
-                .defaultOptions(opts ->
-                        opts.header(HEADER)
-                                .serializers(serdes -> serdes
-                                        .register(typeToken -> Tag.class.isAssignableFrom(GenericTypeReflector.erase(typeToken)), TagSerializer.INSTANCE)
-                                        .register(Locale.class, LocaleSerializer.INSTANCE)
-                                )
-                )
-                .build();
-    });
 
-    public static final Lazy.Memorized<GardenConfig> MEMORIZED = Lazy.memorized(() -> {
-        YamlConfigurationLoader loader = LOADER.get();
+    public static final Lazy.Variable<GardenConfig> CONFIG = Lazy.memorized(() -> {
+        YamlConfigurationLoader loader = createLoader();
         try {
             CommentedConfigurationNode root = loader.load();
             GardenConfig loaded = root.get(GardenConfig.class, new GardenConfig());
@@ -105,6 +90,22 @@ public final class GardenConfig {
     });
 
     public static GardenConfig instance() {
-        return MEMORIZED.get();
+        return CONFIG.get();
+    }
+
+    private static YamlConfigurationLoader createLoader() {
+        Path file = Garden.getInstance().getDataPath().resolve("config.yml");
+        return YamlConfigurationLoader.builder()
+                .path(file)
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(2)
+                .defaultOptions(opts ->
+                        opts.header(HEADER)
+                                .serializers(serdes -> serdes
+                                        .register(typeToken -> Tag.class.isAssignableFrom(GenericTypeReflector.erase(typeToken)), TagSerializer.INSTANCE)
+                                        .register(Locale.class, LocaleSerializer.INSTANCE)
+                                )
+                )
+                .build();
     }
 }
