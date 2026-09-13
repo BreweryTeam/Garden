@@ -93,4 +93,7 @@ public class Database {
         }
     }
 
+    public GardenPlantDataType plantDataType() {
+        return new GardenPlantDataType(this, executor);
+    }
 }

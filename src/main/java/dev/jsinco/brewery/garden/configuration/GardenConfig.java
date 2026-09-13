@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.configuration.serdes.LocaleSerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.TagSerializer;
+import dev.jsinco.brewery.garden.persist.StorageSolution;
 import dev.jsinco.brewery.garden.utility.Lazy;
 import io.leangen.geantyref.GenericTypeReflector;
 import lombok.Getter;
@@ -67,6 +68,8 @@ public final class GardenConfig {
     @Comment("The percent chance that using bone meal on a garden plant advances its growth by one stage (0-100)")
     private int bonemealChance = 25;
 
+    @Comment("How to store all plant data [pdc, sqlite]")
+    private StorageSolution storageSolution = StorageSolution.PDC;
 
     private static final String HEADER = "This is the global configuration file for Garden.\n" +
             "For documentation, visit: https://docs.breweryteam.dev/docs/garden";

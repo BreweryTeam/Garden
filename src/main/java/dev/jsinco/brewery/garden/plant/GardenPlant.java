@@ -5,12 +5,15 @@ import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
+import dev.jsinco.brewery.garden.persist.PlantPdcType;
+import dev.jsinco.brewery.garden.persist.StorageSolution;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import lombok.Getter;
 import lombok.ToString;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
@@ -37,6 +40,7 @@ public class GardenPlant {
     private boolean bloomed = false;
     private final List<PlacedFruitDisplays> placedFruits = new ArrayList<>();
     private int expectedFruits;
+    private StorageSolution currentStorage = null;
 
     private static final Set<Material> DECORATIVE_PLANT_BLOCKS = compileDecorativePlantBlocks();
 
@@ -59,13 +63,14 @@ public class GardenPlant {
         this.expectedFruits = 0;
     }
 
-    public GardenPlant(UUID id, PlantType type, PlantStructure structure, String track, int age, int fruits) {
+    public GardenPlant(UUID id, PlantType type, PlantStructure structure, String track, int age, int fruits, StorageSolution currentStorage) {
         this.id = id;
         this.type = type;
         this.age = age;
         this.track = track;
         this.structure = structure;
         this.expectedFruits = fruits;
+        this.currentStorage = currentStorage;
         if (fruits > 0) {
             Bukkit.getGlobalRegionScheduler().run(Garden.getInstance(), t -> {
                 placedFruits.addAll(placeFruits(fruits));
@@ -109,7 +114,7 @@ public class GardenPlant {
                     expectedFruits--;
                     type.fruitItem().item(PlantItem.PlantItemType.FRUIT, type)
                             .ifPresent(item -> toDrop.interactionBox().getWorld().dropItem(toDrop.interactionBox().getLocation().toCenterLocation(), item));
-                    Garden.getInstance().getGardenPlantDataType().update(this);
+                    updatePersistently(Garden.getInstance().getGardenPlantDataType());
                 }
                 toRemove.forEach(PlacedFruitDisplays::remove);
             });
@@ -135,8 +140,37 @@ public class GardenPlant {
             newStructure.paste();
             this.structure = newStructure;
             registry.registerPlant(this);
-            dataType.update(this);
+            updatePersistently(dataType);
         });
+    }
+
+    private void updatePersistently(GardenPlantDataType dataType) {
+        if (GardenConfig.instance().storageSolution() == StorageSolution.SQLITE && currentStorage != StorageSolution.PDC) {
+            dataType.update(this);
+        } else {
+            if (currentStorage == StorageSolution.SQLITE) {
+                dataType.remove(this);
+                currentStorage = StorageSolution.PDC;
+            }
+            Chunk chunk = structure.origin().getChunk();
+            List<GardenPlant> plants;
+            try {
+                plants = chunk
+                        .getPersistentDataContainer()
+                        .get(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE);
+            } catch (IllegalArgumentException e) {
+                plants = null;
+            }
+            List<GardenPlant> gardenPlants;
+            if (plants == null) {
+                gardenPlants = new ArrayList<>();
+            } else {
+                gardenPlants = new ArrayList<>(plants);
+            }
+            gardenPlants.removeIf(plant -> plant.id.equals(id));
+            gardenPlants.add(this);
+            chunk.getPersistentDataContainer().set(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE, gardenPlants);
+        }
     }
 
     public void bloom() {
@@ -176,7 +210,7 @@ public class GardenPlant {
     public void placeFruits() {
         placedFruits.addAll(placeFruits(-1));
         expectedFruits = placedFruits.size();
-        Garden.getInstance().getGardenPlantDataType().update(this);
+        updatePersistently(Garden.getInstance().getGardenPlantDataType());
     }
 
     private List<PlacedFruitDisplays> placeFruits(int amount) {
@@ -245,7 +279,7 @@ public class GardenPlant {
         if (expectedFruits < 0) {
             expectedFruits = 0;
         }
-        Garden.getInstance().getGardenPlantDataType().update(this);
+        updatePersistently(Garden.getInstance().getGardenPlantDataType());
     }
 
     public void clearBoundEntities() {

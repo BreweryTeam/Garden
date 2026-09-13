@@ -11,6 +11,7 @@ import dev.jsinco.brewery.garden.integration.exported.TBPGardenIntegration;
 import dev.jsinco.brewery.garden.integration.imported.IntegrationRegistryImpl;
 import dev.jsinco.brewery.garden.listener.BlockEventListener;
 import dev.jsinco.brewery.garden.listener.EventListeners;
+import dev.jsinco.brewery.garden.listener.WorldEventListener;
 import dev.jsinco.brewery.garden.persist.Database;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
@@ -29,7 +30,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Tag;
-import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -68,6 +68,7 @@ public class Garden extends JavaPlugin {
     private ScheduledTask growthTask;
     @Getter
     private IntegrationRegistryImpl integrationRegistry;
+    private WorldEventListener worldEventListener;
 
     @Override
     public void onLoad() {
@@ -97,7 +98,7 @@ public class Garden extends JavaPlugin {
             throw new RuntimeException(e);
         }
         gardenRegistry = new PlantRegistry();
-        gardenPlantDataType = new GardenPlantDataType(database);
+        gardenPlantDataType = database.plantDataType();
         this.blockUtil = new BlockUtilAPI.Builder()
                 .withConnectionSupplier(() -> {
                     try {
@@ -113,12 +114,11 @@ public class Garden extends JavaPlugin {
         translator = new GardenTranslator(new File(this.getDataFolder(), "locale"));
         translator.reload();
         GlobalTranslator.translator().addSource(translator);
-        for (World world : Bukkit.getWorlds()) {
-            List<GardenPlant> gardenPlants = gardenPlantDataType.fetch(world).join();
-            gardenPlants.forEach(gardenRegistry::registerPlant);
-        }
+        this.worldEventListener = new WorldEventListener(gardenRegistry, gardenPlantDataType);
+        Bukkit.getWorlds().forEach(worldEventListener::loadWorld);
         Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry, gardenPlantDataType), this);
         Bukkit.getPluginManager().registerEvents(new BlockEventListener(gardenRegistry, gardenPlantDataType), this);
+        Bukkit.getPluginManager().registerEvents(worldEventListener, this);
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
         GrowthManager growthManager = new GrowthManager(gardenRegistry, gardenPlantDataType);
@@ -207,10 +207,7 @@ public class Garden extends JavaPlugin {
         translator.reload();
         gardenRegistry.clear();
         MutableGardenRegistry.PLANT_TYPE.newBacking(PlantType.readPlantTypes());
-        for (World world : Bukkit.getWorlds()) {
-            gardenPlantDataType.fetch(world)
-                    .thenAccept(gardenPlants -> gardenPlants.forEach(gardenRegistry::registerPlant));
-        }
+        Bukkit.getWorlds().forEach(worldEventListener::loadWorld);
         registerPlantRecipes();
         if (MutableGardenRegistry.PLANT_TYPE.values().isEmpty()) {
             Logger.logErr("There's no available plant types for garden!");
