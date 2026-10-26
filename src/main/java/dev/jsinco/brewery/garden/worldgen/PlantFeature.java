@@ -17,6 +17,7 @@ import org.bukkit.Material;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.util.BlockVector;
 import org.joml.Matrix3d;
+import org.joml.Vector3d;
 import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
 
@@ -50,8 +51,8 @@ public class PlantFeature extends CustomFeature<PlantType> {
         int age = context.random().nextInt(stages.size());
         Schematic structure = stages.get(age);
         Matrix3d transformation = PlantType.ALLOWED_TRANSFORMATIONS.get(context.random().nextInt(PlantType.ALLOWED_TRANSFORMATIONS.size()));
-
-        Vector3i offset = new Vector3i(structure.size().x() / 2, 0, structure.size().z() / 2);
+        Vector3i size = structure.size(transformation);
+        Vector3i offset = new Vector3i(size.x() / 2, 0, size.z() / 2);
         PlantStructure plantStructure = new PlantStructure(
                 structure,
                 origin.getBlockX(),
@@ -78,7 +79,6 @@ public class PlantFeature extends CustomFeature<PlantType> {
                 0,
                 GardenConfig.instance().storageSolution()
         );
-        Garden.getGardenRegistry().registerPlant(gardenPlant);
         if (GardenConfig.instance().storageSolution() == StorageSolution.SQLITE) {
             Garden.getInstance().getGardenPlantDataType().insert(gardenPlant);
         } else {
@@ -101,6 +101,7 @@ public class PlantFeature extends CustomFeature<PlantType> {
                             gardenPlants = new ArrayList<>(plants);
                         }
                         gardenPlants.add(gardenPlant);
+                        Garden.getGardenRegistry().registerPlant(gardenPlant);
                         pdc.set(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE, gardenPlants);
                     });
         }
