@@ -17,7 +17,6 @@ import org.bukkit.Material;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.util.BlockVector;
 import org.joml.Matrix3d;
-import org.joml.Vector3d;
 import org.joml.Vector3i;
 import org.jspecify.annotations.NullMarked;
 
