@@ -1,6 +1,7 @@
 package dev.jsinco.brewery.garden.structure;
 
 import dev.jsinco.brewery.garden.Garden;
+import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.thorinwasher.schem.Schematic;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -14,9 +15,7 @@ import org.joml.Matrix3d;
 import org.joml.Vector3i;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
@@ -81,7 +80,9 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
             }
             output.add(posToReplace.getBlock().getState());
             world.setBlockData(posToReplace, blockData);
-            Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
+            if (GardenConfig.instance().overrideDrops()) {
+                Garden.getInstance().getBlockUtil().disableItemDrops(world.getBlockAt(posToReplace));
+            }
         });
         return output;
     }
@@ -103,7 +104,9 @@ public record PlantStructure(Schematic schematic, int originX, int originY, int 
                 if (location.getBlock().getType() == blockData.getMaterial()) {
                     location.getBlock().setType(Material.AIR);
                 }
-                Garden.getInstance().getBlockUtil().enableItemDrops(world.getBlockAt(location));
+                if (GardenConfig.instance().overrideDrops()) {
+                    Garden.getInstance().getBlockUtil().enableItemDrops(world.getBlockAt(location));
+                }
             });
             output.complete(null);
         });

@@ -50,6 +50,9 @@ public final class GardenConfig {
     @Comment("A list of worlds where the BreweryGarden addon is disabled.")
     private List<String> blacklistedWorlds = List.of("resource", "resource_nether");
 
+    @Comment("Override the drops for all blocks (Requires storing multiple block coordinates in storage)")
+    private boolean overrideDrops = false;
+
     @Comment("A list of tags of materials generated through Garden that will drop when broken")
     private List<Tag<Material>> dropsDefaultItems = List.of(Tag.LOGS);
 
