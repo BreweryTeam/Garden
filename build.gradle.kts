@@ -17,7 +17,7 @@ version = findProperty("project.version")!!
 group = findProperty("project.group")!!
 
 val targetMinecraftVersions = listOf(
-    "1.21.5", "1.21.8", "1.21.10", "1.21.11", "26.1.2", "26.2"
+    "1.21.5", "1.21.8", "1.21.10", "1.21.11", "26.1.2", "26.2", "26.3"
 )
 
 repositories {
@@ -60,7 +60,7 @@ dependencies {
 
     implementation("dev.thorinwasher.schem:schem-reader:1.0.0")
     implementation("com.github.Thorinwasher.BlockUtil:blockutil:v2.1.5")
-    implementation("dev.wyck:Wyck:3.4.0-ebbd9a7")
+    implementation("dev.wyck:Wyck:4.0.0-837d6ec")
 
     compileOnly("org.xerial:sqlite-jdbc:3.47.2.0")
 
@@ -133,11 +133,7 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("26.2")
-        downloadPlugins {
-            // modrinth("thebrewingproject", "3.3.1")
-            modrinth("chunky", "MdY6JATr")
-        }
+        minecraftVersion("26.3")
     }
 
 }
