@@ -3,7 +3,6 @@ package dev.jsinco.brewery.garden.configuration.worldgen;
 import com.google.common.collect.ImmutableMap;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
-import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.configuration.serdes.NamespacedKeySerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.RegistryBackedValueSerializer;
 import dev.jsinco.brewery.garden.plant.PlantType;
@@ -22,6 +21,10 @@ import java.util.Map;
 @ConfigSerializable
 public class WorldGenConfig {
     public boolean enabled = false;
+
+    private List<String> worldBlacklist = List.of();
+
+    private List<String> worldWhitelist = List.of();
 
     public Map<NamespacedKey, List<PlantFeaturePlacementConfig>> biomes = ImmutableMap.<NamespacedKey, List<PlantFeaturePlacementConfig>>builder()
             .put(NamespacedKey.minecraft("taiga"), List.of(
@@ -88,5 +91,12 @@ public class WorldGenConfig {
                                 )
                 )
                 .build();
+    }
+
+    public boolean disabledInWorld(String worldName) {
+        if (worldWhitelist != null && !worldWhitelist.isEmpty()) {
+            return !worldWhitelist.contains(worldName);
+        }
+        return worldBlacklist == null || worldBlacklist.contains(worldName);
     }
 }

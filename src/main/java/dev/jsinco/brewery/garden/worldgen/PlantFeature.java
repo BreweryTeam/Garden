@@ -3,6 +3,7 @@ package dev.jsinco.brewery.garden.worldgen;
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
+import dev.jsinco.brewery.garden.configuration.worldgen.WorldGenConfig;
 import dev.jsinco.brewery.garden.persist.PlantPdcType;
 import dev.jsinco.brewery.garden.persist.StorageSolution;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
@@ -32,6 +33,9 @@ public class PlantFeature extends CustomFeature<PlantType> {
 
     @Override
     public boolean place(PlacementContext<PlantType> context) {
+        if (WorldGenConfig.instance().disabledInWorld(context.worldContext().bukkitName())) {
+            return false;
+        }
         BlockVector origin = context.origin();
         Material under = context.getBlock(new BlockVector(origin.getBlockX(), origin.getBlockY() - 1, origin.getBlockZ())).getMaterial();
         if (GardenConfig.instance().plantableBlocks().stream().noneMatch(under::equals)) {
