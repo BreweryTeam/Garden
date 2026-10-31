@@ -8,7 +8,7 @@ import dev.wyck.biome.BiomeGenerationSettings;
 import dev.wyck.keys.ResourceKey;
 import dev.wyck.worldgen.Decoration;
 import dev.wyck.worldgen.HeightmapType;
-import dev.wyck.worldgen.feature.ConfiguredFeature;
+import dev.wyck.worldgen.feature.Feature;
 import dev.wyck.worldgen.feature.custom.CustomFeature;
 import dev.wyck.worldgen.placement.PlacedFeature;
 import dev.wyck.worldgen.placement.PlacementModifier;
@@ -49,7 +49,7 @@ public class NaturalFoliagePlacer {
         ResourceKey plantKey = ResourceKey.fromString(config.plant().key().asString());
         CustomFeature<PlantType> plantFeature = new PlantFeature(plantKey).register();
         return PlacedFeature.of(
-                ConfiguredFeature.of(plantFeature, config.plant())
+                Feature.of(plantFeature, config.plant())
                         .toBuilder()
                         .resourceKey(plantKey)
                         .build(),
