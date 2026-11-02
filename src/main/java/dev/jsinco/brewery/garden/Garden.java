@@ -12,6 +12,7 @@ import dev.jsinco.brewery.garden.integration.exported.TBPGardenIntegration;
 import dev.jsinco.brewery.garden.integration.imported.IntegrationRegistryImpl;
 import dev.jsinco.brewery.garden.listener.BlockEventListener;
 import dev.jsinco.brewery.garden.listener.EventListeners;
+import dev.jsinco.brewery.garden.listener.TobaccoPipeListener;
 import dev.jsinco.brewery.garden.listener.WorldEventListener;
 import dev.jsinco.brewery.garden.persist.Database;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
@@ -123,6 +124,7 @@ public class Garden extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new EventListeners(gardenRegistry, gardenPlantDataType), this);
         Bukkit.getPluginManager().registerEvents(new BlockEventListener(gardenRegistry, gardenPlantDataType), this);
         Bukkit.getPluginManager().registerEvents(worldEventListener, this);
+        Bukkit.getPluginManager().registerEvents(new TobaccoPipeListener(getInstance()), this);
         this.registerPlantRecipes();
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, GardenCommand::register);
         GrowthManager growthManager = new GrowthManager(gardenRegistry, gardenPlantDataType);
