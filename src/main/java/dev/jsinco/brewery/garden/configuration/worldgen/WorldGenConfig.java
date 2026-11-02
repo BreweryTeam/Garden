@@ -7,6 +7,7 @@ import dev.jsinco.brewery.garden.configuration.serdes.NamespacedKeySerializer;
 import dev.jsinco.brewery.garden.configuration.serdes.RegistryBackedValueSerializer;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.utility.Lazy;
+import dev.jsinco.brewery.garden.utility.Logger;
 import org.bukkit.NamespacedKey;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
@@ -17,6 +18,8 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @ConfigSerializable
 public class WorldGenConfig {
@@ -27,31 +30,39 @@ public class WorldGenConfig {
     private List<String> worldWhitelist = List.of();
 
     public Map<NamespacedKey, List<PlantFeaturePlacementConfig>> biomes = ImmutableMap.<NamespacedKey, List<PlantFeaturePlacementConfig>>builder()
-            .put(NamespacedKey.minecraft("taiga"), List.of(
-                    PlantFeaturePlacementConfig.of("blueberry", 1),
-                    PlantFeaturePlacementConfig.of("cranberry", 1)
-            ))
-            .put(NamespacedKey.minecraft("forest"), List.of(
-                    PlantFeaturePlacementConfig.of("apple", 3)
-            ))
-            .put(NamespacedKey.minecraft("flower_forest"), List.of(
-                    PlantFeaturePlacementConfig.of("cherry", 3)
-            ))
-            .put(NamespacedKey.minecraft("savanna"), List.of(
-                    PlantFeaturePlacementConfig.of("grape", 2),
-                    PlantFeaturePlacementConfig.of("peach", 3)
-            ))
-            .put(NamespacedKey.minecraft("sparse_jungle"), List.of(
-                    PlantFeaturePlacementConfig.of("lemon", 3),
-                    PlantFeaturePlacementConfig.of("lime", 3),
-                    PlantFeaturePlacementConfig.of("orange", 3)
-            ))
-            .put(NamespacedKey.minecraft("birch_forest"), List.of(
-                    PlantFeaturePlacementConfig.of("raspberry", 1)
-            ))
-            .put(NamespacedKey.minecraft("old_growth_birch_forest"), List.of(
-                    PlantFeaturePlacementConfig.of("strawberry", 1)
-            ))
+            .put(NamespacedKey.minecraft("taiga"), Stream.of(
+                                    PlantFeaturePlacementConfig.of("blueberry", 1),
+                                    PlantFeaturePlacementConfig.of("cranberry", 1)
+                            ).flatMap(Optional::stream)
+                            .toList()
+            ).put(NamespacedKey.minecraft("forest"), Stream.of(
+                                    PlantFeaturePlacementConfig.of("apple", 3)
+                            ).flatMap(Optional::stream)
+                            .toList()
+            ).put(NamespacedKey.minecraft("flower_forest"), Stream.of(
+                                    PlantFeaturePlacementConfig.of("cherry", 3)
+                            ).flatMap(Optional::stream)
+                            .toList()
+            ).put(NamespacedKey.minecraft("savanna"), Stream.of(
+                                    PlantFeaturePlacementConfig.of("grape", 2),
+                                    PlantFeaturePlacementConfig.of("peach", 3)
+                            ).flatMap(Optional::stream)
+                            .toList()
+            ).put(NamespacedKey.minecraft("sparse_jungle"), Stream.of(
+                                    PlantFeaturePlacementConfig.of("lemon", 3),
+                                    PlantFeaturePlacementConfig.of("lime", 3),
+                                    PlantFeaturePlacementConfig.of("orange", 3)
+                            ).flatMap(Optional::stream)
+                            .toList()
+            ).put(NamespacedKey.minecraft("birch_forest"), Stream.of(
+                                    PlantFeaturePlacementConfig.of("raspberry", 1)
+                            ).flatMap(Optional::stream)
+                            .toList()
+            ).put(NamespacedKey.minecraft("old_growth_birch_forest"), Stream.of(
+                                    PlantFeaturePlacementConfig.of("strawberry", 1)
+                            ).flatMap(Optional::stream)
+                            .toList()
+            )
             .build();
 
     private static final String HEADER = """
@@ -61,15 +72,17 @@ public class WorldGenConfig {
 
     public static final Lazy.Variable<WorldGenConfig> CONFIG = Lazy.memorized(() -> {
         YamlConfigurationLoader loader = createLoader();
+        WorldGenConfig defaultConfig = new WorldGenConfig();
         try {
             CommentedConfigurationNode root = loader.load();
-            WorldGenConfig loaded = root.get(WorldGenConfig.class, new WorldGenConfig());
+            WorldGenConfig loaded = root.get(WorldGenConfig.class, defaultConfig);
 
             root.set(WorldGenConfig.class, loaded);
             loader.save(root);
             return loaded;
         } catch (ConfigurateException e) {
-            throw new RuntimeException(e);
+            Logger.logErr(e.getMessage());
+            return defaultConfig;
         }
     });
 
