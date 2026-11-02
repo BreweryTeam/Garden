@@ -6,6 +6,7 @@ import dev.jsinco.brewery.garden.api.integration.ItemIntegration;
 import dev.jsinco.brewery.garden.commands.GardenCommand;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.configuration.GardenTranslator;
+import dev.jsinco.brewery.garden.configuration.crafting.CraftingConfig;
 import dev.jsinco.brewery.garden.configuration.worldgen.WorldGenConfig;
 import dev.jsinco.brewery.garden.integration.exported.BreweryGardenIngredient;
 import dev.jsinco.brewery.garden.integration.exported.TBPGardenIntegration;
@@ -57,6 +58,7 @@ import java.util.stream.Stream;
 
 public class Garden extends JavaPlugin {
 
+    public static final NamespacedKey ITEM = Garden.key("item");
     @Getter
     private static Garden instance;
     @Getter
@@ -103,7 +105,18 @@ public class Garden extends JavaPlugin {
     public void onEnable() {
         integrationRegistry.itemIntegrations().forEach(ItemIntegration::initialize);
         Preconditions.checkState(loadSuccess, "Failed on load, see logs.");
-
+        if (!new File(getDataFolder(), "crafting.yml").exists()) {
+            saveResource("crafting.yml", false);
+        }
+        CompletableFuture.allOf(integrationRegistry.itemIntegrations()
+                        .map(ItemIntegration::validationReady)
+                        .toArray(CompletableFuture[]::new))
+                .thenRunAsync(() -> CraftingConfig.instance().registerRecipes(),
+                        runnable -> Bukkit.getGlobalRegionScheduler().run(this, ignored -> runnable.run())
+                ).exceptionally(error -> {
+                    Logger.logErr(error.getMessage());
+                    return null;
+                });
         this.blockUtil = new BlockUtilAPI.Builder()
                 .withConnectionSupplier(() -> {
                     try {

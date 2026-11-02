@@ -1,0 +1,11 @@
+# https://docs.breweryteam.dev/docs/garden/config/plant
+
+approximate-growth-time: "5m"
+fruit-placement: ABOVE
+seeds:
+  display-name: "<#62AB00>Tobacco Seeds"
+  material: melon_seeds
+fruit:
+  display-name: "<#62AB00>Tobacco Leaves"
+  head-texture-base64: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGJlYWUxNDIzYTM4NTA3OWY4ZTMwZjFkOTQ1NjhjMDk4ZWNlMjI1ZWUxNDNlN2ZkM2Q0MTc2ZjgzYmQ3ZDg1ZCJ9fX0="
+  color: "#62AB00"

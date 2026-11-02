@@ -3,6 +3,7 @@ package dev.jsinco.brewery.garden.integration.imported;
 import dev.jsinco.brewery.garden.api.integration.IntegrationRegistry;
 import dev.jsinco.brewery.garden.api.integration.ItemIntegration;
 import dev.jsinco.brewery.garden.integration.imported.item.CraftEngineIntegration;
+import dev.jsinco.brewery.garden.integration.imported.item.GardenIntegration;
 import dev.jsinco.brewery.garden.integration.imported.item.ItemsAdderIntegration;
 import dev.jsinco.brewery.garden.integration.imported.item.MinecraftItemIntegration;
 import dev.jsinco.brewery.garden.integration.imported.item.MmoItemsIntegration;
@@ -26,6 +27,7 @@ public class IntegrationRegistryImpl implements IntegrationRegistry {
 
     public void registerDefaults(Plugin garden) {
         registerItemIntegration(new MinecraftItemIntegration());
+        registerItemIntegration(new GardenIntegration());
         registerItemIntegration("net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine", () -> new CraftEngineIntegration(garden));
         registerItemIntegration("dev.lone.itemsadder.api.CustomStack", () -> new ItemsAdderIntegration(garden));
         registerItemIntegration("net.Indyuce.mmoitems.MMOItems", () -> new MmoItemsIntegration(garden));

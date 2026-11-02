@@ -18,11 +18,12 @@ public class Logger {
         logger().log(Level.SEVERE, prefixedMessage);
     }
 
-    public static void logErr(Throwable throwable) {
+    public static Void logErr(Throwable throwable) {
         StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
         String className = caller.getClassName().substring(caller.getClassName().lastIndexOf('.') + 1);
         String prefix = "[Garden Error - " + className + ":" + caller.getLineNumber() + "] ";
         logger().log(Level.SEVERE, prefix + throwable.getMessage(), throwable);
+        return null;
     }
 
     public static void logWarn(String message) {

@@ -1,0 +1,14 @@
+# This is the crafting config file for Garden.
+# For documentation, visit: https://docs.breweryteam.dev/docs/garden
+
+furnace:
+  garden:tobacco:
+    output-item:
+      item-model: "minecraft:dried_kelp"
+      item-id: "minecraft:rotten_flesh"
+      display-name: Tobacco
+      extra-data: { }
+    furnace-recipe:
+      input-item: "garden:tobacco"
+      cook-time: 100
+      float-experience: 0.1
