@@ -43,7 +43,7 @@ public class SimpleSmokeTask {
         if (time <= SMOKE_TICKS) {
             playerTrace[time - 1] = player.getEyeLocation();
         }
-        double globalProgress = (double) time / (SMOKE_TICKS + SMOKE_TRAIL_TICKS);
+        double globalProgress = (double) Math.clamp(time - SMOKE_TRAIL_TICKS / 2, 0, SMOKE_TICKS) / (SMOKE_TICKS);
         Random random = ThreadLocalRandom.current();
         for (int smokeTrail = 0; smokeTrail < SMOKE_TICKS; smokeTrail++) {
             int trailTicks = time - smokeTrail - 1;

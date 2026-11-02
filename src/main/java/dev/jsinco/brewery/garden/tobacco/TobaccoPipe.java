@@ -12,8 +12,6 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
-import org.bukkit.Sound;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
 import org.bukkit.persistence.PersistentDataType;
@@ -23,7 +21,6 @@ import java.util.Locale;
 
 public class TobaccoPipe {
 
-    private static final NamespacedKey ITEM = Garden.key("item");
     private static final NamespacedKey FILL_LEVEL = Garden.key("tobacco/fill_level");
     private static final NamespacedKey LIT = Garden.key("tobacco/lit");
     private static final NamespacedKey COOLDOWN = Garden.key("tobacco/cooldown");
@@ -37,7 +34,7 @@ public class TobaccoPipe {
                 .animation(ItemUseAnimation.TOOT_HORN)
                 .consumeSeconds(1.5F)
                 .hasConsumeParticles(false)
-                .sound(Registry.SOUNDS.getKey(Sound.BLOCK_FIRE_AMBIENT))
+                .sound(NamespacedKey.minecraft("none"))
                 .build());
         itemStack.unsetData(DataComponentTypes.FOOD);
         itemStack.setData(DataComponentTypes.CUSTOM_NAME,
@@ -45,12 +42,12 @@ public class TobaccoPipe {
                         .colorIfAbsent(NamedTextColor.WHITE)
                         .decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE)
         );
-        itemStack.setData(DataComponentTypes.USE_COOLDOWN, UseCooldown.useCooldown(8F)
+        itemStack.setData(DataComponentTypes.USE_COOLDOWN, UseCooldown.useCooldown(1F)
                 .cooldownGroup(COOLDOWN)
                 .build()
         );
         itemStack.editPersistentDataContainer(pdc -> {
-            pdc.set(ITEM, PersistentDataType.STRING, "tobacco_pipe");
+            pdc.set(Garden.ITEM, PersistentDataType.STRING, "tobacco_pipe");
         });
         setLit(itemStack, false);
         burn(itemStack);
@@ -59,7 +56,7 @@ public class TobaccoPipe {
 
     public static boolean isPipe(ItemStack itemStack) {
         return "tobacco_pipe".equalsIgnoreCase(itemStack.getPersistentDataContainer()
-                .get(ITEM, PersistentDataType.STRING)
+                .get(Garden.ITEM, PersistentDataType.STRING)
         );
     }
 
