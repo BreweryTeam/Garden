@@ -14,39 +14,44 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class CircleSmokeTask {
+public class SmokeTask {
 
-    private static final int SMOKE_TICKS = 2;
     private static final int SMOKE_TRAIL_TICKS = 20 * 4;
     private static final double MAX_SMOKE_DISTANCE = 4.0;
     private static final double SMOKE_FLOATING_POINT = 5.0;
     private static final double MAX_SMOKE_WIND = 2D;
     private static final float SMOKE_SIZE = 4F;
-    private static final int SMOKE_CIRCLE_POINTS = 16;
     private int time = 0;
     private int hitPoint = SMOKE_TRAIL_TICKS;
     private final Player player;
     private final List<Vector> firstSmokeDirections;
     private final List<Vector> finalSmokeDirections;
-    private final Location[] playerTrace = new Location[SMOKE_TICKS];
+    private final Location[] playerTrace;
+    private final Vector[] playerVelocity;
+    private final SmokeShape smokeShape;
 
-    public CircleSmokeTask(Player player) {
+    public SmokeTask(Player player, SmokeShape smokeShape) {
         this.player = player;
         this.firstSmokeDirections = compileSmokeDirections();
         this.finalSmokeDirections = compileSmokeDirections();
+        this.smokeShape = smokeShape;
+        this.playerTrace = new Location[smokeShape.smokeTicks()];
+        this.playerVelocity = new Vector[smokeShape.smokeTicks()];
     }
 
     public void tick(ScheduledTask task) {
-        if (time++ > SMOKE_TICKS + SMOKE_TRAIL_TICKS || player.isDead()) {
+        if (time++ > smokeShape.smokeTicks() + SMOKE_TRAIL_TICKS || player.isDead()) {
             task.cancel();
             return;
         }
-        if (time <= SMOKE_TICKS) {
+        if (time <= smokeShape.smokeTicks()) {
             playerTrace[time - 1] = player.getEyeLocation();
+            playerVelocity[time - 1] = player.getVelocity();
         }
-        double globalProgress = (double) Math.clamp(time - SMOKE_TRAIL_TICKS / 2, 0, SMOKE_TICKS) / (SMOKE_TICKS);
+        double globalProgress = (double) Math.clamp(time - SMOKE_TRAIL_TICKS / 2, 0, smokeShape.smokeTicks() + SMOKE_TRAIL_TICKS / 2) /
+                (smokeShape.smokeTicks() + SMOKE_TRAIL_TICKS / 2);
         Random random = ThreadLocalRandom.current();
-        for (int smokeTrail = 0; smokeTrail < SMOKE_TICKS; smokeTrail++) {
+        for (int smokeTrail = 0; smokeTrail < smokeShape.smokeTicks(); smokeTrail++) {
             int trailTicks = time - smokeTrail - 1;
             if (trailTicks > hitPoint || trailTicks < 0 || (trailTicks + time) % 2 == 1) {
                 continue;
@@ -60,26 +65,21 @@ public class CircleSmokeTask {
             } else {
                 eye = EazingUtil.lerp(random.nextDouble(), eye1, eye2);
             }
-            Vector xDirection = eye.getDirection().clone().crossProduct(new Vector(0, 1, 0))
-                    .normalize();
-            Vector zDirection = xDirection.clone().crossProduct(eye.getDirection());
-            double offsetRadians = random.nextDouble(Math.PI * 2);
-            for (int i = 0; i < SMOKE_CIRCLE_POINTS; i++) {
-                double radians = Math.PI * 2 * i / SMOKE_CIRCLE_POINTS;
-                Vector firstDirection = xDirection.clone()
-                        .multiply(Math.cos(offsetRadians + radians))
-                        .add(zDirection.clone()
-                                .multiply(Math.sin(offsetRadians + radians))
-                        ).add(eye.getDirection().clone().multiply(4))
-                        .normalize();
-                Vector inDirection = smokeOffset(progress, globalProgress, firstDirection
+            if (!eye.isChunkLoaded()) {
+                return;
+            }
+            for (Vector shapeVector : smokeShape.shapeAt(smokeTrail, eye.getDirection())) {
+                Vector inDirection = smokeOffset(progress, globalProgress, eye.getDirection()
+                        .clone()
                         .multiply(MAX_SMOKE_DISTANCE)
+                        .add(playerVelocity[smokeTrail])
+                        .add(shapeVector)
                 );
                 Vector extraY = new Vector(0, EazingUtil.easeInOutCubic(progress) * SMOKE_FLOATING_POINT, 0);
                 Location finalLocation = eye.clone().add(inDirection)
                         .add(extraY);
                 if (!finalLocation.isChunkLoaded()) {
-                    continue;
+                    return;
                 }
                 if (TobaccoPipe.smokeIntersects(finalLocation)) {
                     hitPoint = Math.max(0, trailTicks - 1);

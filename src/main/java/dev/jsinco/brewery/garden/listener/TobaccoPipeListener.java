@@ -2,10 +2,12 @@ package dev.jsinco.brewery.garden.listener;
 
 import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.configuration.UsingConfig;
-import dev.jsinco.brewery.garden.tobacco.CircleSmokeTask;
-import dev.jsinco.brewery.garden.tobacco.SimpleSmokeTask;
+import dev.jsinco.brewery.garden.tobacco.CircleSmokeShape;
+import dev.jsinco.brewery.garden.tobacco.LineSmokeShape;
+import dev.jsinco.brewery.garden.tobacco.SmokeShape;
+import dev.jsinco.brewery.garden.tobacco.SmokeTask;
+import dev.jsinco.brewery.garden.tobacco.SphereSmokeShape;
 import dev.jsinco.brewery.garden.tobacco.TobaccoPipe;
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -25,7 +27,6 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Consumer;
 
 public record TobaccoPipeListener(Garden garden) implements Listener {
 
@@ -61,7 +62,7 @@ public record TobaccoPipeListener(Garden garden) implements Listener {
                                 event.getPlayer(),
                                 Sound.BLOCK_CHERRY_LEAVES_PLACE,
                                 SoundCategory.PLAYERS,
-                                random.nextFloat(4, 6),
+                                random.nextFloat(0.2F, 0.5F),
                                 random.nextFloat(0.1F, 0.2F)
                         );
             } else {
@@ -77,19 +78,24 @@ public record TobaccoPipeListener(Garden garden) implements Listener {
         Double proficiency = event.getPlayer().getPersistentDataContainer()
                 .get(SMOKE_PROFICIENCY, PersistentDataType.DOUBLE);
         double proficiency0 = proficiency == null ? 0 : proficiency;
-        double probability = proficiency0 / (proficiency0 + 10);
-        boolean circle = ThreadLocalRandom.current().nextDouble() < probability;
-        Consumer<ScheduledTask> consumable =
-                circle ? new CircleSmokeTask(event.getPlayer())::tick : new SimpleSmokeTask(event.getPlayer())::tick;
-        event.getPlayer().getScheduler().runAtFixedRate(Garden.getInstance(), consumable, null, 1L, 1L);
-        if (TobaccoPipe.isEmpty(item)) {
-            TobaccoPipe.setLit(item, false);
-        }
+        double sphereProbability = proficiency0 / (proficiency0 + 10);
+        double circleProbability = proficiency0 / (proficiency0 + 100);
+        Random random = ThreadLocalRandom.current();
+        SmokeShape shape;
         PersistentDataContainer persistentDataContainer = event.getPlayer().getPersistentDataContainer();
-        if (circle) {
+        if (random.nextDouble() < circleProbability) {
             persistentDataContainer.set(SMOKE_PROFICIENCY, PersistentDataType.DOUBLE, proficiency0 + 0.1);
+            shape = new CircleSmokeShape(1, 2);
+        } else if (random.nextDouble() < sphereProbability) {
+            persistentDataContainer.set(SMOKE_PROFICIENCY, PersistentDataType.DOUBLE, proficiency0 + 0.05);
+            shape = new SphereSmokeShape(0.25);
         } else {
             persistentDataContainer.set(SMOKE_PROFICIENCY, PersistentDataType.DOUBLE, proficiency0 + 0.01);
+            shape = new LineSmokeShape();
+        }
+        event.getPlayer().getScheduler().runAtFixedRate(Garden.getInstance(), new SmokeTask(event.getPlayer(), shape)::tick, null, 1L, 1L);
+        if (TobaccoPipe.isEmpty(item)) {
+            TobaccoPipe.setLit(item, false);
         }
     }
 
