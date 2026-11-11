@@ -80,6 +80,7 @@ public record WorldEventListener(PlantRegistry registry, GardenPlantDataType gar
         plants.stream()
                 .map(GardenPlant::getId)
                 .forEach(registry::unregister);
+        plants.forEach(GardenPlant::clearBoundEntities);
     }
 
 }
