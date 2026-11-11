@@ -72,7 +72,7 @@ public class GardenPlant {
         this.expectedFruits = fruits;
         this.currentStorage = currentStorage;
         if (fruits > 0) {
-            Bukkit.getGlobalRegionScheduler().run(Garden.getInstance(), t -> {
+            Bukkit.getRegionScheduler().run(Garden.getInstance(), structure.origin(), t -> {
                 placedFruits.addAll(placeFruits(fruits));
             });
         }
