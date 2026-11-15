@@ -129,7 +129,7 @@ public class Garden extends JavaPlugin {
         growthTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> growthManager.tick(), 1, 200);
         Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, t -> {
             gardenRegistry.getPlants()
-                    .forEach(GardenPlant::tick);
+                    .forEach(plant -> Bukkit.getRegionScheduler().run(this, plant.origin(), task -> plant.tick()));
         }, 1, 100);
         if (MutableGardenRegistry.PLANT_TYPE.values().isEmpty()) {
             Logger.logErr("There's no available plant types for garden!");
