@@ -68,7 +68,7 @@ public class ExtraItemDataSerializer implements TypeSerializer<ExtraItemData> {
                     consumerList.add(item -> item.setData(DataComponentTypes.ITEM_MODEL, itemModel));
                 }
                 case null, default ->
-                        throw new SerializationException("Unknown entry in %s".formatted(node.path().toString()));
+                        throw new SerializationException("Unknown entry '%s' %s".formatted(key, node.path().toString()));
             }
         }
         return new ExtraItemData(consumerList);
