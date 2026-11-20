@@ -5,18 +5,19 @@ import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
-import dev.jsinco.brewery.garden.persist.PlantPdcType;
 import dev.jsinco.brewery.garden.persist.StorageSolution;
 import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
+import dev.jsinco.brewery.garden.utility.Logger;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockType;
@@ -40,6 +41,7 @@ public class GardenPlant {
     private boolean bloomed = false;
     private final List<PlacedFruitDisplays> placedFruits = new ArrayList<>();
     private int expectedFruits;
+    @Setter
     private StorageSolution currentStorage = null;
 
     private static final Set<Material> DECORATIVE_PLANT_BLOCKS = compileDecorativePlantBlocks();
@@ -71,11 +73,6 @@ public class GardenPlant {
         this.structure = structure;
         this.expectedFruits = fruits;
         this.currentStorage = currentStorage;
-        if (fruits > 0) {
-            Bukkit.getRegionScheduler().run(Garden.getInstance(), structure.origin(), t -> {
-                placedFruits.addAll(placeFruits(fruits));
-            });
-        }
     }
 
     public boolean isFullyGrown() {
@@ -114,7 +111,9 @@ public class GardenPlant {
                     expectedFruits--;
                     type.fruitItem().item(PlantItem.PlantItemType.FRUIT, type)
                             .ifPresent(item -> toDrop.interactionBox().getWorld().dropItem(toDrop.interactionBox().getLocation().toCenterLocation(), item));
-                    updatePersistently(Garden.getInstance().getGardenPlantDataType());
+                    Garden.getInstance().getPersistenceManager()
+                            .update(this)
+                            .exceptionally(Logger::logErr);
                 }
                 toRemove.forEach(PlacedFruitDisplays::remove);
             });
@@ -140,37 +139,10 @@ public class GardenPlant {
             newStructure.paste();
             this.structure = newStructure;
             registry.registerPlant(this);
-            updatePersistently(dataType);
+            Garden.getInstance().getPersistenceManager()
+                    .update(this)
+                    .exceptionally(Logger::logErr);
         });
-    }
-
-    private void updatePersistently(GardenPlantDataType dataType) {
-        if (GardenConfig.instance().storageSolution() == StorageSolution.SQLITE && currentStorage != StorageSolution.PDC) {
-            dataType.update(this);
-        } else {
-            if (currentStorage == StorageSolution.SQLITE) {
-                dataType.remove(this);
-                currentStorage = StorageSolution.PDC;
-            }
-            Chunk chunk = structure.origin().getChunk();
-            List<GardenPlant> plants;
-            try {
-                plants = chunk
-                        .getPersistentDataContainer()
-                        .get(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE);
-            } catch (IllegalArgumentException e) {
-                plants = null;
-            }
-            List<GardenPlant> gardenPlants;
-            if (plants == null) {
-                gardenPlants = new ArrayList<>();
-            } else {
-                gardenPlants = new ArrayList<>(plants);
-            }
-            gardenPlants.removeIf(plant -> plant.id.equals(id));
-            gardenPlants.add(this);
-            chunk.getPersistentDataContainer().set(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE, gardenPlants);
-        }
     }
 
     public void bloom() {
@@ -210,11 +182,17 @@ public class GardenPlant {
     public void placeFruits() {
         placedFruits.addAll(placeFruits(-1));
         expectedFruits = placedFruits.size();
-        updatePersistently(Garden.getInstance().getGardenPlantDataType());
+        Garden.getInstance().getPersistenceManager()
+                .update(this)
+                .exceptionally(Logger::logErr);
     }
 
     private List<PlacedFruitDisplays> placeFruits(int amount) {
-        if (!structure.origin().isChunkLoaded() || !type.bearFruits() || !placedFruits.isEmpty()) {
+        World world = origin().getWorld();
+        if (!structure.origin().isChunkLoaded()
+                || !type.bearFruits()
+                || !placedFruits.isEmpty()
+        ) {
             return List.of();
         }
         PlantItem fruit = type.fruitItem();
@@ -243,7 +221,17 @@ public class GardenPlant {
                     .ifPresent(output::add);
             count++;
         }
-        this.structure.paste(); // Clear all bloom blocks
+        this.structure.paste((vector, blockData) -> {
+            Location location = new Location(world, vector.getBlockX(), vector.getBlockY(), vector.getBlockZ());
+            if (location.getBlock().getType() != Material.FLOWERING_AZALEA_LEAVES) {
+                return;
+            }
+            world.setBlockData(location, blockData);
+        }, vector -> world.getBlockData(
+                vector.getBlockX(),
+                vector.getBlockY(),
+                vector.getBlockZ()
+        ));
         bloomed = false;
         return output;
     }
@@ -279,11 +267,14 @@ public class GardenPlant {
         if (expectedFruits < 0) {
             expectedFruits = 0;
         }
-        updatePersistently(Garden.getInstance().getGardenPlantDataType());
+        Garden.getInstance().getPersistenceManager()
+                .update(this)
+                .exceptionally(Logger::logErr);
     }
 
     public void clearBoundEntities() {
         placedFruits.forEach(PlacedFruitDisplays::remove);
         expectedFruits = 0;
     }
+
 }

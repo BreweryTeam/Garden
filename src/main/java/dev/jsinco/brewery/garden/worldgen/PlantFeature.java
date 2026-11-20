@@ -4,18 +4,17 @@ import dev.jsinco.brewery.garden.Garden;
 import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.configuration.worldgen.WorldGenConfig;
-import dev.jsinco.brewery.garden.persist.PlantPdcType;
-import dev.jsinco.brewery.garden.persist.StorageSolution;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
+import dev.jsinco.brewery.garden.utility.Logger;
 import dev.thorinwasher.schem.Schematic;
 import dev.wyck.keys.ResourceKey;
 import dev.wyck.worldgen.feature.custom.CustomFeature;
 import dev.wyck.worldgen.feature.custom.PlacementContext;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.World;
 import org.bukkit.util.BlockVector;
 import org.joml.Matrix3d;
 import org.joml.Vector3i;
@@ -82,32 +81,17 @@ public class PlantFeature extends CustomFeature<PlantType> {
                 0,
                 GardenConfig.instance().storageSolution()
         );
-        if (GardenConfig.instance().storageSolution() == StorageSolution.SQLITE) {
-            Garden.getInstance().getGardenPlantDataType().insert(gardenPlant);
-        } else {
-            Bukkit.getWorld(context.worldContext().uuid())
-                    .getChunkAtAsync(origin.getBlockX() >> 4, origin.getBlockZ() >> 4)
-                    .thenAccept(chunk -> {
-                        PersistentDataContainer pdc = chunk
-                                .getPersistentDataContainer();
-                        List<GardenPlant> plants;
-                        try {
-                            plants = pdc
-                                    .get(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE);
-                        } catch (IllegalArgumentException e) {
-                            plants = null;
-                        }
-                        List<GardenPlant> gardenPlants;
-                        if (plants == null) {
-                            gardenPlants = new ArrayList<>();
-                        } else {
-                            gardenPlants = new ArrayList<>(plants);
-                        }
-                        gardenPlants.add(gardenPlant);
-                        Garden.getGardenRegistry().registerPlant(gardenPlant);
-                        pdc.set(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE, gardenPlants);
-                    });
+        World world = Bukkit.getWorld(context.worldContext().uuid());
+        if (world == null) {
+            return false;
         }
+        world.getChunkAtAsync(origin.getBlockX() >> 4, origin.getBlockZ() >> 4)
+                .thenAccept(ignored -> {
+                    Garden.getGardenRegistry().registerPlant(gardenPlant);
+                    Garden.getInstance().getPersistenceManager()
+                            .update(gardenPlant)
+                            .exceptionally(Logger::logErr);
+                });
         return true;
     }
 }

@@ -21,12 +21,19 @@ public class GrowthManager {
     public void tick() {
         Random random = ThreadLocalRandom.current();
         for (GardenPlant plant : registry.getPlants()) {
+            if (!plant.origin().isChunkLoaded()) {
+                continue;
+            }
             if (plant.isFullyGrown()) {
                 if (random.nextDouble() > 1 - Math.pow(0.5, (double) 400 / plant.getType().growthTime())) {
                     continue;
                 }
                 Bukkit.getRegionScheduler().run(Garden.getInstance(), plant.origin(), t -> {
-                    if (plant.hasBloomed()) {
+                    if (!plant.isAlive()) {
+                        registry.unregisterPlant(plant);
+                        Garden.getInstance().getPersistenceManager()
+                                .remove(plant);
+                    } else if (plant.hasBloomed()) {
                         plant.placeFruits();
                     } else {
                         plant.bloom();

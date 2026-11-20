@@ -121,7 +121,7 @@ public class BlockEventListener implements Listener {
                 return;
             }
             gardenRegistry.unregisterPlant(gardenPlant);
-            gardenPlantDataType.remove(gardenPlant);
+            Garden.getInstance().getPersistenceManager().remove(gardenPlant);
         });
     }
 

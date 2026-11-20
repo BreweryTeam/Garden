@@ -1,5 +1,2 @@
-UPDATE plants
-SET age            = ?,
-    transformation = ?,
-    fruits         = ?
-WHERE id = ?;
+INSERT OR REPLACE INTO plants
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

@@ -5,8 +5,6 @@ import dev.jsinco.brewery.garden.MutableGardenRegistry;
 import dev.jsinco.brewery.garden.PlantRegistry;
 import dev.jsinco.brewery.garden.configuration.GardenConfig;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
-import dev.jsinco.brewery.garden.persist.PlantPdcType;
-import dev.jsinco.brewery.garden.persist.StorageSolution;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlacedFruitDisplays;
 import dev.jsinco.brewery.garden.plant.PlantType;
@@ -14,6 +12,7 @@ import dev.jsinco.brewery.garden.plant.item.PlantItem;
 import dev.jsinco.brewery.garden.plant.item.PlayerHeadBased;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.jsinco.brewery.garden.utility.Encoder;
+import dev.jsinco.brewery.garden.utility.Logger;
 import dev.jsinco.brewery.garden.utility.WorldUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
@@ -40,8 +39,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -52,7 +49,7 @@ public class EventListeners implements Listener {
 
     private final GardenConfig config;
     private static final Random RANDOM = new Random();
-    public static final Set<BlockPlaceEvent> IGNORED_EVENTS = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    public static final Set<BlockPlaceEvent> IGNORED_EVENTS = ConcurrentHashMap.newKeySet();
 
 
     private final PlantRegistry gardenRegistry;
@@ -193,28 +190,8 @@ public class EventListeners implements Listener {
             return false;
         }
         gardenRegistry.registerPlant(gardenPlant);
-        if (GardenConfig.instance().storageSolution() == StorageSolution.SQLITE) {
-            gardenPlantDataType.insert(gardenPlant);
-        } else {
-            PersistentDataContainer pdc = location.getChunk()
-                    .getPersistentDataContainer();
-            List<GardenPlant> plants;
-            try {
-                plants = pdc
-                        .get(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE);
-            } catch (IllegalArgumentException e) {
-                plants = null;
-            }
-            List<GardenPlant> gardenPlants;
-            if (plants == null) {
-                gardenPlants = new ArrayList<>();
-            } else {
-                gardenPlants = new ArrayList<>(plants);
-            }
-            gardenPlants.add(gardenPlant);
-            pdc.set(PlantPdcType.PLANT_KEY, PlantPdcType.PLANT_LIST_TYPE, gardenPlants);
-        }
-
+        Garden.getInstance().getPersistenceManager().update(gardenPlant)
+                .exceptionally(Logger::logErr);
         itemInHand.setAmount(itemInHand.getAmount() - 1);
         location.getWorld().playSound(location, Sound.BLOCK_GRASS_PLACE, 1.0f, 1.0f);
         return true;
