@@ -21,9 +21,14 @@ public record Consumption(@Nullable @Setting("consumeEffects") List<ConsumeEffec
                           @Nullable @Setting("consumeSeconds") Float consumeSeconds,
                           @Nullable @Setting("consumeParticles") Boolean consumeParticles,
                           @Nullable NamespacedKey sound, @Nullable @Setting("canAlwaysEat") Boolean canAlwaysEat,
-                          @Nullable Integer nutrition, @Nullable Float saturation) {
+                          @Nullable Integer nutrition, @Nullable Float saturation, boolean notFood) {
 
     public void apply(ItemStack itemStack) {
+        if (notFood) {
+            itemStack.unsetData(DataComponentTypes.FOOD);
+            itemStack.unsetData(DataComponentTypes.CONSUMABLE);
+            return;
+        }
         Consumable.Builder consumable = Consumable.consumable();
         if (consumeEffects != null) {
             consumable.addEffects(consumeEffects);

@@ -25,7 +25,7 @@ public class TobaccoPipe {
     private static final NamespacedKey LIT = Garden.key("tobacco/lit");
     private static final NamespacedKey COOLDOWN = Garden.key("tobacco/cooldown");
 
-    private static final int MAX_FILL_LEVEL = 15;
+    private static final int MAX_FILL_LEVEL = 5;
 
     public static ItemStack newPipe() {
         ItemStack itemStack = ItemType.COOKIE.createItemStack();
