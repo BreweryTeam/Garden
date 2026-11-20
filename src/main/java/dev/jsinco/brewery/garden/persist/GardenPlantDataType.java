@@ -6,7 +6,6 @@ import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.PlantType;
 import dev.jsinco.brewery.garden.structure.PlantStructure;
 import dev.jsinco.brewery.garden.utility.Encoder;
-import dev.jsinco.brewery.garden.utility.FileUtil;
 import dev.jsinco.brewery.garden.utility.Logger;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -29,6 +28,7 @@ public class GardenPlantDataType {
 
     private final Database database;
     private final ScheduledExecutorService executor;
+    private final SqlStatements statements = new SqlStatements("/sql");
 
 
     public GardenPlantDataType(Database database, ScheduledExecutorService executor) {
@@ -36,10 +36,10 @@ public class GardenPlantDataType {
         this.executor = executor;
     }
 
-    public CompletableFuture<Void> insert(GardenPlant plant) {
+    public CompletableFuture<Void> update(GardenPlant plant) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection connection = database.getConnection()) {
-                PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/insert_plant.sql"));
+                PreparedStatement preparedStatement = connection.prepareStatement(statements.get("update_plant"));
                 preparedStatement.setBytes(1, Encoder.asBytes(plant.getId()));
                 preparedStatement.setString(2, plant.getType().key().toString());
                 preparedStatement.setInt(3, plant.getAge());
@@ -59,27 +59,10 @@ public class GardenPlantDataType {
         }, executor);
     }
 
-    public CompletableFuture<Void> update(GardenPlant plant) {
-        return CompletableFuture.supplyAsync(() -> {
-            try (Connection connection = database.getConnection()) {
-                PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/update_plant.sql"));
-                preparedStatement.setInt(1, plant.getAge());
-                PlantStructure structure = plant.getStructure();
-                preparedStatement.setString(2, Encoder.serializeTransformation(structure.transformation()));
-                preparedStatement.setInt(3, plant.getExpectedFruits());
-                preparedStatement.setBytes(4, Encoder.asBytes(plant.getId()));
-                preparedStatement.execute();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }, executor);
-    }
-
     public CompletableFuture<Void> remove(GardenPlant plant) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection connection = database.getConnection()) {
-                PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/remove_plant.sql"));
+                PreparedStatement preparedStatement = connection.prepareStatement(statements.get("remove_plant"));
                 preparedStatement.setBytes(1, Encoder.asBytes(plant.getId()));
                 preparedStatement.execute();
             } catch (SQLException e) {
@@ -94,7 +77,7 @@ public class GardenPlantDataType {
             List<GardenPlant> output = new ArrayList<>();
             Set<String> reportedInvalidTracks = new HashSet<>();
             try (Connection connection = database.getConnection()) {
-                PreparedStatement preparedStatement = connection.prepareStatement(FileUtil.readInternalResource("/sql/find_plant.sql"));
+                PreparedStatement preparedStatement = connection.prepareStatement(statements.get("find_plant"));
                 preparedStatement.setBytes(1, Encoder.asBytes(world.getUID()));
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {

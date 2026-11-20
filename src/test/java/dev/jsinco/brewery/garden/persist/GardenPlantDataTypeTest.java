@@ -46,7 +46,7 @@ class GardenPlantDataTypeTest {
                         "checkPersistence(" + plantType + ")",
                         () -> {
                             GardenPlant gardenPlant = new GardenPlant(plantType, new Location(world, 1, 0, 0));
-                            dataType.insert(gardenPlant);
+                            dataType.update(gardenPlant);
                             checkEquals(gardenPlant, dataType.fetch(world).join().get(0));
                             assertEquals(1, dataType.fetch(world).join().size());
                             gardenPlant.incrementGrowthStage(1, Garden.getGardenRegistry(), Garden.getInstance().getGardenPlantDataType());

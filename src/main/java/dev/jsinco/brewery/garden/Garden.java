@@ -15,6 +15,10 @@ import dev.jsinco.brewery.garden.listener.EventListeners;
 import dev.jsinco.brewery.garden.listener.WorldEventListener;
 import dev.jsinco.brewery.garden.persist.Database;
 import dev.jsinco.brewery.garden.persist.GardenPlantDataType;
+import dev.jsinco.brewery.garden.persist.PdcPersistenceManager;
+import dev.jsinco.brewery.garden.persist.PersistenceManager;
+import dev.jsinco.brewery.garden.persist.SQLitePersistenceManager;
+import dev.jsinco.brewery.garden.persist.StorageSolution;
 import dev.jsinco.brewery.garden.plant.GardenPlant;
 import dev.jsinco.brewery.garden.plant.GrowthManager;
 import dev.jsinco.brewery.garden.plant.PlantType;
@@ -71,6 +75,8 @@ public class Garden extends JavaPlugin {
     @Getter
     private IntegrationRegistryImpl integrationRegistry;
     private WorldEventListener worldEventListener;
+    @Getter
+    private PersistenceManager persistenceManager;
 
     @Override
     public void onLoad() {
@@ -94,6 +100,8 @@ public class Garden extends JavaPlugin {
         }
         gardenRegistry = new PlantRegistry();
         gardenPlantDataType = database.plantDataType();
+        persistenceManager = GardenConfig.instance().storageSolution() == StorageSolution.PDC ?
+                new PdcPersistenceManager(gardenPlantDataType) : new SQLitePersistenceManager(gardenPlantDataType);
         NaturalFoliagePlacer.registerFoliage(WorldGenConfig.instance());
         this.loadSuccess = true;
     }
@@ -217,6 +225,8 @@ public class Garden extends JavaPlugin {
             Logger.logErr("There's no available plant types for garden!");
             Bukkit.getPluginManager().disablePlugin(this);
         }
+        persistenceManager = GardenConfig.instance().storageSolution() == StorageSolution.PDC ?
+                new PdcPersistenceManager(gardenPlantDataType) : new SQLitePersistenceManager(gardenPlantDataType);
     }
 
     private void registerPlantRecipes() {

@@ -75,6 +75,10 @@ public class PlantPdcType implements PersistentDataType<byte[], GardenPlant> {
                 throw new IllegalArgumentException("Unsupported version");
             }
             UUID id = Encoder.asUuid(dataInputStream.readNBytes(16));
+            GardenPlant alreadyLoaded = Garden.getGardenRegistry().getByID(id);
+            if (alreadyLoaded != null) {
+                return alreadyLoaded;
+            }
             UUID worldUuid = Encoder.asUuid(dataInputStream.readNBytes(16));
             World world = Bukkit.getWorld(worldUuid);
             if (world == null) {
