@@ -2,7 +2,7 @@
 # For documentation, visit: https://docs.breweryteam.dev/docs/garden
 
 furnace:
-  garden:tobacco:
+  garden:dried_tobacco:
     output-item:
       item-model: "minecraft:dried_kelp"
       item-id: "minecraft:rotten_flesh"
